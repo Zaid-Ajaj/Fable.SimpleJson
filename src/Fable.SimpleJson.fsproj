@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Fable Library</Description>
-    <PackageProjectUrl></PackageProjectUrl>
-    <RepositoryUrl></RepositoryUrl>
-    <PackageLicenseUrl></PackageLicenseUrl>
+    <Description>A simple library for parsing json strings into structured json data</Description>
+    <PackageProjectUrl>https://github.com/Zaid-Ajaj/Fable.SimpleJson</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Zaid-Ajaj/Fable.SimpleJson.git</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/Zaid-Ajaj/Fable.SimpleJson/blob/master/LICENSE</PackageLicenseUrl>
     <PackageIconUrl></PackageIconUrl>
-    <PackageTags>fsharp;fable; json;parser</PackageTags>
+    <PackageTags>fsharp;fable;json;parser</PackageTags>
     <Authors>Zaid Ajaj</Authors>
     <Version>1.0</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
