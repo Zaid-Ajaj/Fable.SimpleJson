@@ -2,10 +2,10 @@ module Tests
 
 open QUnit
 open Fable.Parsimmon
+open Fable.SimpleJson
 open Fable.SimpleJson.AST
 open Fable.SimpleJson.Parser
-open Fable.Import
-open Fable.SimpleJson
+
 
 registerModule "Simple Json Tests"
 

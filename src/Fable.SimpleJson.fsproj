@@ -5,9 +5,9 @@
     <RepositoryUrl></RepositoryUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageIconUrl></PackageIconUrl>
-    <PackageTags>fsharp;fable</PackageTags>
-    <Authors></Authors>
-    <Version></Version>
+    <PackageTags>fsharp;fable; json;parser</PackageTags>
+    <Authors>Zaid Ajaj</Authors>
+    <Version>1.0</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
