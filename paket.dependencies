@@ -1,0 +1,13 @@
+group Main
+    source https://api.nuget.org/v3/index.json
+    storage:none
+    
+    clitool dotnet-fable
+    nuget FSharp.Core
+    nuget Fable.Core
+    nuget Fable.Parsimmon
+
+group Build
+  source https://api.nuget.org/v3/index.json
+
+  nuget FAKE
