@@ -2,6 +2,8 @@ namespace Fable.SimpleJson
 
 open Fable.Parsimmon
 
+#nowarn "40"
+
 module Parser =
 
     open AST

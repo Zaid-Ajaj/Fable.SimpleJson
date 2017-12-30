@@ -163,10 +163,9 @@ testCase "Json parser works" <| fun test ->
             | [ "customerId", JNumber 1.0 
                 "customerName", JString "John"
                 "jobs", JArray [JNumber 1.0; JBool true; JNull]] -> test.pass()
-                    
-            | otherResult -> test.unexpected otherResult
-                
+            | otherResult -> test.unexpected otherResult 
         | otherResult -> test.unexpected otherResult 
+    
     
 testCase "Json parser works with empty nested objects" <| fun test ->
     "{\"child\":{}}"
@@ -226,3 +225,21 @@ testCase "Json parser works with more nested values" <| fun test ->
             | otherResult -> test.unexpected otherResult 
             
         | otherResult -> test.unexpected otherResult 
+
+testCase "Json parser parses number values" <| fun test ->
+    ["12"; "12.0"]
+    |> List.choose SimpleJson.tryParse
+    |> test.areEqual [JNumber 12.0; JNumber 12.0]  
+
+
+testCase "Json parser parses boolean values" <| fun test ->
+    ["true"; "false"; "something else"]
+    |> List.choose SimpleJson.tryParse
+    |> test.areEqual [JBool true; JBool false]
+
+testCase "Json parser parses objects with new lines" <| fun test ->
+    let expected = JObject (Map.ofList ["empty", JObject Map.empty])
+    let input = "\n{\"empty\":\n{\n}}\n"
+    match SimpleJson.tryParse input with
+    | Some json when json = expected -> test.pass()
+    | otherwise -> test.unexpected otherwise
