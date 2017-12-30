@@ -3,6 +3,11 @@
 A simple library for parsing json strings into structured json data. It is written using parser combinators from [Fable.Parsimmon](https://github.com/Zaid-Ajaj/Fable.Parsimmon)
 
 
+[![Nuget](https://img.shields.io/nuget/v/Fable.SimpleJson.svg?colorB=green)](https://www.nuget.org/packages/Fable.SimpleJson)  
+
+[![Build Status](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson.svg?branch=master)](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson)
+
+
 ### Installation
 Install from nuget using paket
 ```sh
@@ -11,10 +16,10 @@ paket add nuget Fable.SimpleJson --project path/to/YourProject.fsproj
 Make sure the references are added to your paket files
 ```sh
 # paket.dependencies (solution-wide dependencies)
-nuget Fable.Parsimmon
+nuget Fable.SimpleJson
 
 # paket.refernces (project-specific dependencies)
-Fable.Parsimmon
+Fable.SimpleJson
 ```
 
 ### Using the library
