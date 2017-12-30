@@ -156,13 +156,13 @@ testCase "JObject parser works with more nested values" <| fun test ->
 
 testCase "Json parser works" <| fun test ->
     " { \"customerId\": 1, \"customerName\": \"John\", \"jobs\":[1,true,null]}"
-    |> parseUsing jsonParser
+    |> SimpleJson.tryParse
     |> function
         | Some (JObject map) ->
             match Map.toList map with
             | [ "customerId", JNumber 1.0 
                 "customerName", JString "John"
-                "jobs", JArray [JNumber 1.0; JBool true; JNull]]-> test.pass()
+                "jobs", JArray [JNumber 1.0; JBool true; JNull]] -> test.pass()
                     
             | otherResult -> test.unexpected otherResult
                 
@@ -210,7 +210,7 @@ testCase "Json parser works with arrays and non-empty nested objects" <| fun tes
         | otherResult -> test.unexpected otherResult
 
 testCase "Json parser works with more nested values" <| fun test ->
-    "{\"other\":\"value\" , \"child\":{ }}"
+    "{\"other\":\"value\",\"child\":{ }}"
     |> SimpleJson.tryParse
     |> function
         | Some (JObject map) ->
