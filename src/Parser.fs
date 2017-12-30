@@ -40,6 +40,22 @@ module Parser =
                 |> float
         )
 
+    let createParserForwardedToRef<'a>() =
+
+        let dummyParser= 
+            let innerFn input : IParser<Json>  = failwith "unfixed forwarded parser"
+            None |> unbox<IParser<Json>>
+        
+        // ref to placeholder Parser
+        let parserRef = ref dummyParser 
+
+        // wrapper Parser
+        let wrapperParser = 
+            // forward input to the placeholder
+             !parserRef  
+
+        wrapperParser, parserRef
+
     let jnumber = 
         [jfloat; jint] 
         |> Parsimmon.choose
@@ -88,12 +104,13 @@ module Parser =
         |> Parsimmon.choose
     
     let comma = withWhitespace (Parsimmon.str ",")
-       
+ 
+
     let rec jarray = Parsimmon.ofLazy <| fun () ->
          
         let leftBracket = withWhitespace (Parsimmon.str "[")
         let rightBracket = withWhitespace (Parsimmon.str "]")
-        
+                
         let value = Parsimmon.seperateBy comma jarray
 
         let list = 
@@ -116,6 +133,8 @@ module Parser =
             |> Parsimmon.map (fun (key, _ , value) -> key,value)
             |> Parsimmon.seperateBy comma
 
+
+        
         let manyKeyValues = 
             keyValue
             |> Parsimmon.between leftBrace rightBrace
@@ -125,6 +144,6 @@ module Parser =
         |> Parsimmon.choose
         
     let jsonParser = 
-        [jvalue; jarray; jobject]
+        [jobject;jarray;jvalue]
         |> List.map withWhitespace
         |> Parsimmon.choose

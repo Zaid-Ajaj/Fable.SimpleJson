@@ -5,6 +5,7 @@ open Fable.Parsimmon
 open Fable.SimpleJson
 open Fable.SimpleJson.AST
 open Fable.SimpleJson.Parser
+open Fable
 
 
 registerModule "Simple Json Tests"
@@ -64,19 +65,19 @@ testCase "Combined parsers JValue works on number values" <| fun test ->
 
 testCase "JArray parser works" <| fun test ->
     "[1.0, null, true, false, \"text\"]"
-    |> parseUsing jarray
+    |> SimpleJson.tryParse
     |> function
         | Some (JArray [JNumber 1.0; JNull; JBool true; JBool false; JString "text"]) -> test.pass()
         | otherResult -> test.unexpected otherResult
 
 testCase "JArray parser works on empty lists" <| fun test ->
     ["[ ]"; "[]"; " []"; " []"]
-    |> List.choose (parseUsing jarray)
+    |> List.choose (SimpleJson.tryParse)
     |> test.areEqual [JArray []; JArray []; JArray []; JArray []]
 
 testCase "JArray parser works on nested arrays of json" <| fun test ->
     ["[[]]"]
-    |> List.choose (parseUsing jarray)
+    |> List.choose (SimpleJson.tryParse)
     |> test.areEqual [JArray [JArray []]] 
 
  
@@ -243,3 +244,74 @@ testCase "Json parser parses objects with new lines" <| fun test ->
     match SimpleJson.tryParse input with
     | Some json when json = expected -> test.pass()
     | otherwise -> test.unexpected otherwise
+  
+testCase "Json parser works with escaped strings" <| fun test ->    
+    ["\"there is some json inside\""; "\"\""]
+    |> List.choose SimpleJson.tryParse 
+    |> test.areEqual [JString "there is some json inside"; JString ""]
+
+testCase "Json parser can parse escaped empty objects" <| fun test ->
+    match SimpleJson.tryParse """ {} """ with
+    | Some _ -> test.pass()
+    | None -> test.fail()
+
+
+testCase "Json parser can parse escaped non-empty objects" <| fun test ->
+    match SimpleJson.tryParse """ {"prop":"value"} """ with
+    | Some json -> 
+        match json with 
+        | JObject map -> 
+            match Map.toList map with
+            | ["prop",JString "value"] -> test.pass()
+            | other -> test.unexpected other
+        | other -> test.unexpected other
+    | None -> test.fail()
+
+
+testCase "Json parser can parse list of objects" <| fun test ->
+    "[{}]"
+    |> SimpleJson.tryParse
+    |> function
+        | Some (JArray [JObject x]) when x = Map.empty -> test.pass()
+        | _ -> test.fail()
+
+// A more realistic test sample
+let jsonTestSample = """
+{
+  "product": "Live JSON generator",
+  "version": 3.1,
+  "releaseDate": "2014-06-25T00:00:00.000Z",
+  "demo": true,
+  "person": {
+    "id": 12345,
+    "name": "John Doe",
+    "phones": {
+      "home": "800-123-4567",
+      "mobile": "877-123-1234"
+    },
+    "email": [
+      "jd@example.com",
+      "jd@example.org"
+    ],
+    "dateOfBirth": "1980-01-02T00:00:00.000Z",
+    "registered": true,
+    "emergencyContacts": [
+      {
+        "name": "Jane Doe",
+        "phone": "888-555-1212",
+        "relationship": "spouse"
+      },
+      {
+        "name": "Justin Doe",
+        "phone": "877-123-1212",
+        "relationship": "parent"
+      }
+    ]
+  }
+}
+"""
+
+testCase "Parsing JSON test sample works" <| fun test ->
+    match SimpleJson.tryParse jsonTestSample with
+    | Some _ -> test.pass()
+    | None -> test.fail()
