@@ -91,8 +91,8 @@ module Parser =
  
     let rec json = Parsimmon.ofLazy <| fun () ->
         
-        let rec jarray = Parsimmon.ofLazy <| fun () ->
-             
+        let jarray = 
+
             let leftBracket = withWhitespace (Parsimmon.str "[")
             let rightBracket = withWhitespace (Parsimmon.str "]")
                     
@@ -106,7 +106,7 @@ module Parser =
             [list; jvalue]
             |> Parsimmon.choose
 
-        let rec jobject = Parsimmon.ofLazy <| fun () ->
+        let jobject = 
             let leftBrace = withWhitespace (Parsimmon.str "{")
             let rightBrace = withWhitespace (Parsimmon.str "}")
             
