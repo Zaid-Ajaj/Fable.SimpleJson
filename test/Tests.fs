@@ -81,80 +81,6 @@ testCase "JArray parser works on nested arrays of json" <| fun test ->
     |> List.choose (SimpleJson.tryParse)
     |> test.areEqual [JArray [JArray []]] 
 
- 
-testCase "JObject parser works" <| fun test ->
-    " { \"customerId\": 1, \"customerName\": \"John\", \"jobs\":[1,true,null]}"
-    |> SimpleJson.tryParse
-    |> function
-        | Some (JObject map) ->
-            match Map.toList map with
-            | [ "customerId", JNumber 1.0 
-                "customerName", JString "John"
-                "jobs", JArray [JNumber 1.0; JBool true; JNull]]-> test.pass()
-                    
-            | otherResult -> test.unexpected otherResult
-                
-        | otherResult -> test.unexpected otherResult 
-    
-testCase "JObject parser works with empty nested objects" <| fun test ->
-    "{\"child\":{}}"
-    |> SimpleJson.tryParse
-    |> function 
-        | Some (JObject (map)) -> 
-            match Map.toList map with
-            | ["child", JObject nested] when Map.isEmpty nested -> test.pass()
-            | otherResult -> test.unexpected otherResult
-        | otherResult -> test.unexpected otherResult
-
-
-testCase "JObject parser works with non-empty nested objects" <| fun test ->
-    "{\"nested\":{\"name\":1}}"
-    |> SimpleJson.tryParse
-    |> function 
-        | Some (JObject (map)) -> 
-            match Map.toList map with
-            | ["nested", JObject nested] -> 
-                match Map.toList nested with
-                | ["name", JNumber 1.0] -> test.pass()
-                | otherResult -> test.unexpected otherResult
-
-            | otherResult -> test.unexpected otherResult 
-        | otherResult -> test.unexpected otherResult
-
-testCase "JObject parser works with arrays and non-empty nested objects" <| fun test ->
-    "{\"list\":[],\"nested\":{\"name\":1}}"
-    |> SimpleJson.tryParse
-    |> function 
-        | Some (JObject (map)) -> 
-            match Map.toList map with
-            | [ "list", JArray []
-                "nested", JObject nested] -> 
-
-                match Map.toList nested with
-                | ["name", JNumber 1.0] -> test.pass()
-                | otherResult -> test.unexpected otherResult
-
-            | otherResult -> test.unexpected otherResult 
-        | otherResult -> test.unexpected otherResult
-
-testCase "JObject parser works with more nested values" <| fun test ->
-    "{\"other\":\"value\" , \"child\":{ }}"
-    |> SimpleJson.tryParse
-    |> function
-        | Some (JObject map) ->
-            Map.containsKey "child" map |> test.areEqual true
-            Map.containsKey "other" map |> test.areEqual true
-
-            match Map.find "child" map with
-            | JObject nested -> Map.isEmpty nested |> test.areEqual true
-            | otherResult -> test.unexpected otherResult 
-
-            match Map.find "other" map with
-            | JString "value" -> test.pass()
-            | otherResult -> test.unexpected otherResult 
-            
-        | otherResult -> test.unexpected otherResult 
-
 
 testCase "Json parser works" <| fun test ->
     " { \"customerId\": 1, \"customerName\": \"John\", \"jobs\":[1,true,null]}"
@@ -262,7 +188,7 @@ testCase "Json parser can parse escaped non-empty objects" <| fun test ->
         match json with 
         | JObject map -> 
             match Map.toList map with
-            | ["prop",JString "value"] -> test.pass()
+            | ["prop", JString "value"] -> test.pass()
             | other -> test.unexpected other
         | other -> test.unexpected other
     | None -> test.fail()
