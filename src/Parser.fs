@@ -91,8 +91,6 @@ module Parser =
  
     let rec json = Parsimmon.ofLazy <| fun () ->
         
-        
-
         let leftBracket = withWhitespace (Parsimmon.str "[")
         let rightBracket = withWhitespace (Parsimmon.str "]")
                     
@@ -106,7 +104,7 @@ module Parser =
         let leftBrace = withWhitespace (Parsimmon.str "{")
         let rightBrace = withWhitespace (Parsimmon.str "}")
             
-        let keyValue = 
+        let keyValues = 
             Parsimmon.seq3 
                 (withWhitespace stringLiteral)
                 (withWhitespace (Parsimmon.str ":"))
@@ -115,7 +113,7 @@ module Parser =
             |> Parsimmon.seperateBy comma
 
         let jobject = 
-            keyValue
+            keyValues
             |> Parsimmon.between leftBrace rightBrace
             |> Parsimmon.map (List.ofArray >> Map.ofList >> JObject)
 
