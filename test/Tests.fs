@@ -241,3 +241,47 @@ testCase "Parsing JSON test sample works" <| fun test ->
     match SimpleJson.tryParse jsonTestSample with
     | Some _ -> test.pass()
     | None -> test.fail()
+
+testCase "JSON test sample is parsed correctly" <| fun test ->
+    let phones =
+      [ "home", JString "800-123-4567"
+        "mobile", JString "877-123-1234" ]
+      |> Map.ofList
+      |> JObject
+
+    let emergencyContacts = 
+        [ [ "name", JString "Jane Doe"
+            "phone", JString "888-555-1212"
+            "relationship", JString "spouse" ] 
+          |> Map.ofList
+          |> JObject
+
+          [ "name", JString "Justin Doe"
+            "phone", JString "877-123-1212"
+            "relationship", JString "parent" ] 
+          |> Map.ofList
+          |> JObject ] |> JArray
+
+    let person = 
+      [ "id", JNumber 12345.0
+        "name", JString "John Doe"
+        "registered", JBool true
+        "dateOfBirth", JString "1980-01-02T00:00:00.000Z"
+        "email", JArray [ JString "jd@example.com"; JString "jd@example.org" ]
+        "phones", phones
+        "emergencyContacts", emergencyContacts ] 
+      |> Map.ofList
+      |> JObject
+
+    let testSample = 
+      [ "product", JString "Live JSON generator"
+        "version", JNumber 3.1 
+        "releaseDate", JString "2014-06-25T00:00:00.000Z" 
+        "demo", JBool true
+        "person", person]
+      |> Map.ofList
+      |> JObject
+
+    match SimpleJson.tryParse jsonTestSample with
+    | Some sampleResult -> test.areEqual testSample sampleResult
+    | otherResult -> test.unexpected otherResult
