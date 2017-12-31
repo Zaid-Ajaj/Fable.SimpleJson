@@ -40,22 +40,6 @@ module Parser =
                 |> float
         )
 
-    let createParserForwardedToRef<'a>() =
-
-        let dummyParser= 
-            let innerFn input : IParser<Json>  = failwith "unfixed forwarded parser"
-            None |> unbox<IParser<Json>>
-        
-        // ref to placeholder Parser
-        let parserRef = ref dummyParser 
-
-        // wrapper Parser
-        let wrapperParser = 
-            // forward input to the placeholder
-             !parserRef  
-
-        wrapperParser, parserRef
-
     let jnumber = 
         [jfloat; jint] 
         |> Parsimmon.choose
