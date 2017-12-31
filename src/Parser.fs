@@ -105,45 +105,44 @@ module Parser =
     
     let comma = withWhitespace (Parsimmon.str ",")
  
-
-    let rec jarray = Parsimmon.ofLazy <| fun () ->
-         
-        let leftBracket = withWhitespace (Parsimmon.str "[")
-        let rightBracket = withWhitespace (Parsimmon.str "]")
-                
-        let value = Parsimmon.seperateBy comma jarray
-
-        let list = 
-            value
-            |> Parsimmon.between leftBracket rightBracket
-            |> Parsimmon.map (List.ofArray >> JArray)
-
-        [list; jvalue]
-        |> Parsimmon.choose
-
-    let rec jobject = Parsimmon.ofLazy <| fun () ->
-        let leftBrace = withWhitespace (Parsimmon.str "{")
-        let rightBrace = withWhitespace (Parsimmon.str "}")
+    let rec json = Parsimmon.ofLazy <| fun () ->
         
-        let keyValue = 
-            Parsimmon.seq3 
-                (withWhitespace stringLiteral)
-                (withWhitespace (Parsimmon.str ":"))
-                (withWhitespace jobject)
-            |> Parsimmon.map (fun (key, _ , value) -> key,value)
-            |> Parsimmon.seperateBy comma
+        let rec jarray = Parsimmon.ofLazy <| fun () ->
+             
+            let leftBracket = withWhitespace (Parsimmon.str "[")
+            let rightBracket = withWhitespace (Parsimmon.str "]")
+                    
+            let value = Parsimmon.seperateBy comma json
 
+            let list = 
+                value
+                |> Parsimmon.between leftBracket rightBracket
+                |> Parsimmon.map (List.ofArray >> JArray)
 
-        
-        let manyKeyValues = 
-            keyValue
-            |> Parsimmon.between leftBrace rightBrace
-            |> Parsimmon.map (List.ofArray >> Map.ofList >> JObject)
+            [list; jvalue]
+            |> Parsimmon.choose
 
-        [jvalue; jarray; manyKeyValues]
+        let rec jobject = Parsimmon.ofLazy <| fun () ->
+            let leftBrace = withWhitespace (Parsimmon.str "{")
+            let rightBrace = withWhitespace (Parsimmon.str "}")
+            
+            let keyValue = 
+                Parsimmon.seq3 
+                    (withWhitespace stringLiteral)
+                    (withWhitespace (Parsimmon.str ":"))
+                    (withWhitespace json)
+                |> Parsimmon.map (fun (key, _ , value) -> key,value)
+                |> Parsimmon.seperateBy comma
+
+            let manyKeyValues = 
+                keyValue
+                |> Parsimmon.between leftBrace rightBrace
+                |> Parsimmon.map (List.ofArray >> Map.ofList >> JObject)
+
+            [jvalue; jarray; manyKeyValues]
+            |> Parsimmon.choose
+
+        [jvalue; jobject; jarray]
         |> Parsimmon.choose
         
-    let jsonParser = 
-        [jobject;jarray;jvalue]
-        |> List.map withWhitespace
-        |> Parsimmon.choose
+    let jsonParser = withWhitespace json

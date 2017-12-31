@@ -6,6 +6,7 @@ open Fable.SimpleJson
 open Fable.SimpleJson.AST
 open Fable.SimpleJson.Parser
 open Fable
+open Fable.SimpleJson
 
 
 registerModule "Simple Json Tests"
@@ -83,7 +84,7 @@ testCase "JArray parser works on nested arrays of json" <| fun test ->
  
 testCase "JObject parser works" <| fun test ->
     " { \"customerId\": 1, \"customerName\": \"John\", \"jobs\":[1,true,null]}"
-    |> parseUsing jobject
+    |> SimpleJson.tryParse
     |> function
         | Some (JObject map) ->
             match Map.toList map with
@@ -97,7 +98,7 @@ testCase "JObject parser works" <| fun test ->
     
 testCase "JObject parser works with empty nested objects" <| fun test ->
     "{\"child\":{}}"
-    |> parseUsing jobject
+    |> SimpleJson.tryParse
     |> function 
         | Some (JObject (map)) -> 
             match Map.toList map with
@@ -108,7 +109,7 @@ testCase "JObject parser works with empty nested objects" <| fun test ->
 
 testCase "JObject parser works with non-empty nested objects" <| fun test ->
     "{\"nested\":{\"name\":1}}"
-    |> parseUsing jobject
+    |> SimpleJson.tryParse
     |> function 
         | Some (JObject (map)) -> 
             match Map.toList map with
@@ -122,7 +123,7 @@ testCase "JObject parser works with non-empty nested objects" <| fun test ->
 
 testCase "JObject parser works with arrays and non-empty nested objects" <| fun test ->
     "{\"list\":[],\"nested\":{\"name\":1}}"
-    |> parseUsing jobject
+    |> SimpleJson.tryParse
     |> function 
         | Some (JObject (map)) -> 
             match Map.toList map with
@@ -138,7 +139,7 @@ testCase "JObject parser works with arrays and non-empty nested objects" <| fun 
 
 testCase "JObject parser works with more nested values" <| fun test ->
     "{\"other\":\"value\" , \"child\":{ }}"
-    |> parseUsing jobject
+    |> SimpleJson.tryParse
     |> function
         | Some (JObject map) ->
             Map.containsKey "child" map |> test.areEqual true
@@ -254,7 +255,6 @@ testCase "Json parser can parse escaped empty objects" <| fun test ->
     match SimpleJson.tryParse """ {} """ with
     | Some _ -> test.pass()
     | None -> test.fail()
-
 
 testCase "Json parser can parse escaped non-empty objects" <| fun test ->
     match SimpleJson.tryParse """ {"prop":"value"} """ with
