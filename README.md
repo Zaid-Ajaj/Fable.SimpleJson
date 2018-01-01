@@ -65,9 +65,11 @@ open Fable.SimpleJson
             | otherwise -> None
     | None -> None
 ```
-Now, to serialize a typed entity into Json:
+### Serialization example
+Now, to serialize a typed entity into a json string, you build the json structure by hand and call `SimpleJson.toString` like the following:
+
 ```fs
-let person = { Name: "John"; Age 34 }
+let person = { Name = "John"; Age = 34 }
 
 let serialized = 
     [ "name", JString person.Name
