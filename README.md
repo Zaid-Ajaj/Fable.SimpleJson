@@ -20,7 +20,13 @@ Fable.SimpleJson
 ```
 
 ### Using the library
-You basically just call `SimpleJson.tryParse` and pattern match on the resulting Json. 
+
+The whole API is the following:
+```fs
+SimpleJson.tryParse : string -> Option<Json>
+SimpleJson.parse : string -> Json
+SimpleJson.toString : Json -> string
+```
 
 The AST looks like this:
 ```fs
@@ -32,83 +38,43 @@ type Json =
     | JArray of Json list
     | JObject of Map<string, Json>
 ```
-Here are examples from the test project:
+
+### Deserialization example
+Suppose you have the record of `Person`:
+```fs
+type Person = { Name: string; Age: int }
+```
+And you want to deserialize this string:
+```
+"{ \"name\":\"john\", \"age\":20 }"
+```
+Then you can write:
 ```fs
 open Fable.SimpleJson
 
+"{ \"name\":\"john\", \"age\":20 }"
+|> SimpleJson.tryParse
+|> function
+    | Some (JObject dict) ->
+        let value key = Map.tryFind key dict
+        [value "name"; value "age"]
+        |> List.choose id
+        |> function
+            | [JString name; JNumber age]  -> 
+                Some { Name = name; Age = int age }
+            | otherwise -> None
+    | None -> None
+```
+Now, to serialize a typed entity into Json:
+```fs
+let person = { Name: "John"; Age 34 }
 
-testCase "Json parser works" <| fun test ->
-    " { \"customerId\": 1, \"customerName\": \"John\", \"jobs\":[1,true,null]}"
-    |> SimpleJson.tryParse
-    |> function
-        | Some (JObject map) ->
-            match Map.toList map with
-            | [ "customerId", JNumber 1.0 
-                "customerName", JString "John"
-                "jobs", JArray [JNumber 1.0; JBool true; JNull]] -> test.pass()
-                    
-            | otherResult -> test.unexpected otherResult
-                
-        | otherResult -> test.unexpected otherResult 
-    
-testCase "Json parser works with empty nested objects" <| fun test ->
-    "{\"child\":{}}"
-    |> SimpleJson.tryParse
-    |> function 
-        | Some (JObject (map)) -> 
-            match Map.toList map with
-            | ["child", JObject nested] when Map.isEmpty nested -> test.pass()
-            | otherResult -> test.unexpected otherResult
-        | otherResult -> test.unexpected otherResult
-
-
-testCase "Json parser works with non-empty nested objects" <| fun test ->
-    "{\"nested\":{\"name\":1}}"
-    |> SimpleJson.tryParse
-    |> function 
-        | Some (JObject (map)) -> 
-            match Map.toList map with
-            | ["nested", JObject nested] -> 
-                match Map.toList nested with
-                | ["name", JNumber 1.0] -> test.pass()
-                | otherResult -> test.unexpected otherResult
-
-            | otherResult -> test.unexpected otherResult 
-        | otherResult -> test.unexpected otherResult
-
-testCase "Json parser works with arrays and non-empty nested objects" <| fun test ->
-    "{\"list\":[],\"nested\":{\"name\":1}}"
-    |> SimpleJson.tryParse
-    |> function 
-        | Some (JObject (map)) -> 
-            match Map.toList map with
-            | [ "list", JArray []
-                "nested", JObject nested] -> 
-
-                match Map.toList nested with
-                | ["name", JNumber 1.0] -> test.pass()
-                | otherResult -> test.unexpected otherResult
-
-            | otherResult -> test.unexpected otherResult 
-        | otherResult -> test.unexpected otherResult
-
-testCase "Json parser works with more nested values" <| fun test ->
-    "{\"other\":\"value\",\"child\":{ }}"
-    |> SimpleJson.tryParse
-    |> function
-        | Some (JObject map) ->
-            Map.containsKey "child" map |> test.areEqual true
-            Map.containsKey "other" map |> test.areEqual true
-
-            match Map.find "child" map with
-            | JObject nested -> Map.isEmpty nested |> test.areEqual true
-            | otherResult -> test.unexpected otherResult 
-
-            match Map.find "other" map with
-            | JString "value" -> test.pass()
-            | otherResult -> test.unexpected otherResult 
-            
-        | otherResult -> test.unexpected otherResult 
+let serialized = 
+    [ "name", JString person.Name
+      "age", JNumber (float person.Age) ]
+    |> Map.ofList
+    |> JObject
+    |> SimpleJson.toString
 ```
 
 ### Building and running tests

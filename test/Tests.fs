@@ -3,11 +3,7 @@ module Tests
 open QUnit
 open Fable.Parsimmon
 open Fable.SimpleJson
-open Fable.SimpleJson.AST
 open Fable.SimpleJson.Parser
-open Fable
-open Fable.SimpleJson
-
 
 registerModule "Simple Json Tests"
 
@@ -81,7 +77,6 @@ testCase "JArray parser works on nested arrays of json" <| fun test ->
     |> List.choose (SimpleJson.tryParse)
     |> test.areEqual [JArray [JArray []]] 
 
-
 testCase "Json parser works" <| fun test ->
     " { \"customerId\": 1, \"customerName\": \"John\", \"jobs\":[1,true,null]}"
     |> SimpleJson.tryParse
@@ -93,8 +88,7 @@ testCase "Json parser works" <| fun test ->
                 "jobs", JArray [JNumber 1.0; JBool true; JNull]] -> test.pass()
             | otherResult -> test.unexpected otherResult 
         | otherResult -> test.unexpected otherResult 
-    
-    
+
 testCase "Json parser works with empty nested objects" <| fun test ->
     "{\"child\":{}}"
     |> SimpleJson.tryParse
@@ -104,7 +98,6 @@ testCase "Json parser works with empty nested objects" <| fun test ->
             | ["child", JObject nested] when Map.isEmpty nested -> test.pass()
             | otherResult -> test.unexpected otherResult
         | otherResult -> test.unexpected otherResult
-
 
 testCase "Json parser works with non-empty nested objects" <| fun test ->
     "{\"nested\":{\"name\":1}}"
@@ -158,7 +151,6 @@ testCase "Json parser parses number values" <| fun test ->
     ["12"; "12.0"]
     |> List.choose SimpleJson.tryParse
     |> test.areEqual [JNumber 12.0; JNumber 12.0]  
-
 
 testCase "Json parser parses boolean values" <| fun test ->
     ["true"; "false"; "something else"]
@@ -285,3 +277,30 @@ testCase "JSON test sample is parsed correctly" <| fun test ->
     match SimpleJson.tryParse jsonTestSample with
     | Some sampleResult -> test.areEqual testSample sampleResult
     | otherResult -> test.unexpected otherResult
+
+testCase "Json serialization/deserialization works back and forth" <| fun test ->
+    match SimpleJson.tryParse jsonTestSample with
+    | Some sampleResult -> 
+        let serialized = SimpleJson.toString sampleResult
+        match SimpleJson.tryParse serialized with
+        | Some serializedSampleResult -> 
+            test.areEqual sampleResult serializedSampleResult
+            test.areEqual serialized (SimpleJson.toString serializedSampleResult)
+        | None -> test.failwith "Could not deserialize json resulted from SimpleJson.toString"
+    | otherResult -> test.unexpected otherResult
+
+
+type Person = { Name: string; Age: int }
+
+testCase "Deserializing Person works" <| fun test ->
+    "{ \"name\":\"john\", \"age\":20 }"
+    |> SimpleJson.tryParse
+    |> function
+        | Some (JObject dict) ->
+            let value key = Map.tryFind key dict
+            [value "name"; value "age"]
+            |> List.choose id
+            |> function
+                | [JString "john"; JNumber 20.0] -> test.pass()
+                | other -> test.unexpected other        
+        | other -> test.unexpected other

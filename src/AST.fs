@@ -1,5 +1,6 @@
 namespace Fable.SimpleJson
 
+[<AutoOpen>]
 module AST = 
 
     /// A type representing Javascript object notation
@@ -10,4 +11,3 @@ module AST =
         | JNull
         | JArray of Json list
         | JObject of Map<string, Json>
-

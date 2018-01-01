@@ -14,3 +14,22 @@ module SimpleJson =
         match tryParse input with
         | Some result -> result
         | None -> failwithf "Could not parse the JSON input: %s" input
+
+    /// Stringifies a Json object back to string representation
+    let rec toString = function
+        | JNull -> "null"
+        | JBool true -> "true"
+        | JBool false -> "false"
+        | JNumber number -> string number
+        | JString text -> sprintf "\"%s\"" text
+        | JArray elements -> 
+            elements
+            |> List.map toString
+            |> String.concat ","
+            |> sprintf "[%s]"
+        | JObject map -> 
+            map 
+            |> Map.toList
+            |> List.map (fun (key,value) -> sprintf "\"%s\":%s" key (toString value))
+            |> String.concat ","
+            |> sprintf "{%s}"
