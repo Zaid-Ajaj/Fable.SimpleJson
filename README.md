@@ -28,7 +28,7 @@ SimpleJson.parse : string -> Json
 SimpleJson.toString : Json -> string
 SimpleJson.fromObjectLiteral : 'a -> Option<Json>
 SimpleJson.mapKeys : (f: string -> string) -> Json -> Json
-SimpleJson.mapKeysByPath : (f: string list -> strin) -> Json -> Json
+SimpleJson.mapKeysByPath : (f: string list -> string option) -> Json -> Json
 ```
 
 The AST looks like this:
