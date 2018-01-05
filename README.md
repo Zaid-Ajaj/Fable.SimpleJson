@@ -26,6 +26,7 @@ The whole API is the following:
 SimpleJson.tryParse : string -> Option<Json>
 SimpleJson.parse : string -> Json
 SimpleJson.toString : Json -> string
+SimpleJson.fromObjectLiteral : 'a -> Option<Json>
 ```
 
 The AST looks like this:
