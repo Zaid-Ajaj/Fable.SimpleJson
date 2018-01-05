@@ -109,7 +109,7 @@ Then obviously using Fable's `ofJson<Person>` wouldn't work because the keys of 
 # Selective re-writing of JSON keys based on expression path:
 The function `SimpleJson.mapKeys` will convert every possible key in every object within the JSON structure. Sometimes you want to select *exactly* which keys to convert based on their path in the JSON using `SimpleJson.mapKeysByPath`:
 
-```
+```fs
 testCase "mapKeysByPath works" <| fun test ->
     "[{\"person\":{\"first\":\"john\", \"last\":\"doe\"}}, {\"first\":\"not-mapped\"}]"
     |> SimpleJson.parse
