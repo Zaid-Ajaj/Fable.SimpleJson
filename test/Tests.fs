@@ -4,6 +4,8 @@ open QUnit
 open Fable.Parsimmon
 open Fable.SimpleJson
 open Fable.SimpleJson.Parser
+open Fable.Core
+open Fable.Core.JsInterop
 
 registerModule "Simple Json Tests"
 
@@ -290,8 +292,6 @@ testCase "Json serialization/deserialization works back and forth" <| fun test -
     | otherResult -> test.unexpected otherResult
 
 
-type Person = { Name: string; Age: int }
-
 testCase "Deserializing Person works" <| fun test ->
     "{ \"name\":\"john\", \"age\":20 }"
     |> SimpleJson.tryParse
@@ -304,3 +304,28 @@ testCase "Deserializing Person works" <| fun test ->
                 | [JString "john"; JNumber 20.0] -> test.pass()
                 | other -> test.unexpected other        
         | other -> test.unexpected other
+
+
+type IStudent = 
+    abstract name: string with get,set
+    abstract age: int with get,set 
+    abstract subjects: string [] with get,set
+
+
+testCase "fromObjectLiteral works" <| fun test ->
+    let student = createEmpty<IStudent>
+    student.name <- "John"
+    student.age <- 20
+    student.subjects <- [| "math" |]
+
+    match SimpleJson.fromObjectLiteral student with
+    | Some (JObject dict) ->
+        let value key = Map.tryFind key dict
+        [value "name"; value "age"; value "subjects"]
+        |> List.choose id
+        |> function 
+            | [JString "John"; JNumber 20.0; JArray [JString "math"]] -> test.pass()
+            | otherResult -> test.unexpected otherResult
+
+    | Some otherResult -> test.unexpected otherResult
+    | None -> test.failwith "No match"

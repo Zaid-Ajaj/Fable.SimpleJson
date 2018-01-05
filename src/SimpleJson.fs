@@ -1,8 +1,10 @@
 namespace Fable.SimpleJson
 
+open Fable.Core
 open Fable.Parsimmon
 open Parser
 open AST
+
 
 module SimpleJson = 
     /// Tries to parse a string into a Json structured JSON data.
@@ -33,3 +35,11 @@ module SimpleJson =
             |> List.map (fun (key,value) -> sprintf "\"%s\":%s" key (toString value))
             |> String.concat ","
             |> sprintf "{%s}"
+
+    [<Emit("(x => x === undefined ? null : x)(JSON.stringify($0))")>]
+    let private stringify (x: 'a) : string = jsNative
+
+    /// Tries to convert an object literal to the Json by calling JSON.stringify on the object first
+    let fromObjectLiteral (x: 'a) = 
+        try tryParse (stringify x)
+        with | _ -> None
