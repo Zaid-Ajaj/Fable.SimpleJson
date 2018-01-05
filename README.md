@@ -51,7 +51,7 @@ And you want to deserialize this string:
 ```json
 "{ \"name\":\"john\", \"age\":20 }"
 ```
-Then you can would use the safe `SimpleJson.tryParse` and patter-match and extract the values from the deserialized JSON:
+Then you can would use the safe `SimpleJson.tryParse` and pattern-match and extract the values from the deserialized JSON:
 ```fs
 open Fable.SimpleJson
 
@@ -68,8 +68,10 @@ open Fable.SimpleJson
             | otherwise -> None
     | None -> None
 ```
+You could also use the non-safe version `SimpleJson.parse` if you know for sure that the JSON input string is parsable. `SimpleJson.parse` will throw an exception if it can't deserialize the JSON string.
+
 ## Serialization
-Now, to serialize a typed entity into a json string, you build the json structure by hand and call `SimpleJson.toString` like the following:
+Now, to serialize a typed entity into a JSON string, you build the JSON structure by hand and call `SimpleJson.toString` like the following:
 
 ```fs
 let person = { Name = "John"; Age = 34 }
@@ -93,7 +95,7 @@ And you have the type
 ```fs
 type Person = { FirstName: string; LastName: string }
 ```
-Then obviously using Fable's `ofJson<Person>` wouldn't work because the keys of the object don't match. SimpleJson can help with this by first rewriting the keys into something Fable built-in converter understands:
+Then obviously using Fable's `ofJson<Person>` wouldn't work because the keys of the object don't match. SimpleJson can help with this by first rewriting the keys into something Fable's built-in converter understands:
 ```fs
 "{\"first_name\":\"John\",\"last_name\":\"Doe\"}"
 |> SimpleJson.parse
@@ -106,7 +108,7 @@ Then obviously using Fable's `ofJson<Person>` wouldn't work because the keys of 
  // { FirstName = "John"; LastName = "Doe" }
 ```
 
-# Selective re-writing of JSON keys based on expression path:
+# Selective re-writing of JSON keys based on key path:
 The function `SimpleJson.mapKeys` will convert every possible key in every object within the JSON structure. Sometimes you want to select *exactly* which keys to convert based on their path in the JSON using `SimpleJson.mapKeysByPath`:
 
 ```fs
@@ -121,7 +123,7 @@ testCase "mapKeysByPath works" <| fun test ->
     |> SimpleJson.toString
     |> test.areEqual "[{\"Person\":{\"first_name\":\"john\",\"last_name\":\"doe\"}},{\"first\":\"not-mapped\"}]"
 ```
-### Building and running tests
+## Building and running tests
 Requirements
 
  - Dotnet 2.0
