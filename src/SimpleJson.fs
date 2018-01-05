@@ -43,3 +43,37 @@ module SimpleJson =
     let fromObjectLiteral (x: 'a) = 
         try tryParse (stringify x)
         with | _ -> None
+
+    /// Transforms all keys of the objects within the Json structure
+    let rec mapKeys f = function
+        | JObject dictionary ->
+            dictionary
+            |> Map.toList
+            |> List.map (fun (key, value) -> f key, mapKeys f value)
+            |> Map.ofList
+            |> JObject
+        | JArray values ->
+            values
+            |> List.map (mapKeys f)
+            |> JArray
+        | otherJsonValue -> otherJsonValue
+
+    /// Transforms keys of object selectively by path segments
+    let mapKeysByPath f json =
+        let rec mapKey xs = function
+            | JObject dictionary ->
+                dictionary
+                |> Map.toList
+                |> List.map (fun (key, value) ->
+                    let keyPath = xs @ [key]
+                    match f keyPath with
+                    | Some nextKey -> nextKey, mapKey keyPath value
+                    | None -> key, mapKey keyPath value)
+                |> Map.ofList
+                |> JObject
+            | JArray values ->
+                values
+                |> List.map (mapKey xs)
+                |> JArray
+            | otherJsonValue -> otherJsonValue
+        mapKey [] json

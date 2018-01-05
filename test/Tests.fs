@@ -4,7 +4,6 @@ open QUnit
 open Fable.Parsimmon
 open Fable.SimpleJson
 open Fable.SimpleJson.Parser
-open Fable.Core
 open Fable.Core.JsInterop
 
 registerModule "Simple Json Tests"
@@ -311,7 +310,6 @@ type IStudent =
     abstract age: int with get,set 
     abstract subjects: string [] with get,set
 
-
 testCase "fromObjectLiteral works" <| fun test ->
     let student = createEmpty<IStudent>
     student.name <- "John"
@@ -329,3 +327,27 @@ testCase "fromObjectLiteral works" <| fun test ->
 
     | Some otherResult -> test.unexpected otherResult
     | None -> test.failwith "No match"
+
+
+testCase "mapKeys works" <| fun test ->
+    "[{\"person\":{\"first\":\"john\", \"last\":\"doe\"}}]"
+    |> SimpleJson.parse
+    |> SimpleJson.mapKeys (function 
+        | "person" -> "Person"
+        | "first" -> "FirstName"
+        | "last" -> "LastName"
+        | key -> key)
+    |> SimpleJson.toString
+    |> test.areEqual "[{\"Person\":{\"FirstName\":\"john\",\"LastName\":\"doe\"}}]"
+
+ 
+testCase "mapKeysByPath works" <| fun test ->
+    "[{\"person\":{\"first\":\"john\", \"last\":\"doe\"}}, {\"first\":\"not-mapped\"}]"
+    |> SimpleJson.parse
+    |> SimpleJson.mapKeysByPath (function
+        | ["person"] -> Some "Person"
+        | ["person";"first"] -> Some "first_name"
+        | ["person";"last"] -> Some "last_name"
+        | other -> None)
+    |> SimpleJson.toString
+    |> test.areEqual "[{\"Person\":{\"first_name\":\"john\",\"last_name\":\"doe\"}},{\"first\":\"not-mapped\"}]"
