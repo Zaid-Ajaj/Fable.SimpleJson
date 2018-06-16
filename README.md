@@ -75,7 +75,7 @@ And you want to deserialize this string:
 ```json
 "{ \"name\":\"john\", \"age\":20 }"
 ```
-Then you can would use the safe `SimpleJson.tryParse` and pattern-match and extract the values from the deserialized JSON:
+Then you can would use the safe `SimpleJson.tryParse` to pattern-match and extract the values from the parsed JSON:
 ```fs
 open Fable.SimpleJson
 

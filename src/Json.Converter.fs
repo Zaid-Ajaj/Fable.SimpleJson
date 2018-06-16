@@ -114,7 +114,7 @@ module Convert =
             caseTypes
             |> Array.tryFind (fun (case, _, _) -> case = caseName)  
             |> function 
-                | Some _ -> unbox [| caseName |]
+                | Some (_, caseInfo, _) -> unbox (FSharpValue.MakeUnion(caseInfo, [||]))
                 | None -> 
                     let caseNames = Array.map (fun (name, _, _) -> sprintf " '%s' " name) caseTypes 
                     let expectedCases = String.concat ", " caseNames
