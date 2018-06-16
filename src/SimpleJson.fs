@@ -3,8 +3,6 @@ namespace Fable.SimpleJson
 open Fable.Core
 open Fable.Parsimmon
 open Parser
-open AST
-
 
 module SimpleJson = 
     /// Tries to parse a string into a Json structured JSON data.

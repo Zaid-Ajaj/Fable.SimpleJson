@@ -1,13 +1,14 @@
 group Main
     source https://api.nuget.org/v3/index.json
     storage:none
-    
-    clitool dotnet-fable
+
     nuget FSharp.Core
-    nuget Fable.Core
+    nuget Fable.Core >= 2.0.0-alpha-010
     nuget Fable.Parsimmon
+    clitool dotnet-fable ~> 2.0.0-alpha-019
 
 group Build
+  framework >= net45
   source https://api.nuget.org/v3/index.json
 
-  nuget FAKE
+  nuget FAKE ~> 4.64.6

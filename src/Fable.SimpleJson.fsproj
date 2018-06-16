@@ -7,14 +7,17 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageTags>fsharp;fable;json;parser</PackageTags>
     <Authors>Zaid Ajaj</Authors>
-    <Version>1.9.0</Version>
+    <Version>2.0.0-alpha-01</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AST.fs" />
+    <Compile Include="TypeInfo.fs" />
+    <Compile Include="TypeInfo.Converter.fs" />
+    <Compile Include="Json.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="SimpleJson.fs" />
+    <Compile Include="Json.Converter.fs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="*.fsproj; *.fs;" PackagePath="fable\" />

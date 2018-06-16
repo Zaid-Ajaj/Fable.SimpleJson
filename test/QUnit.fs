@@ -3,19 +3,19 @@ module QUnit
 open Fable.Core
 open Fable.Core.JsInterop
 
-type ModuleHooks = 
+type ModuleHooks =
     abstract before : unit -> unit
     abstract beforeEach : unit -> unit
     abstract afterEach : unit -> unit
     abstract after : unit -> unit
 
-type TestResult<'b> = 
+type TestResult<'b> =
     abstract result : bool
     abstract actual : 'b
     abstract expected : 'b
     abstract message : string
 
-type LogResult = 
+type LogResult =
     /// The boolean result of an assertion, true means passed, false means failed.
     abstract result : bool
     /// One side of a comparision assertion. Can be undefined when ok() is used.
@@ -27,7 +27,7 @@ type LogResult =
     /// The associated stacktrace, either from an exception or pointing to the source of the assertion. Depends on browser support for providing stacktraces, so can be undefined.
     abstract source : string
     /// The test block name of the assertion.
-    abstract name : string 
+    abstract name : string
     /// The time elapsed in milliseconds since the start of the containing QUnit.test(), including setup.
     abstract runtime : float
     /// Indicates whether or not this assertion was part of a todo test.
@@ -37,7 +37,7 @@ type LogResult =
 
 type AsyncResult = unit -> unit
 
-type Asserter = 
+type Asserter =
     /// Instruct QUnit to wait for an asynchronous operation.
     abstract async : unit -> AsyncResult
     /// Instruct QUnit to wait for an asynchronous operation.
@@ -50,7 +50,7 @@ type Asserter =
     abstract ensureThat : bool -> unit
     /// The equal assertion uses the simple comparison operator (==) to compare the actual and expected arguments. When they are equal, the assertion passes; otherwise, it fails. When it fails, both actual and expected values are displayed in the test result, in addition to a given message.
     [<Emit("$0.equal($1, $2, $3)")>]
-    abstract equalWithMsg : 'a -> 'b -> string -> unit 
+    abstract equalWithMsg : 'a -> 'b -> string -> unit
     /// To ensure that an explicit number of assertions are run within any test, use assert.expect( number ) to register an expected count. If the number of assertions run does not match the expected count, the test will fail.
     abstract expect : int -> unit
     /// The notEqual assertion uses the simple inverted comparison operator (!=) to compare the actual and expected arguments. When they aren’t equal, the assertion passes; otherwise, it fails. When it fails, both actual and expected values are displayed in the test result, in addition to a given message.
@@ -58,7 +58,7 @@ type Asserter =
     abstract notEqual : 'a -> 'b -> unit
     /// The notEqual assertion uses the simple inverted comparison operator (!=) to compare the actual and expected arguments. When they aren’t equal, the assertion passes; otherwise, it fails. When it fails, both actual and expected values are displayed in the test result, in addition to a given message.
     [<Emit("$0.notEqual($1, $2, $3)")>]
-    abstract notEqualWithMsg : 'a -> 'b -> string -> unit 
+    abstract notEqualWithMsg : 'a -> 'b -> string -> unit
     /// The most basic assertion in QUnit, ok() requires just one argument. If the argument evaluates to true, the assertion passes; otherwise, it fails. If a second message argument is provided, it will be displayed in place of the result.
     [<Emit("$0.ok($1, $2)")>]
     abstract ok : 'a -> string -> unit
@@ -114,7 +114,7 @@ let log (callback: LogResult -> unit) : unit = jsNative
 let setTimeout (t: int) : unit = jsNative
 /// Tests an async computation
 let testCaseAsync (testName: string) (asserterFunc: Asserter -> Async<unit>) : unit =
-    (fun (test: Asserter) -> 
+    (fun (test: Asserter) ->
         let finish = test.async()
         async {
             do! asserterFunc test
@@ -123,17 +123,17 @@ let testCaseAsync (testName: string) (asserterFunc: Asserter -> Async<unit>) : u
     ) |> testCase testName
 
 [<AutoOpen>]
-module Extensions = 
+module Extensions =
 
     type Asserter with
         /// Fail the test and show the unexpected value serialized in test results
-        member test.unexpected (value: 'a) = 
-            test.failwith (sprintf "Unexpected value: %s" (toJson value))
+        member test.unexpected (value: 'a) =
+            test.failwith (sprintf "Unexpected value: %A" value)
         /// Uses F#'s structural equality for testing
-        member test.areEqual (expected: 't) (actual: 't) = 
+        member test.areEqual (expected: 't) (actual: 't) =
             if expected = actual
             then test.pass()
-            else test.failwith (sprintf "Expected %s but got %s" (toJson expected) (toJson actual))
+            else test.failwith (sprintf "Expected %A but got %A" expected actual)
         /// Registers a passing test
-        member test.pass() = 
+        member test.pass() =
             test.passWith "Passed"

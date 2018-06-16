@@ -1,7 +1,6 @@
 # Fable.SimpleJson [![Nuget](https://img.shields.io/nuget/v/Fable.SimpleJson.svg?colorB=green)](https://www.nuget.org/packages/Fable.SimpleJson)   [![Build Status](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson.svg?branch=master)](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson)
 
-A simple library for parsing json strings into structured json data. It is written using parser combinators from [Fable.Parsimmon](https://github.com/Zaid-Ajaj/Fable.Parsimmon)
-
+A simple library for easily parsing, transforming and converting JSON in Fable projects. It is written using parser combinators from [Fable.Parsimmon](https://github.com/Zaid-Ajaj/Fable.Parsimmon)
 
 Template Used to build the library: [fable-library-template](https://github.com/Zaid-Ajaj/fable-library-template)
 
@@ -21,14 +20,29 @@ Fable.SimpleJson
 
 ### Using the library
 
-The whole API is the following:
+JSON Parsing and Transformation API
 ```fs
+open Fable.SimpleJson 
+
+// ... 
+
 SimpleJson.tryParse : string -> Option<Json>
 SimpleJson.parse : string -> Json
 SimpleJson.toString : Json -> string
 SimpleJson.fromObjectLiteral : 'a -> Option<Json>
 SimpleJson.mapKeys : (f: string -> string) -> Json -> Json
 SimpleJson.mapKeysByPath : (f: string list -> string option) -> Json -> Json
+```
+JSON Convertion API
+```fs
+open Fable.SimpleJson 
+
+// ...
+
+Json.parseAs<'t> (inputJson: string) : 't 
+Json.tryParseAs<'t> (inputJson: string) : Result<'t, string> 
+Json.parseFromJsonAs<'t> (parsedJson: Json) : 't 
+Json.tryParse
 ```
 
 The AST looks like this:
@@ -42,7 +56,17 @@ type Json =
     | JObject of Map<string, Json>
 ```
 
-## Deserialization
+## Auto Deserialization 
+Suppose you have the record of `Person`, you can then use `Json.parseAs<'t>` for automatic deserialization:
+```fs
+type Person = { Name: string; Age: int }
+
+"{ \"Name\": \"John\", \"Age\": 42  }"
+|> Json.parseAs<Person> 
+// result => { Name = "John"; Age = 42 }
+```
+
+## Manual Deserialization
 Suppose you have the record of `Person`:
 ```fs
 type Person = { Name: string; Age: int }
@@ -70,7 +94,15 @@ open Fable.SimpleJson
 ```
 You could also use the non-safe version `SimpleJson.parse` if you know for sure that the JSON input string is parsable. `SimpleJson.parse` will throw an exception if it can't deserialize the JSON string.
 
-## Serialization
+## Auto Serialization
+
+```fs
+let person = { Name = "John"; Age = 34 } 
+
+Json.stringify person 
+```
+
+## Manual Serialization
 Now, to serialize a typed entity into a JSON string, you build the JSON structure by hand and call `SimpleJson.toString` like the following:
 
 ```fs
@@ -84,6 +116,8 @@ let serialized =
     |> SimpleJson.toString
 ```
 
+
+
 ## Pre-processing JSON values
 Suppose you want to deserialize the string:
 
@@ -95,7 +129,7 @@ And you have the type
 ```fs
 type Person = { FirstName: string; LastName: string }
 ```
-Then obviously using Fable's `ofJson<Person>` wouldn't work because the keys of the object don't match. SimpleJson can help with this by first rewriting the keys into something Fable's built-in converter understands:
+Then obviously it wouldn't "just work" because the keys of the object don't match. SimpleJson can help with this by first rewriting the keys to match with the field names of the record before converting:
 ```fs
 "{\"first_name\":\"John\",\"last_name\":\"Doe\"}"
 |> SimpleJson.parse
@@ -104,7 +138,7 @@ Then obviously using Fable's `ofJson<Person>` wouldn't work because the keys of 
     | "last_name" -> "LastName"
     | key -> key)
 |> SimpleJson.toString
-|> ofJson<Person>
+|> Json.convertFromJsonAs<Person>
  // { FirstName = "John"; LastName = "Doe" }
 ```
 

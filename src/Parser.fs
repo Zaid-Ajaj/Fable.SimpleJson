@@ -6,8 +6,6 @@ open Fable.Parsimmon
 
 module Parser =
 
-    open AST
-    
     let digits = 
         Parsimmon.digit 
         |> Parsimmon.atLeastOneOrMany
