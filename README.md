@@ -42,7 +42,7 @@ open Fable.SimpleJson
 Json.parseAs<'t> (inputJson: string) : 't 
 Json.tryParseAs<'t> (inputJson: string) : Result<'t, string> 
 Json.parseFromJsonAs<'t> (parsedJson: Json) : 't 
-Json.tryParse
+Json.tryParseFromJsonAs<'t> (parsedJson: Json) : Result<'t, string> 
 ```
 
 The AST looks like this:
