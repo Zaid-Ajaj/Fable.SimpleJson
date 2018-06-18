@@ -10,15 +10,15 @@ module Convert =
     [<Emit("$0[$1] = $2")>]
     let internal setProp o k v = jsNative
 
-    type InternalMap<'k, 'v> = 
+    type InternalMap = 
         | MapEmpty 
-        | MapOne of 'k * 'v 
-        | MapNode of 'k * 'v * InternalMap<'k, 'v> * InternalMap<'k, 'v> * int 
+        | MapOne of string * Json 
+        | MapNode of string * Json * InternalMap * InternalMap
 
     let rec flattenMap = function 
         | MapEmpty -> [ ] 
         | MapOne (key, value) -> [ key, value ] 
-        | MapNode (key, value, left, right, _) -> 
+        | MapNode (key, value, left, right) -> 
             [ yield! flattenMap left 
               yield! flattenMap right 
               yield  (key, value) ] 
@@ -31,6 +31,36 @@ module Convert =
     let (|NonArray|_|) = function 
         | JArray _ -> None 
         | json -> Some json 
+
+    let (|MapEmpty|_|) json = 
+        match json with  
+        | JString "MapEmpty" -> Some json
+        | _ -> None 
+
+    let (|MapKey|_|) = function
+        | JNumber number -> Some (string number)
+        | JString key -> Some key 
+        | _ -> None
+
+    let (|MapOne|_|) = function 
+        | JArray [ JString "MapOne"; MapKey key; value ] -> Some (key, value)
+        | _ -> None 
+        
+    let (|MapNode|_|) = function 
+        | JArray [ JString "MapNode"; MapKey key; value; left; right; JNumber _  ] -> 
+            Some (key, value, left, right)
+        | _ -> None 
+
+    let rec generateMap json = 
+        match json with
+        | MapEmpty _ -> Some InternalMap.MapEmpty
+        | MapOne (key, value) -> Some (InternalMap.MapOne (key, value))
+        | MapNode (key, value, left, right) -> 
+            match generateMap left, generateMap right with 
+            | Some leftMap, Some rightMap -> 
+                Some (InternalMap.MapNode(key, value, leftMap, rightMap))
+            | _ -> None
+        | _ -> None 
 
     let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj = 
         match input, typeInfo with  
@@ -217,19 +247,18 @@ module Convert =
             // and convert that to back to a normal map from the data
             match Map.tryFind "comparer" map, Map.tryFind "tree" map with 
             | Some (JObject comparer), Some (JArray tree) when Map.isEmpty comparer ->  
-                let internapMap = 
-                    SimpleJson.toString (JArray tree)
-                    |> Fable.Import.JS.JSON.parse
-                    |> unbox<InternalMap<string, obj>> 
-
-                flattenMap internapMap
-                |> List.map (fun (key, value) -> 
-                    let nextKey = unbox (fromJsonAs (JString key) keyType)
-                    let jsonValue = Fable.Import.JS.JSON.stringify value |> SimpleJson.parse
-                    let nextValue = unbox (fromJsonAs jsonValue valueType)
-                    unbox<string> nextKey, nextValue)
-                |> Map.ofList 
-                |> unbox                
+                match generateMap (JArray tree) with 
+                | Some internalMap -> 
+                    flattenMap internalMap
+                    |> List.map (fun (key, value) -> 
+                        let nextKey = unbox (fromJsonAs (JString key) keyType)
+                        let nextValue = unbox (fromJsonAs value valueType)
+                        unbox<string> nextKey, nextValue)
+                    |> Map.ofList 
+                    |> unbox   
+                | None -> 
+                    let inputJson = SimpleJson.toString (JArray tree)
+                    failwithf "Could not generate map from JSON\n %s" inputJson              
             | _ -> 
                 // if comparer and tree are not present, 
                 // assume we are parsing Fable 1 object literal 
