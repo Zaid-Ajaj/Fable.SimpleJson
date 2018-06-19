@@ -3,6 +3,7 @@ namespace Fable.SimpleJson
 open System
 open FSharp.Reflection
 open Fable.Core 
+open System.Reflection
 
 [<AutoOpen>]
 module Converter = 
@@ -17,6 +18,7 @@ module Converter =
         | "System.Numerics.BigInteger" -> Some TypeInfo.BigInt
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit
         | "System.Guid" -> Some TypeInfo.Guid
+        | "System.Byte" -> Some TypeInfo.Byte
         | _ -> None 
     
     let (|RecordType|_|) (t: Type) = 
@@ -82,7 +84,7 @@ module Converter =
         then FSharpType.GetTupleElements(t) |> Some 
         else None 
     
-    let rec createTypeInfo (resolvedType: Type) : TypeInfo = 
+    let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo = 
         match resolvedType with  
         | PrimitiveType typeInfo -> typeInfo   
         | FuncType (types) -> TypeInfo.Func (Array.map createTypeInfo types)
@@ -101,7 +103,7 @@ module Converter =
         | _ -> TypeInfo.Object resolvedType
 
 
-    type TypeInfo with  
-        static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : TypeInfo = 
+    type Fable.SimpleJson.TypeInfo with  
+        static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : Fable.SimpleJson.TypeInfo = 
             let resolvedType = resolver.Value.ResolveType()
             createTypeInfo resolvedType 

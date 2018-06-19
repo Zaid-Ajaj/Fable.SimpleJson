@@ -11,6 +11,7 @@ type TypeInfo =
     | Bool   
     | Float  
     | Long 
+    | Byte
     | DateTime 
     | BigInt 
     | Guid 

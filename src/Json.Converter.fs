@@ -75,6 +75,8 @@ module Convert =
         | JNull, TypeInfo.String _ -> unbox null
         // int64 as string -> parse it
         | JString value, TypeInfo.Long _ -> unbox (int64 value) 
+        | JString value, TypeInfo.Byte -> unbox (byte value)
+        | JNumber value, TypeInfo.Byte -> unbox (byte value)
         // BigInt as string -> parse it
         | JString value, TypeInfo.BigInt _ -> unbox (bigint.Parse value)
         | JNumber value, TypeInfo.BigInt _ -> unbox (bigint (Fable.Import.JS.Math.floor(value))) 

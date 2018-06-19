@@ -545,6 +545,14 @@ testCase "Converting record with arrays" <| fun test ->
     |> Json.parseAs<RecordWithArray>
     |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
 
+type RecWithByte = { byteValue: byte }
+
+testCase "Converting record with bytes" <| fun test -> 
+    { byteValue = byte 200  }
+    |> Json.stringify
+    |> Json.parseAs<RecWithByte>
+    |> test.areEqual { byteValue = byte 200 }
+
 type ComplexRecord<'t> = { 
     Value: 't; 
     HasValue: bool;
