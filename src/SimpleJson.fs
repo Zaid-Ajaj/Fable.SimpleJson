@@ -63,7 +63,7 @@ module SimpleJson =
                 dictionary
                 |> Map.toList
                 |> List.map (fun (key, value) ->
-                    let keyPath = xs @ [key]
+                    let keyPath = List.concat [xs; [key]]
                     match f keyPath with
                     | Some nextKey -> nextKey, mapKey keyPath value
                     | None -> key, mapKey keyPath value)
