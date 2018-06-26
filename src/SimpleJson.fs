@@ -3,6 +3,7 @@ namespace Fable.SimpleJson
 open Fable.Core
 open Fable.Parsimmon
 open Parser
+open Fable.Import
 
 module SimpleJson = 
     /// Tries to parse a string into a Json structured JSON data.
@@ -55,7 +56,21 @@ module SimpleJson =
             |> List.map (mapKeys f)
             |> JArray
         | otherJsonValue -> otherJsonValue
-
+    
+    /// Transforms object values recursively using function `f` that takes the key and value of the object and returns a new value 
+    let rec mapbyKey f = function 
+        | JObject dictionary ->
+            dictionary
+            |> Map.toList
+            |> List.map (fun (key, value) -> key, f key value) 
+            |> Map.ofList 
+            |> JObject 
+        | JArray values -> 
+            values
+            |> List.map (mapbyKey f) 
+            |> JArray 
+        | otherJsonValue -> otherJsonValue
+            
     /// Transforms keys of object selectively by path segments
     let mapKeysByPath f json =
         let rec mapKey xs = function

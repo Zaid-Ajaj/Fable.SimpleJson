@@ -360,6 +360,18 @@ testCase "mapKeysByPath works" <| fun test ->
     |> test.areEqual "[{\"Person\":{\"first_name\":\"john\",\"last_name\":\"doe\"}},{\"first\":\"not-mapped\"}]"
 
 
+testCase "SimpleJson.mapByKey works" <| fun test ->
+    let makeUpper key value = 
+        match key, value with
+        | "first_name", JString name -> JString (name.ToUpper())
+        | _, value -> value
+    
+    "[{\"first_name\":\"john\"},{\"first_name\":\"jane\"}]"
+    |> SimpleJson.parse 
+    |> SimpleJson.mapbyKey makeUpper
+    |> SimpleJson.toString 
+    |> test.areEqual "[{\"first_name\":\"JOHN\"},{\"first_name\":\"JANE\"}]"
+
 registerModule "Convert Tests"
 
 type SimpleRecord = 
