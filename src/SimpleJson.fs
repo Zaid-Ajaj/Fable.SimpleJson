@@ -35,9 +35,16 @@ module SimpleJson =
             |> String.concat ","
             |> sprintf "{%s}"
 
-
-    [<Emit("(x => x === undefined ? null : x)(JSON.stringify($0))")>]
-    let private stringify (x: 'a) : string = jsNative
+    let stringify (value: 'a) : string =
+        JS.JSON.stringify(value, (fun _ v ->
+            match v with
+            | :? string -> v
+            | :? System.Collections.IEnumerable ->
+                if JS.Array.isArray(v)
+                then v
+                else JS.Array.from(v :?> JS.Iterable<obj>) |> box
+            | _ -> v
+        ), 0)
 
     /// Tries to convert an object literal to the Json by calling JSON.stringify on the object first
     let fromObjectLiteral (x: 'a) = 

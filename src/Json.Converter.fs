@@ -244,6 +244,15 @@ module Convert =
                                   |> sprintf "[ %s ]"
                               failwithf "Could not find the required key '%s' in the JSON object literal with keys %s to match with record type '%s' that has fields %s" fieldName dictKeys recordType.Name recordFields)
             unbox (FSharpValue.MakeRecord(recordType, recordValues))
+        
+        | JArray tuples,  TypeInfo.Map (keyType, valueType) -> 
+            [ for keyValuePair in tuples do 
+                let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple [| keyType; valueType |])
+                yield tuple ]
+            |> unbox<(string * obj) list> 
+            |> Map.ofList 
+            |> unbox 
+                
         | JObject map, TypeInfo.Map (keyType, valueType) -> 
             // check whether the map is serialized to it's internal representation
             // and convert that to back to a normal map from the data
@@ -283,7 +292,7 @@ module Convert =
 module ConverterExtensions = 
     type Json with
         static member stringify<'t> (x: 't) = 
-            Fable.Import.JS.JSON.stringify x 
+            SimpleJson.stringify x 
 
         /// Parses the input string as JSON and tries to convert it as the given type argument
         static member parseAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't = 
@@ -292,7 +301,6 @@ module ConverterExtensions =
             | Some inputJson -> 
                 let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 
                 Convert.fromJson<'t> inputJson typeInfo 
-
 
         /// Parses the input string as JSON using native parsing and tries to convert it as the given type argument
         static member parseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't = 

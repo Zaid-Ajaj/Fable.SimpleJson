@@ -430,11 +430,23 @@ testCase "Parsing maps serialized with toJson from Fable 1" <| fun test ->
     |> Map.toList 
     |> test.areEqual [ "A", "a"; "B", "b"; "C", "c" ]
 
+testCase "Parsing maps with integers as keys from string works" <| fun test ->
+    "[[1, \"one\"], [2, \"two\"], [3,\"three\"]]"
+    |> Json.parseAs<Map<int, string>> 
+    |> Map.toList 
+    |> test.areEqual [ 1, "one"; 2, "two"; 3, "three" ]
+
+testCase "Parsing maps with integers as keys from string works where integers are stringified" <| fun test ->
+    "[[\"1\", \"one\"], [\"2\", \"two\"], [\"3\",\"three\"]]"
+    |> Json.parseAs<Map<int, string>> 
+    |> Map.toList 
+    |> test.areEqual [ 1, "one"; 2, "two"; 3, "three" ]
+
 testCase "Parsing maps with integers as keys" <| fun test ->
     [ 1, "one"; 2, "two"; 3, "three" ]
     |> Map.ofList 
     |> Json.stringify
-    |> Json.parseAs<Map<int, string>> 
+    |> Json.parseAs<Map<int, string>>
     |> Map.toList 
     |> test.areEqual [ 1, "one"; 2, "two"; 3, "three" ]
 
