@@ -3,9 +3,9 @@ group Main
     storage:none
 
     nuget FSharp.Core
-    nuget Fable.Core >= 2.0.0-alpha-010
+    nuget Fable.Core prerelease
     nuget Fable.Parsimmon
-    clitool dotnet-fable ~> 2.0.0-alpha-019
+    clitool dotnet-fable prerelease
 
 group Build
   framework >= net45

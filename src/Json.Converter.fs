@@ -292,7 +292,14 @@ module ConverterExtensions =
             | Some inputJson -> 
                 let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 
                 Convert.fromJson<'t> inputJson typeInfo 
-        
+
+
+        /// Parses the input string as JSON using native parsing and tries to convert it as the given type argument
+        static member parseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't = 
+            let inputJson = SimpleJson.parseNative input 
+            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 
+            Convert.fromJson<'t> inputJson typeInfo 
+                
         /// Tries to parse the input string as JSON and tries to convert it as the given type argument, returing a (hopefully) useful error message when it fails
         static member tryParseAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> = 
             try Ok (Json.parseAs<'t>(input, resolver.Value)) 

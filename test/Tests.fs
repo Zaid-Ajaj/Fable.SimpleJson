@@ -462,10 +462,23 @@ testCase "Converting records with simple types" <| fun test ->
     |> Json.parseAs<SimpleRec> 
     |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451 }
 
+testCase "Native: Converting records with simple types" <| fun test -> 
+    { A = 20; B = "BB"; C = false; D = 2.0451 }
+    |> Json.stringify
+    |> Json.parseNativeAs<SimpleRec> 
+    |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451 }
+
 testCase "Converting records with simple types, strings can be null" <| fun test -> 
     { A = 20; B = null; C = false; D = 2.0451 }
     |> Json.stringify
     |> Json.parseAs<SimpleRec> 
+    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451 }
+
+
+testCase "Native: Converting records with simple types, strings can be null" <| fun test -> 
+    { A = 20; B = null; C = false; D = 2.0451 }
+    |> Json.stringify
+    |> Json.parseNativeAs<SimpleRec> 
     |> test.areEqual { A = 20; B = null; C = false; D = 2.0451 }
 
 testCase "Converting lists records with simple types" <| fun test -> 
@@ -474,10 +487,22 @@ testCase "Converting lists records with simple types" <| fun test ->
     |> Json.parseAs<SimpleRec list> 
     |> test.areEqual [ { A = 20; B = "BB"; C = false; D = 2.0451 } ] 
 
+testCase "Native: Converting records with simple types, strings can be null" <| fun test -> 
+    { A = 20; B = null; C = false; D = 2.0451 }
+    |> Json.stringify
+    |> Json.parseNativeAs<SimpleRec> 
+    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451 }
+
 testCase "Converting arrays records with simple types" <| fun test -> 
     [| { A = 20; B = "BB"; C = false; D = 2.0451 } |] 
     |> Json.stringify
     |> Json.parseAs<SimpleRec[]> 
+    |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451 } |] 
+
+testCase "Native: Converting arrays records with simple types" <| fun test -> 
+    [| { A = 20; B = "BB"; C = false; D = 2.0451 } |] 
+    |> Json.stringify
+    |> Json.parseNativeAs<SimpleRec[]> 
     |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451 } |] 
 
 testCase "Converting optional (Some) records with simple types" <| fun test -> 
@@ -487,7 +512,20 @@ testCase "Converting optional (Some) records with simple types" <| fun test ->
     |> Json.parseAs<Option<SimpleRec>> 
     |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451 }) 
 
+testCase "Native: Converting optional (Some) records with simple types" <| fun test -> 
+    { A = 20; B = "BB"; C = false; D = 2.0451 }
+    |> Some
+    |> Json.stringify
+    |> Json.parseAs<Option<SimpleRec>> 
+    |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451 }) 
+
 testCase "Converting optional (None) records with simple types" <| fun test -> 
+    None
+    |> Json.stringify
+    |> Json.parseAs<Option<SimpleRec>> 
+    |> test.areEqual None 
+
+testCase "Native: Converting optional (None) records with simple types" <| fun test -> 
     None
     |> Json.stringify
     |> Json.parseAs<Option<SimpleRec>> 
@@ -539,6 +577,14 @@ testCase "Converting maps works" <| fun test ->
     |> Map.toList 
     |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
 
+testCase "Native: Converting maps works" <| fun test ->
+    [ "test", [ One; Two 20; Three "some value" ] ]
+    |> Map.ofList 
+    |> Fable.Import.JS.JSON.stringify
+    |> Json.parseNativeAs<Map<string, SimpleDU list>>  
+    |> Map.toList 
+    |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
+
 testCase "TypeInfo can be generated from GenericTestRecord" <| fun test -> 
     let typeInfo = TypeInfo.createFrom<Maybe<list<GenericTestRecord<string>>>>() 
     test.pass() 
@@ -549,6 +595,12 @@ testCase "Converting generic record with Maybe<int> as a field" <| fun test ->
     |> Json.parseAs<Maybe<list<RecWithGenDU<string>>>>
     |> test.areEqual (Just [ { Other = "wise"; Value = Just 20 } ] )
 
+testCase "Native: Converting generic record with Maybe<int> as a field" <| fun test ->
+    Just [ { Other = "wise"; Value = Just 20 } ] 
+    |> Json.stringify
+    |> Json.parseNativeAs<Maybe<list<RecWithGenDU<string>>>>
+    |> test.areEqual (Just [ { Other = "wise"; Value = Just 20 } ] )
+
 type RecordWithArray = { Arr : Option<Maybe<int>> [ ] }  
 
 testCase "Converting record with arrays" <| fun test ->
@@ -557,12 +609,24 @@ testCase "Converting record with arrays" <| fun test ->
     |> Json.parseAs<RecordWithArray>
     |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
 
+testCase "Native: Converting record with arrays" <| fun test ->
+    { Arr = [| Some Nothing; Some (Just 20) |] }
+    |> Json.stringify
+    |> Json.parseNativeAs<RecordWithArray>
+    |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
+
 type RecWithByte = { byteValue: byte }
 
 testCase "Converting record with bytes" <| fun test -> 
     { byteValue = byte 200  }
     |> Json.stringify
     |> Json.parseAs<RecWithByte>
+    |> test.areEqual { byteValue = byte 200 }
+
+testCase "Native: Converting record with bytes" <| fun test -> 
+    { byteValue = byte 200  }
+    |> Json.stringify
+    |> Json.parseNativeAs<RecWithByte>
     |> test.areEqual { byteValue = byte 200 }
 
 type ComplexRecord<'t> = { 
@@ -599,10 +663,36 @@ testCase "Converting complex generic types" <| fun test ->
     |> Json.parseAs<Maybe<ComplexRecord<SimpleRec> list>> 
     |> test.areEqual complexValue
 
-testCase "Result can be converter" <| fun test -> 
+testCase "Native: Converting complex generic types" <| fun test ->
+    let complexValue : Maybe<ComplexRecord<SimpleRec> list> = 
+        [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134 } 
+            HasValue = true
+            Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
+            RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
+            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
+            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
+            NestedMaps  = [ Map.ofList [ "one", Map.ofList [ "two", Just 100L ] ] ]
+            SimpleTuples = Some "value", 20, System.Guid.NewGuid()
+            Doubtful = Just (Just (Just Nothing))
+            Int64 = Just 5L, None, [ 20L ]
+            BigInt = Just 5I, None, [ -20I ] } ]
+        |> Just 
+        
+    complexValue
+    |> Json.stringify 
+    |> Json.parseAs<Maybe<ComplexRecord<SimpleRec> list>> 
+    |> test.areEqual complexValue
+
+testCase "Result can be converted" <| fun test -> 
     [ Ok "value"; Error (Maybe.Just 5) ]
     |> Json.stringify
     |> Json.parseAs<list<Result<string, Maybe<int>>>>
+    |> test.areEqual [ Ok "value"; Error (Maybe.Just 5) ]
+
+testCase "Native: Result can be converted" <| fun test -> 
+    [ Ok "value"; Error (Maybe.Just 5) ]
+    |> Json.stringify
+    |> Json.parseNativeAs<list<Result<string, Maybe<int>>>>
     |> test.areEqual [ Ok "value"; Error (Maybe.Just 5) ]
 
 type RecordWithLong = { value : Maybe<Option<int64>>; other: string } 
@@ -614,6 +704,12 @@ testCase "SingleCase of int64 can be converter" <| fun test ->
     SingleCase 20L
     |> Json.stringify
     |> Json.parseAs<SingleCase>
+    |> test.areEqual (SingleCase 20L)
+
+testCase "Native: SingleCase of int64 can be converter" <| fun test -> 
+    SingleCase 20L
+    |> Json.stringify
+    |> Json.parseNativeAs<SingleCase>
     |> test.areEqual (SingleCase 20L)
 
 let integersToInt64 (a: int, b: int) = 
@@ -639,11 +735,23 @@ testCase "Long can be converted" <| fun test ->
     |> Json.parseAs<RecordWithLong>
     |> test.areEqual { value = Just (Some 5L); other = "" }
 
-testCase "BigInt can be converter" <| fun test -> 
+testCase "Native: Long can be converted" <| fun test ->
+    { value = Just (Some 5L); other = "" } 
+    |> Json.stringify
+    |> Json.parseNativeAs<RecordWithLong>
+    |> test.areEqual { value = Just (Some 5L); other = "" }
+
+testCase "BigInt can be converted" <| fun test -> 
     { value = Just (Some 5I) } 
     |> Json.stringify
     |> Json.parseAs<RecordWithBigInt>
     |> test.areEqual { value = Just (Some 5I) }
+
+testCase "Native: BigInt can be converted" <| fun test -> 
+    { value = Just (Some 5I) } 
+    |> Json.stringify
+    |> Json.parseNativeAs<RecordWithBigInt>
+    |> test.areEqual { value = Just (Some 5I) }    
 
 type Optional = { 
     key: int; 
@@ -654,6 +762,11 @@ type Optional = {
 testCase "Multiple optional fields can be omitted from the JSON" <| fun test -> 
     "{ \"key\": 5 }"
     |> Json.parseAs<Optional>
+    |> test.areEqual { key = 5; value = None; number = None }
+
+testCase "Native: Multiple optional fields can be omitted from the JSON" <| fun test -> 
+    "{ \"key\": 5 }"
+    |> Json.parseNativeAs<Optional>
     |> test.areEqual { key = 5; value = None; number = None }
 
 type Rec = { name: string; age: int option }

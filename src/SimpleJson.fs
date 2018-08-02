@@ -35,6 +35,7 @@ module SimpleJson =
             |> String.concat ","
             |> sprintf "{%s}"
 
+
     [<Emit("(x => x === undefined ? null : x)(JSON.stringify($0))")>]
     let private stringify (x: 'a) : string = jsNative
 
@@ -42,6 +43,27 @@ module SimpleJson =
     let fromObjectLiteral (x: 'a) = 
         try tryParse (stringify x)
         with | _ -> None
+
+    [<Emit("$1[$0]")>]
+    let internal get<'a> (key: string) (x: obj) : 'a = jsNative
+
+    let rec internal parseNative' (x: obj) = 
+        match x with  
+        | TypeCheck.NativeString str -> JString str 
+        | TypeCheck.NativeNumber number -> JNumber number 
+        | TypeCheck.NativeBool value -> JBool value  
+        | TypeCheck.Null _ -> JNull
+        | TypeCheck.NativeArray arr -> JArray (List.ofArray (Array.map parseNative' arr))
+        | TypeCheck.NativeObject object -> 
+            [ for key in JS.Object.keys object -> key, parseNative' (get<obj> key object)  ]
+            |> Map.ofList
+            |> JObject
+        | _ -> JNull
+            
+    /// Parses and converts the input string to Json using Javascript's native parsing capabilities
+    let parseNative (input: string) = 
+        let parsed = JS.JSON.parse input 
+        parseNative' parsed 
 
     /// Transforms all keys of the objects within the Json structure
     let rec mapKeys f = function
