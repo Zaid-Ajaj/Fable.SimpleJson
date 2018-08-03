@@ -84,6 +84,11 @@ module Converter =
         then FSharpType.GetTupleElements(t) |> Some 
         else None 
     
+    let (|SeqType|_|) (t: Type) = 
+        if t.FullName.StartsWith "System.Collections.Generic.IEnumerable`1"
+        then  t.GetGenericArguments().[0] |> Some 
+        else None 
+
     let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo = 
         match resolvedType with  
         | PrimitiveType typeInfo -> typeInfo   
@@ -100,7 +105,10 @@ module Converter =
         | OptionType elemType -> TypeInfo.Option (createTypeInfo elemType)
         | SetType elemType -> TypeInfo.Set (createTypeInfo elemType)
         | MapType (keyType, valueType) -> TypeInfo.Map (createTypeInfo keyType, createTypeInfo valueType)
-        | _ -> TypeInfo.Object resolvedType
+        | SeqType elemType -> TypeInfo.Seq (createTypeInfo elemType)
+        | _ -> 
+            Fable.Import.JS.console.log(TypeInfo.Object, resolvedType)
+            TypeInfo.Object resolvedType
 
 
     type Fable.SimpleJson.TypeInfo with  

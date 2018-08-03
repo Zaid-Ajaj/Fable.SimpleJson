@@ -204,6 +204,10 @@ module Convert =
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> Set.ofList
             |> unbox
+
+        | JArray values, TypeInfo.Seq elementType ->
+            let converted = List.map (fun value -> unbox (fromJsonAs value elementType)) values
+            unbox converted
         // Tuples, become just arrays
         | JArray array, TypeInfo.Tuple tupleTypes -> 
             array
@@ -313,6 +317,11 @@ module ConverterExtensions =
             try Ok (Json.parseAs<'t>(input, resolver.Value)) 
             with | ex -> Error ex.Message
         
+        /// Tries to parse the input string as JSON using native parsing and tries to convert it as the given type argument
+        static member tryParseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> = 
+            try Ok (Json.parseNativeAs<'t>(input, resolver.Value)) 
+            with | ex -> Error ex.Message  
+
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing
         static member convertFromJsonAs<'t> (input: Json, [<Inject>] ?resolver: ITypeResolver<'t>) : 't = 
             let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 

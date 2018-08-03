@@ -20,6 +20,7 @@ type TypeInfo =
     | List of TypeInfo 
     | Set of TypeInfo 
     | Array of TypeInfo
+    | Seq of TypeInfo 
     | Tuple of TypeInfo [ ] 
     | Map of key:TypeInfo * value:TypeInfo 
     | Func of TypeInfo [ ] 

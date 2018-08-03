@@ -765,6 +765,33 @@ testCase "Native: BigInt can be converted" <| fun test ->
     |> Json.parseNativeAs<RecordWithBigInt>
     |> test.areEqual { value = Just (Some 5I) }    
 
+type Dummy = { first: int }
+type DummySeq = DummySeq of Dummy seq 
+type DummyList = DummyList of Dummy list 
+
+testCase "List<'t> can be deserialized" <| fun test -> 
+    [{ first = 10 }]
+    |> DummyList
+    |> Json.stringify
+    |> Json.parseNativeAs<DummyList> 
+    |> test.areEqual (DummyList [{ first = 10 }])
+ 
+testCase "Seq<'t> can be deserialized" <| fun test -> 
+    "[\"DummySeq\", [{ \"first\": 10 }]]"
+    |> Json.parseNativeAs<DummySeq> 
+    |> fun dummy -> 
+        match dummy with 
+        | DummySeq elems -> 
+            match List.ofSeq elems with 
+            | [ { first = 10 } ] -> test.pass()
+            | _ -> test.fail() 
+
+testCase "Seq<'t> can be serialized correctly" <| fun test -> 
+    seq { yield { first = 10 } }
+    |> DummySeq
+    |> Json.stringify
+    |> test.areEqual "[\"DummySeq\",[{\"first\":10}]]"
+    
 type Optional = { 
     key: int; 
     value: string option; 
