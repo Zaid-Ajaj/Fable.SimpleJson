@@ -19,7 +19,7 @@
     <Compile Include="Parser.fs" />
     <Compile Include="SimpleJson.fs" />
     <Compile Include="Json.Converter.fs" />
-  </ItemGroup>
+  </ItemGroup> 
   <ItemGroup>
     <Content Include="*.fsproj; *.fs;" PackagePath="fable\" />
   </ItemGroup>

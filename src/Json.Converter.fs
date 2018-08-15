@@ -9,6 +9,7 @@ module Convert =
 
     [<Emit("$0[$1] = $2")>]
     let internal setProp o k v = jsNative
+    let log x = Fable.Import.JS.console.log(x)
 
     type InternalMap = 
         | MapEmpty 
@@ -62,29 +63,37 @@ module Convert =
             | _ -> None
         | _ -> None 
 
-    let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj = 
+    let makeTuple (a: Type, b: Type) : Type = 
+        let lit = obj()
+        lit?fullname <- "System.Tuple`2"
+        lit?generics <- (fun () -> [| a; b |])
+        lit?cases <- (fun () -> [| |])
+        lit?fields <- (fun () -> [|  |])
+        unbox lit 
+
+    let rec fromJsonAs (input: Json) (typeInfo: Type) : obj = 
         match input, typeInfo with  
-        | JNumber value, TypeInfo.Float _ -> unbox value  
+        | JNumber value, TypeName "System.Double" -> unbox value  
         // reading number as int -> floor it
-        | JNumber value, TypeInfo.Int32 _ -> unbox (Fable.Import.JS.Math.floor(value))
-        | JBool value, TypeInfo.Bool _ -> unbox value 
+        | JNumber value, TypeName "System.Int32" -> unbox (Fable.Import.JS.Math.floor(value))
+        | JBool value, TypeName "System.Boolean" -> unbox value 
         // reading int from string -> parse it
-        | JString value, TypeInfo.Int32 _ -> unbox (int value)
-        | JString value, TypeInfo.String _ -> unbox value 
+        | JString value, TypeName "System.Int32" -> unbox (int value)
+        | JString value, TypeName "System.String" -> unbox value 
         // null values for strings are just the null string 
-        | JNull, TypeInfo.String _ -> unbox null
+        | JNull, TypeName "System.String" -> unbox null
         // int64 as string -> parse it
-        | JString value, TypeInfo.Long _ -> unbox (int64 value) 
-        | JString value, TypeInfo.Byte -> unbox (byte value)
-        | JNumber value, TypeInfo.Byte -> unbox (byte value)
+        | JString value, TypeName "System.Int64" -> unbox (int64 value) 
+        | JString value, TypeName "System.Byte" -> unbox (byte value)
+        | JNumber value, TypeName "System.Byte" -> unbox (byte value)
         // BigInt as string -> parse it
-        | JString value, TypeInfo.BigInt _ -> unbox (bigint.Parse value)
-        | JNumber value, TypeInfo.BigInt _ -> unbox (bigint (Fable.Import.JS.Math.floor(value))) 
+        | JString value, TypeName "System.Numerics.BigInteger" -> unbox (bigint.Parse value)
+        | JNumber value, TypeName "System.Numerics.BigInteger" -> unbox (bigint (Fable.Import.JS.Math.floor(value))) 
         // parse formatted date time
-        | JString value, TypeInfo.DateTime _ -> unbox (DateTime.Parse(value))
+        | JString value, TypeName "System.DateTime" -> unbox (DateTime.Parse(value))
         // deserialize union from objects
         // { "One": 20 } or {"One": [20]} -> One of int 
-        | JObject values, TypeInfo.Union (cases, unionType) -> 
+        | JObject values, UnionType (cases) -> 
             match Map.toList values with 
             | [ caseName, JArray values ] -> 
                 cases
@@ -93,7 +102,7 @@ module Convert =
                     | None ->
                         let caseNames = Array.map (fun (name, _, _) -> sprintf " '%s' " name) cases 
                         let expectedCases = String.concat ", " caseNames
-                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases 
+                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName typeInfo.Name expectedCases 
                     | Some (foundCaseName, caseInfo, types) -> 
                         if Array.length types <> List.length values 
                         then failwithf "Expected case '%s' to have %d argument types but the JSON data only contained %d values" foundCaseName (Array.length types) (List.length values) 
@@ -113,22 +122,22 @@ module Convert =
                     | _ ->
                         let caseNames = Array.map (fun (name, _, _) -> sprintf " '%s' " name) cases 
                         let expectedCases = String.concat ", " caseNames
-                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases 
+                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName typeInfo.Name expectedCases 
             | otherwise -> 
                 // TODO!!! Better error messages here
                 let unexpectedJson = Fable.Import.JS.JSON.stringify otherwise 
                 let expectedType = Fable.Import.JS.JSON.stringify cases 
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
-        | JNull, TypeInfo.Option _ -> unbox None  
-        | jsonValue, TypeInfo.Option optionalType when jsonValue <> JNull ->
+        | JNull, OptionType _ -> unbox None  
+        | jsonValue, OptionType optionalType when jsonValue <> JNull ->
             let parsedOptional = unbox fromJsonAs jsonValue optionalType
             unbox Some parsedOptional
-        | JString value, TypeInfo.Guid _ -> unbox (System.Guid.Parse(value))
+        | JString value, TypeName "System.Guid" -> unbox (System.Guid.Parse(value))
         // int64 as a number, convert it to int then to in64
-        | JNumber value , TypeInfo.Long _ -> unbox int64 (int value) 
+        | JNumber value , TypeName "System.Int64" -> unbox int64 (int value) 
         // int64 as the internal representation from Long.js
         // then reconstruct it from the high/low (two integers) components 
-        | JObject dict, TypeInfo.Long _ -> 
+        | JObject dict, TypeName "System.Int64" -> 
             let get key = Map.tryFind key dict 
             [ get "low"; get "high"; get "unsigned" ]
             |> List.choose id 
@@ -142,7 +151,7 @@ module Convert =
                 | _ -> failwithf "Unable to construct int64 from object literal { low: int, high: int, unsigned: bool }"
         // convert a single case string to union
         // "One" -> One
-        | JString caseName, TypeInfo.Union (caseTypes, unionType) -> 
+        | JString caseName, UnionType (caseTypes) -> 
             caseTypes
             |> Array.tryFind (fun (case, _, _) -> case = caseName)  
             |> function 
@@ -150,23 +159,23 @@ module Convert =
                 | None -> 
                     let caseNames = Array.map (fun (name, _, _) -> sprintf " '%s' " name) caseTypes 
                     let expectedCases = String.concat ", " caseNames
-                    failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases 
+                    failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName typeInfo.Name expectedCases 
         // convert unions from arrays
         // ["One", 20] -> One of int
-        | JArray caseValue, TypeInfo.Union (cases, unionType) ->
+        | JArray caseValue, UnionType (cases) ->
             match caseValue with 
             // Union case without values
             | [ JString caseName ] ->  
                 cases
                 |> Array.tryFind (fun (case, _, _) -> case = caseName)  
                 |> function 
-                    | Some (caseName, caseInfo, caseInfoTypes) -> 
+                    | Some (caseName, caseInfo, caseTypes) -> 
                         // single case without values
                         unbox (FSharpValue.MakeUnion(caseInfo, [||]))
                     | None -> 
                         let caseNames = Array.map (fun (name, _, _) -> sprintf " '%s' " name) cases 
                         let expectedCases = String.concat ", " caseNames
-                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
+                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName typeInfo.Name expectedCases
             | JString caseName :: values -> 
                 cases
                 |> Array.tryFind (fun (case, _, _) -> case = caseName)  
@@ -177,7 +186,7 @@ module Convert =
                         failwithf "Case %s was not valid, expected one of [%s]" caseName expectedCases 
                     | Some (foundCaseName, caseInfo, types) -> 
                         if Array.length types <> List.length values 
-                        then failwithf "The number of union case parameters for '%s' is different" foundCaseName 
+                        then failwithf "The number of union case parameters for '%s' is different: found %d value(s) with %d type(s)\nValues:\n %s" foundCaseName (List.length values) (Array.length types) (Fable.Import.JS.JSON.stringify values)
                         let parsedValues = 
                             Array.ofList values
                             |> Array.zip types 
@@ -189,34 +198,34 @@ module Convert =
                 let expectedType = Fable.Import.JS.JSON.stringify cases 
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         // Arrays
-        | JArray values, TypeInfo.Array elementType -> 
+        | JArray values, ArrayType elementType -> 
             values 
-            |> List.map (fun value -> unbox (fromJsonAs value elementType))
+            |> List.map (fun value -> log value; unbox (fromJsonAs value elementType))
             |> Array.ofList 
             |> unbox 
         // Lists  
-        | JArray values, TypeInfo.List elementType -> 
+        | JArray values, ListType elementType -> 
             values 
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> unbox
-        | JArray values, TypeInfo.Set elementType ->
+        | JArray values, SetType elementType ->
             values 
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> Set.ofList
             |> unbox
 
-        | JArray values, TypeInfo.Seq elementType ->
+        | JArray values, SeqType elementType ->
             let converted = List.map (fun value -> unbox (fromJsonAs value elementType)) values
             unbox converted
         // Tuples, become just arrays
-        | JArray array, TypeInfo.Tuple tupleTypes -> 
+        | JArray array, TupleType tupleTypes -> 
             array
             |> Array.ofList
             |> Array.zip tupleTypes 
             |> Array.map (fun (jsonType, jsonData) -> fromJsonAs jsonData jsonType)
             |> unbox
         // Records
-        | JObject dict, TypeInfo.Record (fields, recordType) -> 
+        | JObject dict, RecordType fields -> 
             // Match the JSON object literal keys with their types
             let recordValues =   
                 let values = Map.toList dict
@@ -229,7 +238,7 @@ module Convert =
                         | None -> 
                             match fieldType with  
                             // field type is an option of something, just return None
-                            | TypeInfo.Option _ -> unbox None 
+                            | OptionType _ -> unbox None 
                             | _ ->
                               // field type is required and it doens't exist in the JSON
                               // then generate a nice error message
@@ -242,22 +251,23 @@ module Convert =
                                   fields 
                                   |> Array.map (fun (name, innerFieldType) -> 
                                       match innerFieldType with  
-                                      | TypeInfo.Option _ -> sprintf "optional('%s')" name
+                                      | OptionType _ -> sprintf "optional('%s')" name
                                       | _ -> sprintf "required('%s')" name)  
                                   |> String.concat ", "
                                   |> sprintf "[ %s ]"
-                              failwithf "Could not find the required key '%s' in the JSON object literal with keys %s to match with record type '%s' that has fields %s" fieldName dictKeys recordType.Name recordFields)
-            unbox (FSharpValue.MakeRecord(recordType, recordValues))
+                              failwithf "Could not find the required key '%s' in the JSON object literal with keys %s to match with record type '%s' that has fields %s" fieldName dictKeys typeInfo.Name recordFields)
+            
+            unbox (FSharpValue.MakeRecord(typeInfo, recordValues))
         
-        | JArray tuples,  TypeInfo.Map (keyType, valueType) -> 
+        | JArray tuples, MapType (keyType, valueType) -> 
             [ for keyValuePair in tuples do 
-                let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple [| keyType; valueType |])
+                let tuple = fromJsonAs keyValuePair (makeTuple(keyType, valueType))
                 yield tuple ]
             |> unbox<(string * obj) list> 
             |> Map.ofList 
             |> unbox 
                 
-        | JObject map, TypeInfo.Map (keyType, valueType) -> 
+        | JObject map, MapType (keyType, valueType) -> 
             // check whether the map is serialized to it's internal representation
             // and convert that to back to a normal map from the data
             match Map.tryFind "comparer" map, Map.tryFind "tree" map with 
@@ -303,13 +313,13 @@ module ConverterExtensions =
             match SimpleJson.tryParse input with 
             | None -> failwith "Couldn't parse the input JSON string because it seems to be invalid"
             | Some inputJson -> 
-                let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 
+                let typeInfo = resolver.Value.ResolveType()
                 Convert.fromJson<'t> inputJson typeInfo 
 
         /// Parses the input string as JSON using native parsing and tries to convert it as the given type argument
         static member parseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't = 
             let inputJson = SimpleJson.parseNative input 
-            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 
+            let typeInfo = resolver.Value.ResolveType()
             Convert.fromJson<'t> inputJson typeInfo 
                 
         /// Tries to parse the input string as JSON and tries to convert it as the given type argument, returing a (hopefully) useful error message when it fails
@@ -324,7 +334,7 @@ module ConverterExtensions =
 
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing
         static member convertFromJsonAs<'t> (input: Json, [<Inject>] ?resolver: ITypeResolver<'t>) : 't = 
-            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value) 
+            let typeInfo = resolver.Value.ResolveType()
             Convert.fromJson<'t> input typeInfo 
 
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing

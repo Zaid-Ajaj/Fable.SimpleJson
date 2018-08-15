@@ -33,6 +33,11 @@ testCase "JBool parser works" <| fun test ->
     |> List.choose (parseUsing jbool)
     |> test.areEqual [JBool true; JBool false]
 
+testCase "JNumber parser works with negative numbers" <| fun test ->
+    [ "-1"; "-20.5" ]
+    |> List.choose (parseUsing jnumber)
+    |> test.areEqual [JNumber -1.0; JNumber -20.5]
+
 testCase "JNull parser works" <| fun test ->
     ["null"; "other"]
     |> List.choose (parseUsing jnull)
@@ -547,6 +552,18 @@ type Maybe<'t> =
     | Just of 't
     | Nothing 
 
+testCase "Maybe<'t> can be converted" <| fun test ->
+    (Just 5)
+    |> Json.stringify
+    |> Json.parseNativeAs<Maybe<int>>
+    |> test.areEqual (Just 5)
+
+testCase "Native: Maybe<'t> can be converted" <| fun test ->
+    (Just 5)
+    |> Json.stringify
+    |> Json.parseNativeAs<Maybe<int>>
+    |> test.areEqual (Just 5)
+
 type RecWithGenDU<'t> = { Other: 't; Value : Maybe<int> }
 
 type GenericTestRecord<'t> = { Other: 't; Value : Maybe<int> }
@@ -613,19 +630,40 @@ testCase "Native: Converting generic record with Maybe<int> as a field" <| fun t
     |> Json.parseNativeAs<Maybe<list<RecWithGenDU<string>>>>
     |> test.areEqual (Just [ { Other = "wise"; Value = Just 20 } ] )
 
-type RecordWithArray = { Arr : Option<Maybe<int>> [ ] }  
+type RecordWithList = { Arr : Option<Maybe<int>> list }  
+
+testCase "Converting record with lists" <| fun test ->
+    { Arr = [ Some Nothing; Some (Just 20) ] }
+    |> Json.stringify
+    |> Json.parseAs<RecordWithList>
+    |> test.areEqual { Arr = [ Some Nothing; Some (Just 20) ] }
+
+testCase "Native: Converting record with lists" <| fun test ->
+    { Arr = [ Some Nothing; Some (Just 20) ] }
+    |> Json.stringify
+    |> Json.parseNativeAs<RecordWithList>
+    |> test.areEqual { Arr = [ Some Nothing; Some (Just 20) ] }
+
+type RecordWithArray = { Arr : Maybe<int> [ ] }  
+
+testCase "Converting array with optional ints works" <| fun test ->
+    [| Some 5; None; Some -20 |]
+    |> Json.stringify
+    |> (fun x -> log x; x)
+    |> Json.parseAs<Option<int> [ ]>
+    |> test.areEqual [| Some 5; None; Some -20 |]
 
 testCase "Converting record with arrays" <| fun test ->
-    { Arr = [| Some Nothing; Some (Just 20) |] }
+    { Arr = [| Nothing; Just 20 |] }
     |> Json.stringify
     |> Json.parseAs<RecordWithArray>
-    |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
+    |> test.areEqual { Arr = [| Nothing; Just 20 |] }
 
 testCase "Native: Converting record with arrays" <| fun test ->
-    { Arr = [| Some Nothing; Some (Just 20) |] }
+    { Arr = [| Nothing; Just 20 |] }
     |> Json.stringify
     |> Json.parseNativeAs<RecordWithArray>
-    |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
+    |> test.areEqual { Arr = [| Nothing; Just 20 |] }
 
 type RecWithByte = { byteValue: byte }
 
@@ -646,7 +684,7 @@ type ComplexRecord<'t> = {
     HasValue: bool;
     Dates: DateTime list
     RecordList : SimpleRec list; 
-    ArrayOfOptionalRecords : Option<SimpleRec>[]
+    ArrayOfOptionalRecords : Option<SimpleRec> list
     OptionalRecord : Option<SimpleRec> 
     Doubtful : Maybe<Maybe<Maybe<Maybe<int>>>>
     SimpleTuples : Option<string> * int * System.Guid
@@ -661,7 +699,7 @@ testCase "Converting complex generic types" <| fun test ->
             HasValue = true
             Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
             RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
-            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
+            ArrayOfOptionalRecords = [ None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None ]
             OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
             NestedMaps  = [ Map.ofList [ "one", Map.ofList [ "two", Just 100L ] ] ]
             SimpleTuples = Some "value", 20, System.Guid.NewGuid()
@@ -681,8 +719,8 @@ testCase "Native: Converting complex generic types" <| fun test ->
             HasValue = true
             Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
             RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
-            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
-            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
+            ArrayOfOptionalRecords = [ None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None ]
+            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 } 
             NestedMaps  = [ Map.ofList [ "one", Map.ofList [ "two", Just 100L ] ] ]
             SimpleTuples = Some "value", 20, System.Guid.NewGuid()
             Doubtful = Just (Just (Just Nothing))
@@ -821,3 +859,22 @@ testCase "Nice error messages are created for missing JSON keys" <| fun test ->
             // with record type 'Rec' that has fields [ required('name'), optional('age') ]
             test.passWith errorMsg
         | _ -> test.fail()
+
+type Recursive = {
+    Name: string 
+    Children: Recursive list
+}
+
+testCase "Recursive types can be converted" <| fun test ->
+    let input = {
+        Name = "root"
+        Children = [ 
+            { Name = "Child 1"; Children = [ ]  }
+            { Name = "Child 1"; Children = [ ]  }
+        ]
+    }
+
+    input
+    |> Json.stringify
+    |> Json.parseNativeAs<Recursive>
+    |> test.areEqual input

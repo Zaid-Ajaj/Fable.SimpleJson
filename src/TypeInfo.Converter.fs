@@ -21,6 +21,8 @@ module Converter =
         | "System.Byte" -> Some TypeInfo.Byte
         | _ -> None 
     
+    let (|TypeName|_|) (primType: Type) = Some primType.FullName
+
     let (|RecordType|_|) (t: Type) = 
         if FSharpType.IsRecord t 
         then 
@@ -70,7 +72,7 @@ module Converter =
         else None 
 
     let (|ArrayType|_|) (t:Type) = 
-        if (t.FullName.EndsWith "[]")
+        if (t.IsArray)
         then t.GetElementType() |> Some 
         else None 
     
@@ -89,8 +91,14 @@ module Converter =
         then  t.GetGenericArguments().[0] |> Some 
         else None 
 
+    let add (key, value) (map: Map<'key, 'value>) = 
+        if Map.containsKey key map 
+        then Map.add value (Map.remove key map) 
+        else Map.add value map
+
     let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo = 
-        match resolvedType with  
+        
+        match resolvedType with   
         | PrimitiveType typeInfo -> typeInfo   
         | FuncType (types) -> TypeInfo.Func (Array.map createTypeInfo types)
         | TupleType types -> TypeInfo.Tuple (Array.map createTypeInfo types)
@@ -106,9 +114,7 @@ module Converter =
         | SetType elemType -> TypeInfo.Set (createTypeInfo elemType)
         | MapType (keyType, valueType) -> TypeInfo.Map (createTypeInfo keyType, createTypeInfo valueType)
         | SeqType elemType -> TypeInfo.Seq (createTypeInfo elemType)
-        | _ -> 
-            Fable.Import.JS.console.log(TypeInfo.Object, resolvedType)
-            TypeInfo.Object resolvedType
+        | _ -> TypeInfo.Object resolvedType
 
 
     type Fable.SimpleJson.TypeInfo with  
