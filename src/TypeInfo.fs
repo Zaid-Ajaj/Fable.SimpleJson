@@ -26,7 +26,9 @@ and TypeInfo =
     | DateTime 
     | BigInt 
     | Guid 
-    | Object of (unit -> Type)
+    | Any of (unit -> Type)
+    | Async of (unit -> TypeInfo)
+    | Promise of (unit -> TypeInfo)
     | Option of (unit -> TypeInfo) 
     | List of (unit -> TypeInfo)  
     | Set of (unit -> TypeInfo)  

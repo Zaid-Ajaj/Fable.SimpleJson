@@ -89,6 +89,16 @@ module Converter =
         then  t.GetGenericArguments().[0] |> Some 
         else None 
 
+    let (|AsyncType|_|) (t:Type) = 
+        if t.FullName.StartsWith "Microsoft.FSharp.Control.FSharpAsync`1"
+        then  t.GetGenericArguments().[0] |> Some 
+        else None 
+
+    let (|PromiseType|_|) (t:Type) = 
+        if t.FullName.StartsWith "Fable.Import.JS.Promise`1"
+        then t.GetGenericArguments().[0] |> Some 
+        else None 
+
     let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo = 
         match resolvedType with  
         | PrimitiveType typeInfo -> typeInfo   
@@ -113,7 +123,9 @@ module Converter =
         | SetType elemType -> TypeInfo.Set (fun () -> createTypeInfo elemType)
         | MapType (keyType, valueType) -> TypeInfo.Map (fun () -> createTypeInfo keyType, createTypeInfo valueType)
         | SeqType elemType -> TypeInfo.Seq (fun () -> createTypeInfo elemType)
-        | _ -> TypeInfo.Object (fun () -> resolvedType)
+        | AsyncType elemType -> TypeInfo.Async (fun () -> createTypeInfo elemType)
+        | PromiseType elemType -> TypeInfo.Promise (fun () -> createTypeInfo elemType)
+        | _ -> TypeInfo.Any (fun () -> resolvedType)
 
 
     type Fable.SimpleJson.TypeInfo with  
