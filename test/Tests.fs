@@ -759,6 +759,89 @@ testCase "BigInt can be converted" <| fun test ->
     |> Json.parseAs<RecordWithBigInt>
     |> test.areEqual { value = Just (Some 5I) }
 
+testCase "bigint list can be converted" <| fun test -> 
+    [ 5I; 2I ]
+    |> Json.stringify
+    |> Json.parseAs<bigint list> 
+    |> test.areEqual [ 5I; 2I ]
+
+testCase "Native: bigint list can be converted" <| fun test -> 
+    [ 5I; 2I ]
+    |> Json.stringify
+    |> Json.parseNativeAs<bigint list> 
+    |> test.areEqual [ 5I; 2I ]
+
+testCase "bigint list can be converted from Json as numbers" <| fun test -> 
+    "[5, 2]"
+    |> Json.parseAs<bigint list> 
+    |> test.areEqual [ 5I; 2I ]
+
+testCase "bigint list can be converted from Json as strings" <| fun test -> 
+    "[\"5\", \"2\"]"
+    |> Json.parseAs<bigint list> 
+    |> test.areEqual [ 5I; 2I ]
+
+testCase "TypeInfo for Option<bigint> list can be generated" <| fun test -> 
+    let typeInfo = TypeInfo.createFrom<Option<bigint> list>()
+    match typeInfo with  
+    | TypeInfo.List getOptionBigInt ->
+        let optionBigInt = getOptionBigInt() 
+        match optionBigInt with 
+        | TypeInfo.Option getBigInt ->
+            let bigInt = getBigInt() 
+            match bigInt with 
+            | TypeInfo.BigInt -> test.pass() 
+            | _ -> test.fail() 
+        | _ -> test.fail() 
+    | _ -> test.fail()
+
+testCase "TypeInfo for Option<bigint> array can be generated" <| fun test -> 
+    let typeInfo = TypeInfo.createFrom<Option<bigint> [ ]>()
+    match typeInfo with  
+    | TypeInfo.Array getOptionBigInt ->
+        let optionBigInt = getOptionBigInt() 
+        match optionBigInt with 
+        | TypeInfo.Option getBigInt ->
+            let bigInt = getBigInt() 
+            match bigInt with 
+            | TypeInfo.BigInt -> test.pass() 
+            | _ -> test.fail() 
+        | _ -> test.fail() 
+    | _ -> test.fail()
+
+testCase "Simple Option<BigInt> can be converted from Json" <| fun test -> 
+    "[\"5\", \"2\", null]"
+    |> Json.parseAs<Option<bigint> list> 
+    |> test.areEqual [ Some 5I; Some 2I; None ]
+
+testCase "Simple Option<BigInt> can be converted manually from Json as string" <| fun test -> 
+    let typeInfo = TypeInfo.createFrom<Option<bigint> list>()
+    let inputJson = SimpleJson.parse "[\"5\", \"2\", null]"
+    let result = Convert.fromJsonAs inputJson typeInfo 
+    unbox<Option<bigint> list> result
+    |> test.areEqual [ Some 5I; Some 2I; None ]
+  
+testCase "Simple Json array can be parsed as Json" <| fun test -> 
+    "[\"5\", \"2\", null]"
+    |> SimpleJson.parseNative
+    |> test.areEqual (JArray [ JString "5"; JString "2" ; JNull ])
+
+testCase "Simple Option<Int> can be parsed as Json" <| fun test -> 
+    "[5, 2, null]"
+    |> SimpleJson.parseNative
+    |> test.areEqual (JArray [ JNumber 5.0; JNumber 2.0 ; JNull ])
+
+testCase "Simple Option<Int> can be converted from Json" <| fun test -> 
+    "[\"5\", \"2\", null]"
+    |> Json.parseAs<Option<int> list> 
+    |> test.areEqual [ Some 5; Some 2; None ]
+
+testCase "Simple Option<BigInt> can be converted" <| fun test -> 
+    [ Some 5I; Some 2I; None ]
+    |> Json.stringify
+    |> Json.parseAs<Option<bigint> list> 
+    |> test.areEqual [ Some 5I; Some 2I; None ]
+
 testCase "Native: BigInt can be converted" <| fun test -> 
     { value = Just (Some 5I) } 
     |> Json.stringify
@@ -821,3 +904,35 @@ testCase "Nice error messages are created for missing JSON keys" <| fun test ->
             // with record type 'Rec' that has fields [ required('name'), optional('age') ]
             test.passWith errorMsg
         | _ -> test.fail()
+
+type Recursive = {
+    Name : string 
+    Children : Recursive list
+}
+
+testCase "Recursive records can be converted" <| fun test ->
+    let input = {
+        Name = "root"
+        Children = [ 
+            { Name = "Child 1"; Children = [ { Name = "Grandchild 1"; Children = [ ] } ] }
+            { Name = "Child 2"; Children = [ { Name = "Grandchild 2"; Children = [ ] } ] }
+            { Name = "Child 2"; Children = [  ] }
+        ]
+    }
+
+    input
+    |> Json.stringify
+    |> Json.parseAs<Recursive>
+    |> test.areEqual input
+
+type Tree = 
+    | Leaf of int 
+    | Branch of Tree * Tree 
+
+testCase "Recursive unions can be converted" <| fun test ->
+    let input = Branch(Branch(Leaf 10, Leaf 5), Leaf 5)
+    
+    input
+    |> Json.stringify
+    |> Json.parseAs<Tree>
+    |> test.areEqual input

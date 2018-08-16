@@ -92,23 +92,28 @@ module Converter =
     let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo = 
         match resolvedType with  
         | PrimitiveType typeInfo -> typeInfo   
-        | FuncType (types) -> TypeInfo.Func (Array.map createTypeInfo types)
-        | TupleType types -> TypeInfo.Tuple (Array.map createTypeInfo types)
-        | RecordType fields -> 
-            [| for (fieldName, fieldType) in fields -> fieldName, createTypeInfo fieldType |]
-            |> fun generatedFields -> TypeInfo.Record (generatedFields, resolvedType)
-        | UnionType cases -> 
-            [| for (caseName, caseInfo, caseTypes) in cases -> caseName, caseInfo, Array.map createTypeInfo caseTypes |]
-            |> fun generatedCases -> TypeInfo.Union (generatedCases, resolvedType)
-        | ListType elemType -> TypeInfo.List (createTypeInfo elemType) 
-        | ArrayType elemType -> TypeInfo.Array (createTypeInfo elemType)
-        | OptionType elemType -> TypeInfo.Option (createTypeInfo elemType)
-        | SetType elemType -> TypeInfo.Set (createTypeInfo elemType)
-        | MapType (keyType, valueType) -> TypeInfo.Map (createTypeInfo keyType, createTypeInfo valueType)
-        | SeqType elemType -> TypeInfo.Seq (createTypeInfo elemType)
-        | _ -> 
-            Fable.Import.JS.console.log(TypeInfo.Object, resolvedType)
-            TypeInfo.Object resolvedType
+        | FuncType (types) -> TypeInfo.Func (fun () -> Array.map createTypeInfo types)
+        | TupleType types -> TypeInfo.Tuple (fun () -> Array.map createTypeInfo types)
+        | RecordType fields -> TypeInfo.Record <| fun () ->
+            let fields = 
+                [| for (fieldName, fieldType) in fields -> 
+                    { FieldName = fieldName; 
+                      FieldType = createTypeInfo fieldType } |] 
+            fields, resolvedType
+
+        | UnionType cases -> TypeInfo.Union <| fun () ->
+            [| for (caseName, caseInfo, caseTypes) in cases -> 
+                { CaseName = caseName;
+                  Info = caseInfo;
+                  CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType
+
+        | ListType elemType -> TypeInfo.List (fun () -> createTypeInfo elemType) 
+        | ArrayType elemType -> TypeInfo.Array (fun () -> createTypeInfo elemType)
+        | OptionType elemType -> TypeInfo.Option (fun () -> createTypeInfo elemType)
+        | SetType elemType -> TypeInfo.Set (fun () -> createTypeInfo elemType)
+        | MapType (keyType, valueType) -> TypeInfo.Map (fun () -> createTypeInfo keyType, createTypeInfo valueType)
+        | SeqType elemType -> TypeInfo.Seq (fun () -> createTypeInfo elemType)
+        | _ -> TypeInfo.Object (fun () -> resolvedType)
 
 
     type Fable.SimpleJson.TypeInfo with  
