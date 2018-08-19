@@ -893,6 +893,50 @@ testCase "Native: Multiple optional fields can be omitted from the JSON" <| fun 
 
 type Rec = { name: string; age: int option }
 
+testCase "Generic union types with list-like type arguments work" <| fun test ->
+    Just [1 .. 5]
+    |> Json.stringify 
+    |> Json.parseNativeAs<Maybe<int list>>
+    |> test.areEqual (Just [1;2;3;4;5])
+
+testCase "Result<int list, string> conversion works" <| fun test ->
+    Ok [1;2;3]
+    |> Json.stringify
+    |> Json.parseNativeAs<Result<int list, string>>
+    |> test.areEqual (Ok [1;2;3])
+
+type SecureResponse<'t> = Result<'t, string> 
+
+type User = {
+    Login: string 
+    IsAdmin: bool 
+    LastActivity: DateTime
+}
+
+testCase "Deserializing SecureRequest<User list> works" <| fun test ->
+    let inputs = """
+        {
+            "Ok": [
+                {
+                    "Login": "foo",
+                    "IsAdmin": false,
+                    "LastActivity": "2018-08-15T15:12:50.0379614Z"
+                },
+                {
+                    "Login": "bar",
+                    "IsAdmin": false,
+                    "LastActivity": "2018-08-09T18:48:07.0638391Z"
+                }
+            ]
+        }
+    """
+
+    inputs 
+    |> Json.parseNativeAs<SecureResponse<User list>>
+    |> function 
+        | Ok [{ Login = "foo"; IsAdmin = false }; { Login = "bar"; IsAdmin = false }] -> test.pass() 
+        | otherwise -> test.fail()
+  
 testCase "Nice error messages are created for missing JSON keys" <| fun test -> 
     "{ \"answer\": 42 }"
     |> Json.tryParseAs<Rec>

@@ -63,6 +63,12 @@ module Convert =
             | _ -> None
         | _ -> None 
 
+    let arrayLike = function 
+        | TypeInfo.Array _ -> true 
+        | TypeInfo.List _ -> true 
+        | TypeInfo.Seq _ -> true 
+        | _ -> false
+
     let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj = 
         match input, typeInfo with  
         | JNumber value, TypeInfo.Float _ -> unbox value  
@@ -96,8 +102,14 @@ module Convert =
                         let caseNames = Array.map (fun case -> sprintf " '%s' " case.CaseName) cases 
                         let expectedCases = String.concat ", " caseNames
                         failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases 
+                    | Some foundCase when Array.length foundCase.CaseTypes = 1 && arrayLike foundCase.CaseTypes.[0] ->
+                        let deserialized = fromJsonAs (JArray values) foundCase.CaseTypes.[0]
+                        FSharpValue.MakeUnion(foundCase.Info, [| deserialized |])
+                        |> unbox
                     | Some foundCase -> 
-                        if Array.length foundCase.CaseTypes <> List.length values 
+                        if Array.length foundCase.CaseTypes = 1  
+                            && not (arrayLike foundCase.CaseTypes.[0])
+                            && Array.length foundCase.CaseTypes <> List.length values
                         then failwithf "Expected case '%s' to have %d argument types but the JSON data only contained %d values" foundCase.CaseName (Array.length foundCase.CaseTypes) (List.length values) 
                         let parsedValues = 
                             Array.ofList values
