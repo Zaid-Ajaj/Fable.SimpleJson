@@ -936,6 +936,28 @@ testCase "Deserializing SecureRequest<User list> works" <| fun test ->
     |> function 
         | Ok [{ Login = "foo"; IsAdmin = false }; { Login = "bar"; IsAdmin = false }] -> test.pass() 
         | otherwise -> test.fail()
+
+testCase "Deserializing SecureRequest<User list> works from Fable 2 representation" <| fun test ->
+    let inputs = """
+        [ "Ok", 
+            [{
+                "Login": "foo",
+                "IsAdmin": false,
+                "LastActivity": "2018-08-15T15:12:50.0379614Z"
+            },
+            {
+                "Login": "bar",
+                "IsAdmin": false,
+                "LastActivity": "2018-08-09T18:48:07.0638391Z"
+            }]
+        ]
+    """
+
+    inputs 
+    |> Json.parseNativeAs<SecureResponse<User list>>
+    |> function 
+        | Ok [{ Login = "foo"; IsAdmin = false }; { Login = "bar"; IsAdmin = false }] -> test.pass() 
+        | otherwise -> test.fail()
   
 testCase "Nice error messages are created for missing JSON keys" <| fun test -> 
     "{ \"answer\": 42 }"
