@@ -80,6 +80,7 @@ module Convert =
         | JString value, TypeInfo.String _ -> unbox value 
         // null values for strings are just the null string 
         | JNull, TypeInfo.String _ -> unbox null
+        | JNull, TypeInfo.Unit -> unbox ()
         // int64 as string -> parse it
         | JString value, TypeInfo.Long _ -> unbox (int64 value) 
         | JString value, TypeInfo.Byte -> unbox (byte value)

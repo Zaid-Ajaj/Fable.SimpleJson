@@ -937,6 +937,12 @@ testCase "Deserializing SecureRequest<User list> works" <| fun test ->
         | Ok [{ Login = "foo"; IsAdmin = false }; { Login = "bar"; IsAdmin = false }] -> test.pass() 
         | otherwise -> test.fail()
 
+testCase "Result of unit can be converted" <| fun test ->
+    Ok ()
+    |> Json.stringify
+    |> Json.parseNativeAs<Result<unit, string>>
+    |> test.areEqual (Ok ())
+
 testCase "Deserializing SecureRequest<User list> works from Fable 2 representation" <| fun test ->
     let inputs = """
         [ "Ok", 
