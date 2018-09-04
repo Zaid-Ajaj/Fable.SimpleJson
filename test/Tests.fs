@@ -97,6 +97,11 @@ testCase "Json parser works" <| fun test ->
             | otherResult -> test.unexpected otherResult 
         | otherResult -> test.unexpected otherResult 
 
+testCase "Negative numbers can be parsed" <| fun test ->    
+    ["-5"; "-5.2"; "-1"; "-0.5"]
+    |> List.choose (parseUsing jnumber)
+    |> test.areEqual [JNumber -5.0; JNumber -5.2; JNumber -1.0; JNumber -0.5]
+
 testCase "Json parser works with empty nested objects" <| fun test ->
     "{\"child\":{}}"
     |> SimpleJson.tryParse

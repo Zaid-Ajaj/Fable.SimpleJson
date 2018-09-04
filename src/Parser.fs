@@ -13,6 +13,10 @@ module Parser =
 
     let jint = digits |> Parsimmon.map float
 
+    let negJint = 
+        Parsimmon.seq2 (Parsimmon.str "-") jint 
+        |> Parsimmon.map (fun (sign, number) -> -number)
+
     let jfloat = 
 
         let digits = 
@@ -38,8 +42,12 @@ module Parser =
                 |> float
         )
 
+    let negativeJFloat = 
+        Parsimmon.seq2 (Parsimmon.str "-") jfloat 
+        |> Parsimmon.map (fun (sign, number) -> -number)
+
     let jnumber = 
-        [jfloat; jint] 
+        [jfloat; negativeJFloat; jint; negJint] 
         |> Parsimmon.choose
         |> Parsimmon.map JNumber
 
