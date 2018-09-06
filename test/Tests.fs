@@ -650,6 +650,7 @@ type ComplexRecord<'t> = {
     Value: 't;
     HasValue: bool;
     Dates: DateTime list
+    DateTimeOffsets: DateTimeOffset list
     RecordList : SimpleRec list;
     ArrayOfOptionalRecords : Option<SimpleRec>[]
     OptionalRecord : Option<SimpleRec>
@@ -665,6 +666,7 @@ testCase "Converting complex generic types" <| fun test ->
         [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134 }
             HasValue = true
             Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
+            DateTimeOffsets = [ DateTimeOffset.Now; DateTimeOffset.Now.AddDays(5.0) ]
             RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
             ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
             OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
@@ -685,6 +687,7 @@ testCase "Native: Converting complex generic types" <| fun test ->
         [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134 }
             HasValue = true
             Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
+            DateTimeOffsets = [ DateTimeOffset.Now; DateTimeOffset.Now.AddDays(5.0) ]
             RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
             ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
             OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
