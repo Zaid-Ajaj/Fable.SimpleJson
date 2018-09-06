@@ -5,6 +5,7 @@ open Fable.Core
 open Fable.Core.JsInterop
 open FSharp.Reflection
 open System.Numerics
+open System.Collections
 
 module Convert =
 
@@ -68,6 +69,12 @@ module Convert =
         | TypeInfo.List _ -> true
         | TypeInfo.Seq _ -> true
         | _ -> false
+
+    let isQuoted (input: string) = 
+        input.StartsWith "\"" && input.EndsWith "\""
+
+    let removeQuotes (input: string) = 
+        input.Substring(1, input.Length - 2)
 
     let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj =
         match input, typeInfo with
@@ -159,6 +166,18 @@ module Convert =
                     |> unbox
                 | _ -> failwithf "Unable to construct int64 from object literal { low: int, high: int, unsigned: bool }"
         // convert a single case string to union
+        // "One" -> One, here is a special case where the case in quoted inside the string
+        | JString caseName, TypeInfo.Union getTypes when isQuoted caseName ->
+            let (caseTypes, unionType) = getTypes()
+            caseTypes
+            |> Array.tryFind (fun case -> case.CaseName = removeQuotes caseName)
+            |> function
+                | Some ({ Info = caseInfo }) -> unbox (FSharpValue.MakeUnion(caseInfo, [||]))
+                | None ->
+                    let caseNames = Array.map (fun case -> sprintf " '%s' " case.CaseName) caseTypes
+                    let expectedCases = String.concat ", " caseNames
+                    failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
+        // convert a single case string to union
         // "One" -> One
         | JString caseName, TypeInfo.Union getTypes ->
             let (caseTypes, unionType) = getTypes()
@@ -186,7 +205,7 @@ module Convert =
                     | None ->
                         let caseNames = Array.map (fun case -> sprintf " '%s' " case.CaseName) cases
                         let expectedCases = String.concat ", " caseNames
-                        failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
+                        failwithf "Case '%s' was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
             | JString caseName :: values ->
                 cases
                 |> Array.tryFind (fun case -> case.CaseName = caseName)
@@ -277,12 +296,23 @@ module Convert =
 
         | JArray tuples, TypeInfo.Map getTypes ->
             let (keyType, valueType) = getTypes()
-            [ for keyValuePair in tuples do
-                let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
-                yield tuple ]
-            |> unbox<(string * obj) list>
-            |> Map.ofList
-            |> unbox
+            let pairs = 
+                [ for keyValuePair in tuples do
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
+                    yield tuple ]
+            match keyType with 
+            | TypeInfo.Int32 
+            | TypeInfo.String 
+            | TypeInfo.Bool -> 
+                pairs 
+                |> unbox<(string * obj) list>
+                |> Map.ofList
+                |> unbox
+            | _ -> 
+                pairs 
+                |> unbox<(IStructuralComparable * obj) list>
+                |> Map.ofList
+                |> unbox
 
         | JObject map, TypeInfo.Map getTypes ->
             let (keyType, valueType) = getTypes()
@@ -292,13 +322,26 @@ module Convert =
             | Some (JObject comparer), Some (JArray tree) when Map.isEmpty comparer ->
                 match generateMap (JArray tree) with
                 | Some internalMap ->
-                    flattenMap internalMap
-                    |> List.map (fun (key, value) ->
-                        let nextKey = unbox (fromJsonAs (JString key) keyType)
-                        let nextValue = unbox (fromJsonAs value valueType)
-                        unbox<string> nextKey, nextValue)
-                    |> Map.ofList
-                    |> unbox
+                    let pairs = 
+                        flattenMap internalMap
+                        |> List.map (fun (key, value) ->
+                            let nextKey = unbox (fromJsonAs (JString key) keyType)
+                            let nextValue = unbox (fromJsonAs value valueType)
+                            unbox<string> nextKey, nextValue)
+                    match keyType with 
+                    | TypeInfo.Int32 
+                    | TypeInfo.String 
+                    | TypeInfo.Bool -> 
+                        pairs 
+                        |> unbox<(string * obj) list>
+                        |> Map.ofList
+                        |> unbox
+                    | _ -> 
+                        pairs 
+                        |> unbox<(IStructuralComparable * obj) list>
+                        |> Map.ofList
+                        |> unbox
+
                 | None ->
                     let inputJson = SimpleJson.toString (JArray tree)
                     failwithf "Could not generate map from JSON\n %s" inputJson
@@ -306,14 +349,27 @@ module Convert =
                 // if comparer and tree are not present,
                 // assume we are parsing Fable 1 object literal
                 // and converting that to map
-                map
-                |> Map.toList
-                |> List.map (fun (key, value) ->
-                    let nextKey = unbox (fromJsonAs (JString key) keyType)
-                    let nextValue = unbox (fromJsonAs value valueType)
-                    unbox<string> nextKey, nextValue)
-                |> Map.ofList
-                |> unbox
+                let pairs = 
+                    map
+                    |> Map.toList
+                    |> List.map (fun (key, value) ->
+                        let nextKey = unbox (fromJsonAs (JString key) keyType)
+                        let nextValue = unbox (fromJsonAs value valueType)
+                        unbox<string> nextKey, nextValue)
+                        
+                match keyType with 
+                | TypeInfo.Int32 
+                | TypeInfo.String 
+                | TypeInfo.Bool -> 
+                    pairs 
+                    |> unbox<(string * obj) list>
+                    |> Map.ofList
+                    |> unbox
+                | _ -> 
+                    pairs 
+                    |> unbox<(IStructuralComparable * obj) list>
+                    |> Map.ofList
+                    |> unbox
         | _ ->
             failwithf "Cannot convert %s to %s" (Fable.Import.JS.JSON.stringify input) (Fable.Import.JS.JSON.stringify typeInfo)
 

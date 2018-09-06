@@ -7,7 +7,6 @@ open Fable.SimpleJson
 open Fable.SimpleJson.Parser
 open Fable.Core.JsInterop
 open System
-open Fable.SimpleJson
 
 registerModule "Simple Json Tests"
 
@@ -1029,10 +1028,133 @@ type ConfigValue = {
 
 type Config = Map<ConfigKey,ConfigValue>
 
-testCase "Maps with DU keys can be deserialized" <| fun test ->
+testCase "Deserializing simple DU works" <| fun test -> 
+    "[\"Technique\", \"Theme\", \"Collection\"]"
+    |> Json.parseNativeAs<ConfigKey list>
+    |> test.areEqual [ Technique ; Theme ; Collection ]
+
+testCase "Deserializing simple quoted DU works" <| fun test -> 
+    """["\"Technique\"", "\"Theme\"", "\"Collection\""]"""
+    |> Json.parseNativeAs<ConfigKey list>
+    |> test.areEqual [ Technique ; Theme ; Collection ]
+
+testCase "Simple maps with unqouted DU keys can be deserialized" <| fun test ->
+    // This is what received from Giraffe
+    let input = """{"Technique":{"name":"Техника","id":null}}"""
+    let expected = Map.ofList [ Technique, { id = None; name = "Техника" } ] 
+
+    input
+    |> Json.parseNativeAs<Config>
+    |> test.areEqual expected
+
+
+testCase "Simple maps with unqouted DU keys can be deserialized part 2" <| fun test ->
+    // This is what received from Giraffe
+    let input = """
+        { 
+            "Technique": { 
+                "name": "Техника",
+                "id": null
+            }, 
+            "Theme": { 
+                "name": "Тема",
+                "id": null 
+            } 
+        }
+    """
+
+    let expected = Map.ofList [ 
+        Technique, { id = None; name = "Техника" } 
+        Theme, { id = None; name = "Тема" }
+    ] 
+
+    input
+    |> Json.parseNativeAs<Config>
+    |> test.areEqual expected
+
+testCase "Simple maps with unqouted DU keys can be deserialized interchanged" <| fun test ->
+    // This is what received from Giraffe
+    let input = """
+        { 
+            "Technique": { 
+                "name": "Техника",
+                "id": null
+            }, 
+            "Theme": { 
+                "name": "Тема",
+                "id": null 
+            }
+        }
+    """
+    
+    let expected = Map.ofList [ 
+        Theme, { id = None; name = "Тема" }
+        Technique, { id = None; name = "Техника" } 
+    ] 
+
+    let deserialized = Json.parseNativeAs<Config> input
+    
+    Map.containsKey Technique deserialized
+    |> test.areEqual true
+
+    Map.containsKey Theme deserialized
+    |> test.areEqual true
+
+testCase "Simple maps with unqouted DU keys can be deserialized interchanged: part 2" <| fun test ->
+    // This is what received from Giraffe
+    let input = """
+        { 
+            "Technique": { 
+                "name": "Техника",
+                "id": null
+            }, 
+            "Theme": { 
+                "name": "Тема",
+                "id": null 
+            }, 
+            "Collection": {
+                "name": "Коллекция",
+                "id": null
+            }
+        }
+    """
+    
+    let expected = Map.ofList [ 
+        Theme, { id = None; name = "Тема" }
+        Technique, { id = None; name = "Техника" } 
+        Collection, { id = None; name = "Коллекция" }
+    ] 
+
+    let deserialized = Json.parseNativeAs<Config> input
+    
+    Map.containsKey Theme deserialized 
+    |> test.areEqual true 
+
+    Map.containsKey Technique deserialized 
+    |> test.areEqual true
+
+    Map.containsKey Collection deserialized 
+    |> test.areEqual true
+
+    test.areEqual expected deserialized
+
+testCase "Maps with unqouted DU keys can be deserialized" <| fun test ->
+    // This is what received from Giraffe
+    let input = """{"Technique":{"name":"Техника","id":null},"Theme":{"name":"Тема","id":null},"Collection":{"name":"Коллекция","id":null}}"""
+
+    let expected =
+        [ Collection, {id=None;name="Коллекция"}
+          Technique, {id=None;name="Техника"}
+          Theme, {id=None;name="Тема"} ] 
+        |> Map.ofList
+
+    input
+    |> Json.parseNativeAs<Config>
+    |> test.areEqual expected
+
+testCase "Maps with quoted DU keys can be deserialized" <| fun test ->
     // This is what received from Giraffe
     let input = """{"\"Technique\"":{"name":"Техника","id":null},"\"Theme\"":{"name":"Тема","id":null},"\"Collection\"":{"name":"Коллекция","id":null}}"""
-    printfn "<<<:%s" input
 
     let expected =
         [ Collection, {id=None;name="Коллекция"}
@@ -1043,14 +1165,36 @@ testCase "Maps with DU keys can be deserialized" <| fun test ->
     |> Json.parseNativeAs<Config>
     |> test.areEqual expected
 
+testCase "isQuoted works" <| fun test ->
+    "\"text\""
+    |> Convert.isQuoted 
+    |> test.areEqual true
+
+testCase "removeQuotes works" <| fun test ->
+    "\"text\""
+    |> Convert.removeQuotes 
+    |> test.areEqual "text"
+
+testCase "Maps can use structural equality" <| fun test -> 
+    let firstInput =
+        [ Collection, { id=None; name="Коллекция"}
+          Technique,  { id=None; name="Техника"}
+          Theme,      { id=None; name="Тема"} ] |> Map.ofList 
+
+    let secondInput =
+        [ Theme,  { id = None; name="Тема"}
+          Technique, { id = None; name="Техника"}
+          Collection, { id = None; name="Коллекция"} ] |> Map.ofList 
+
+    test.areEqual firstInput secondInput
+
 testCase "Maps with DU keys can be converted" <| fun test ->
     let input =
-        [ Collection, {id=None;name="Коллекция"}
-          Technique, {id=None;name="Техника"}
-          Theme, {id=None;name="Тема"} ] |> Map.ofList
+        [ Collection, { id=None; name="Коллекция"}
+          Technique,  { id=None; name="Техника"}
+          Theme,      { id=None; name="Тема"} ] |> Map.ofList
 
     input
     |> Json.stringify
-    |> (fun s -> printfn ">>>%s" s; s)
-    |> Json.parseAs<Config>
+    |> Json.parseNativeAs<Config>
     |> test.areEqual input
