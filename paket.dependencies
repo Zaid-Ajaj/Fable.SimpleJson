@@ -4,7 +4,7 @@ group Main
 
     nuget FSharp.Core
     nuget Fable.Core prerelease
-    nuget Fable.Parsimmon
+    nuget Fable.Parsimmon prerelease
     clitool dotnet-fable prerelease
 
 group Build
