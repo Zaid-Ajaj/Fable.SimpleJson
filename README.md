@@ -1,8 +1,14 @@
-# Fable.SimpleJson [![Nuget](https://img.shields.io/nuget/v/Fable.SimpleJson.svg?colorB=green)](https://www.nuget.org/packages/Fable.SimpleJson)   [![Build Status](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson.svg?branch=master)](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson)
+# Fable.SimpleJson [![Build Status](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson.svg?branch=master)](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson)
 
 A simple library for easily parsing, transforming and converting JSON in Fable projects. It is written using parser combinators from [Fable.Parsimmon](https://github.com/Zaid-Ajaj/Fable.Parsimmon)
 
-Template Used to build the library: [fable-library-template](https://github.com/Zaid-Ajaj/fable-library-template)
+### Nuget Packages
+
+| Fable version | Package |
+| ------------- | ------------- |
+| 1.3.x  |  [![Nuget](https://img.shields.io/nuget/v/Fable.SimpleJson.svg?maxAge=0&colorB=brightgreen)](https://www.nuget.org/packages/Fable.SimpleJson)  |
+| 2.0-beta  | [![Nuget](https://img.shields.io/nuget/vpre/Fable.SimpleJson.svg?maxAge=0&colorB=brightgreen)](https://www.nuget.org/packages/Fable.SimpleJson)   |
+
 
 ### Installation
 Install from nuget using paket
@@ -89,8 +95,8 @@ open Fable.SimpleJson
         |> function
             | [JString name; JNumber age]  -> 
                 Some { Name = name; Age = int age }
-            | otherwise -> None
-    | None -> None
+            | _ -> None
+    | _ -> None
 ```
 You could also use the non-safe version `SimpleJson.parse` if you know for sure that the JSON input string is parsable. `SimpleJson.parse` will throw an exception if it can't deserialize the JSON string.
 
@@ -98,7 +104,6 @@ You could also use the non-safe version `SimpleJson.parse` if you know for sure 
 
 ```fs
 let person = { Name = "John"; Age = 34 } 
-
 Json.stringify person 
 ```
 
@@ -137,7 +142,6 @@ Then obviously it wouldn't "just work" because the keys of the object don't matc
     | "first_name" -> "FirstName"
     | "last_name" -> "LastName"
     | key -> key)
-|> SimpleJson.toString
 |> Json.convertFromJsonAs<Person>
  // { FirstName = "John"; LastName = "Doe" }
 ```
