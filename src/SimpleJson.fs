@@ -46,11 +46,6 @@ module SimpleJson =
             | _ -> v
         ), 0)
 
-    /// Tries to convert an object literal to the Json by calling JSON.stringify on the object first
-    let fromObjectLiteral (x: 'a) = 
-        try tryParse (stringify x)
-        with | _ -> None
-
     [<Emit("$1[$0]")>]
     let internal get<'a> (key: string) (x: obj) : 'a = jsNative
 
@@ -71,6 +66,15 @@ module SimpleJson =
     let parseNative (input: string) = 
         let parsed = JS.JSON.parse input 
         parseNative' parsed 
+
+    let tryParseNative (input: string) = 
+        try Some (parseNative input)
+        with | ex -> None
+
+    /// Tries to convert an object literal to the Json by calling JSON.stringify on the object first
+    let fromObjectLiteral (x: 'a) = 
+        try Some (parseNative' x)
+        with | _ -> None
 
     /// Transforms all keys of the objects within the Json structure
     let rec mapKeys f = function
@@ -119,3 +123,13 @@ module SimpleJson =
                 |> JArray
             | otherJsonValue -> otherJsonValue
         mapKey [] json
+
+    let rec readPath (keys: string list) (input: Json) =
+        match keys, input with 
+        | [ ], _ -> None 
+        | [ key ], JObject dict -> Map.tryFind key dict 
+        | firstKey :: rest, JObject dict -> 
+            match Map.tryFind firstKey dict with 
+            | Some (JObject nextDict) -> readPath rest (JObject nextDict) 
+            | _ -> None 
+        | _ -> None

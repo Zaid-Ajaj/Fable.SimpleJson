@@ -1198,3 +1198,40 @@ testCase "Maps with DU keys can be converted" <| fun test ->
     |> Json.stringify
     |> Json.parseNativeAs<Config>
     |> test.areEqual input
+
+testCase "SimpleJson.readPath works" <| fun test -> 
+    let inputJson = 
+        """
+        {
+            "keys": {
+                "first": "first value",
+                "second": "second value"
+            }
+        }
+        """
+
+    let input = SimpleJson.parse inputJson 
+    let read keys = SimpleJson.readPath keys input
+    match read ["keys"; "first"], read [ "keys"; "second" ] with 
+    | Some (JString first), Some (JString second) -> 
+        test.areEqual first "first value"
+        test.areEqual second "second value"
+    | result -> test.failwith (Json.stringify result)
+
+testCase "SimpleJson.readPath works with fromObjectLiteral" <| fun test -> 
+    let subscription = createObj [
+        "keys" ==> createObj [
+            "first" ==> "first value"
+            "second" ==> "second value"
+        ]
+    ]
+
+    subscription
+    |> SimpleJson.fromObjectLiteral
+    |> Option.map (fun subscription ->
+        let read keys = SimpleJson.readPath keys subscription
+        match read ["keys"; "first"], read [ "keys"; "second" ] with 
+        | Some (JString first), Some (JString second) -> first, second
+        | _ -> "", ""
+    ) 
+    |> test.areEqual (Some ("first value", "second value"))
