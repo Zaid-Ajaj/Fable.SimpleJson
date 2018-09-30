@@ -1,18 +1,18 @@
 STORAGE: NONE
 NUGET
   remote: https://api.nuget.org/v3/index.json
-    dotnet-fable (2.0.0-beta-004) - clitool: true
+    dotnet-fable (2.0) - clitool: true
       Dotnet.ProjInfo (>= 0.9) - restriction: >= netcoreapp2.0
-      FSharp.Compiler.Service (>= 23.0.3) - restriction: >= netcoreapp2.0
-      FSharp.Core (>= 4.3.4) - restriction: >= netcoreapp2.0
+      FSharp.Compiler.Service (>= 25.0.1) - restriction: >= netcoreapp2.0
+      FSharp.Core (>= 4.5.2) - restriction: >= netcoreapp2.0
       Microsoft.NETCore.App (>= 2.0) - restriction: >= netcoreapp2.0
       Newtonsoft.Json (>= 11.0.2) - restriction: >= netcoreapp2.0
     Dotnet.ProjInfo (0.9) - restriction: >= netcoreapp2.0
       FSharp.Core (>= 4.2.3) - restriction: && (< net45) (>= netstandard2.0)
-    Fable.Core (2.0.0-beta-001)
-      FSharp.Core (>= 4.3.4) - restriction: >= netstandard2.0
-    Fable.Parsimmon (3.0.0-beta-001)
-      Fable.Core (>= 2.0.0-beta-001) - restriction: >= netstandard2.0
+    Fable.Core (2.0)
+      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
+    Fable.Parsimmon (3.0)
+      Fable.Core (>= 2.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
     FSharp.Compiler.Service (25.0.1) - restriction: >= netcoreapp2.0
       FSharp.Core (>= 4.1.18) - restriction: || (>= net45) (>= netstandard2.0)
