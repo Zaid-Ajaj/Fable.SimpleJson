@@ -85,6 +85,8 @@ module Convert =
         // reading int from string -> parse it
         | JString value, TypeInfo.Int32 _ -> unbox (int value)
         | JString value, TypeInfo.String _ -> unbox value
+        | JString value, TypeInfo.Decimal -> unbox (decimal value) 
+        | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
         // null values for strings are just the null string
         | JNull, TypeInfo.String _ -> unbox null
         | JNull, TypeInfo.Unit -> unbox ()

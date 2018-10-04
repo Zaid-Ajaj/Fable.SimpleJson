@@ -15,7 +15,7 @@ module Converter =
         | "System.DateTimeOffset" -> Some TypeInfo.DateTimeOffset
         | "System.Boolean" -> Some  TypeInfo.Bool
         | "System.Double" -> Some TypeInfo.Float
-        | "System.Decimal" -> Some TypeInfo.Float
+        | "System.Decimal" -> Some TypeInfo.Decimal
         | "System.Int64" -> Some TypeInfo.Long
         | "System.Numerics.BigInteger" -> Some TypeInfo.BigInt
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit
