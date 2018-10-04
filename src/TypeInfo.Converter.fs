@@ -17,6 +17,7 @@ module Converter =
         | "System.Double" -> Some TypeInfo.Float
         | "System.Decimal" -> Some TypeInfo.Decimal
         | "System.Int64" -> Some TypeInfo.Long
+        | "System.Int16" -> Some TypeInfo.Short 
         | "System.Numerics.BigInteger" -> Some TypeInfo.BigInt
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit
         | "System.Guid" -> Some TypeInfo.Guid

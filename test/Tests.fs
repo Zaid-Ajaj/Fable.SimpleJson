@@ -645,6 +645,20 @@ testCase "Native: Converting record with bytes" <| fun test ->
     |> Json.parseNativeAs<RecWithByte>
     |> test.areEqual { byteValue = byte 200 }
 
+type RecWithShort = { shortValue: int16 }
+
+testCase "Converting record with Int16" <| fun test ->
+    { shortValue = int16 200  }
+    |> Json.stringify
+    |> Json.parseAs<RecWithShort>
+    |> test.areEqual { shortValue = int16 200 }
+
+testCase "Native: Converting record with Int16" <| fun test ->
+    { shortValue = int16 200  }
+    |> Json.stringify
+    |> Json.parseNativeAs<RecWithShort>
+    |> test.areEqual { shortValue = int16 200 } 
+
 type ComplexRecord<'t> = {
     Value: 't;
     HasValue: bool;

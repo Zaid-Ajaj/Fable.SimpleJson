@@ -22,6 +22,7 @@ and TypeInfo =
     | Bool
     | Float
     | Decimal
+    | Short 
     | Long
     | Byte
     | DateTime
