@@ -470,70 +470,70 @@ testCase "Map.toList works" <| fun test ->
 
 registerModule "Json"
 
-type SimpleRec = { A: int; B: string; C: bool; D: float }
+type SimpleRec = { A: int; B: string; C: bool; D: float; E: decimal }
 
 testCase "Converting records with simple types" <| fun test ->
-    { A = 20; B = "BB"; C = false; D = 2.0451 }
+    { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
     |> Json.stringify
     |> Json.parseAs<SimpleRec>
-    |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451 }
+    |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
 
 testCase "Native: Converting records with simple types" <| fun test ->
-    { A = 20; B = "BB"; C = false; D = 2.0451 }
+    { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
     |> Json.stringify
     |> Json.parseNativeAs<SimpleRec>
-    |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451 }
+    |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
 
 testCase "Converting records with simple types, strings can be null" <| fun test ->
-    { A = 20; B = null; C = false; D = 2.0451 }
+    { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
     |> Json.stringify
     |> Json.parseAs<SimpleRec>
-    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451 }
+    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
 
 
 testCase "Native: Converting records with simple types, strings can be null" <| fun test ->
-    { A = 20; B = null; C = false; D = 2.0451 }
+    { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
     |> Json.stringify
     |> Json.parseNativeAs<SimpleRec>
-    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451 }
+    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
 
 testCase "Converting lists records with simple types" <| fun test ->
-    [ { A = 20; B = "BB"; C = false; D = 2.0451 } ]
+    [ { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } ]
     |> Json.stringify
     |> Json.parseAs<SimpleRec list>
-    |> test.areEqual [ { A = 20; B = "BB"; C = false; D = 2.0451 } ]
+    |> test.areEqual [ { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } ]
 
 testCase "Native: Converting records with simple types, strings can be null" <| fun test ->
-    { A = 20; B = null; C = false; D = 2.0451 }
+    { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
     |> Json.stringify
     |> Json.parseNativeAs<SimpleRec>
-    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451 }
+    |> test.areEqual { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
 
 testCase "Converting arrays records with simple types" <| fun test ->
-    [| { A = 20; B = "BB"; C = false; D = 2.0451 } |]
+    [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
     |> Json.stringify
     |> Json.parseAs<SimpleRec[]>
-    |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451 } |]
+    |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
 
 testCase "Native: Converting arrays records with simple types" <| fun test ->
-    [| { A = 20; B = "BB"; C = false; D = 2.0451 } |]
+    [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
     |> Json.stringify
     |> Json.parseNativeAs<SimpleRec[]>
-    |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451 } |]
+    |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
 
 testCase "Converting optional (Some) records with simple types" <| fun test ->
-    { A = 20; B = "BB"; C = false; D = 2.0451 }
+    { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
     |> Some
     |> Json.stringify
     |> Json.parseAs<Option<SimpleRec>>
-    |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451 })
+    |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M })
 
 testCase "Native: Converting optional (Some) records with simple types" <| fun test ->
-    { A = 20; B = "BB"; C = false; D = 2.0451 }
+    { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
     |> Some
     |> Json.stringify
     |> Json.parseAs<Option<SimpleRec>>
-    |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451 })
+    |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M })
 
 testCase "Converting optional (None) records with simple types" <| fun test ->
     None
@@ -662,13 +662,13 @@ type ComplexRecord<'t> = {
 
 testCase "Converting complex generic types" <| fun test ->
     let complexValue : Maybe<ComplexRecord<SimpleRec> list> =
-        [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134 }
+        [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134; E = 23.42M }
             HasValue = true
             Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
             DateTimeOffsets = [ DateTimeOffset.Now; DateTimeOffset.Now.AddDays(5.0) ]
-            RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
-            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
-            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
+            RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451; E = 42.23M } ]
+            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451; E = 42.42M }; None |]
+            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451; E = 23.23M }
             NestedMaps  = [ Map.ofList [ "one", Map.ofList [ "two", Just 100L ] ] ]
             SimpleTuples = Some "value", 20, System.Guid.NewGuid()
             Doubtful = Just (Just (Just Nothing))
@@ -683,13 +683,13 @@ testCase "Converting complex generic types" <| fun test ->
 
 testCase "Native: Converting complex generic types" <| fun test ->
     let complexValue : Maybe<ComplexRecord<SimpleRec> list> =
-        [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134 }
+        [ { Value = { A = 20; B = "AA"; C = false; D = 5.64134; E = 23.42M }
             HasValue = true
             Dates = [ DateTime.Now; DateTime.Now.AddDays(5.0) ]
             DateTimeOffsets = [ DateTimeOffset.Now; DateTimeOffset.Now.AddDays(5.0) ]
-            RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451 } ]
-            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451 }; None |]
-            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451 }
+            RecordList = [ { A = 30; B = "CC"; C = true; D = 2.0451; E = 23.42M } ]
+            ArrayOfOptionalRecords = [| None; Some { A = 35; B = "FF"; C = false; D = 1.0451; E = 42.23M }; None |]
+            OptionalRecord = Some { A = 40; B = "BB"; C = true; D = 3.0451; E = 42.42M }
             NestedMaps  = [ Map.ofList [ "one", Map.ofList [ "two", Just 100L ] ] ]
             SimpleTuples = Some "value", 20, System.Guid.NewGuid()
             Doubtful = Just (Just (Just Nothing))
@@ -1028,12 +1028,12 @@ type ConfigValue = {
 
 type Config = Map<ConfigKey,ConfigValue>
 
-testCase "Deserializing simple DU works" <| fun test -> 
+testCase "Deserializing simple DU works" <| fun test ->
     "[\"Technique\", \"Theme\", \"Collection\"]"
     |> Json.parseNativeAs<ConfigKey list>
     |> test.areEqual [ Technique ; Theme ; Collection ]
 
-testCase "Deserializing simple quoted DU works" <| fun test -> 
+testCase "Deserializing simple quoted DU works" <| fun test ->
     """["\"Technique\"", "\"Theme\"", "\"Collection\""]"""
     |> Json.parseNativeAs<ConfigKey list>
     |> test.areEqual [ Technique ; Theme ; Collection ]
@@ -1041,7 +1041,7 @@ testCase "Deserializing simple quoted DU works" <| fun test ->
 testCase "Simple maps with unqouted DU keys can be deserialized" <| fun test ->
     // This is what received from Giraffe
     let input = """{"Technique":{"name":"Техника","id":null}}"""
-    let expected = Map.ofList [ Technique, { id = None; name = "Техника" } ] 
+    let expected = Map.ofList [ Technique, { id = None; name = "Техника" } ]
 
     input
     |> Json.parseNativeAs<Config>
@@ -1051,22 +1051,22 @@ testCase "Simple maps with unqouted DU keys can be deserialized" <| fun test ->
 testCase "Simple maps with unqouted DU keys can be deserialized part 2" <| fun test ->
     // This is what received from Giraffe
     let input = """
-        { 
-            "Technique": { 
+        {
+            "Technique": {
                 "name": "Техника",
                 "id": null
-            }, 
-            "Theme": { 
+            },
+            "Theme": {
                 "name": "Тема",
-                "id": null 
-            } 
+                "id": null
+            }
         }
     """
 
-    let expected = Map.ofList [ 
-        Technique, { id = None; name = "Техника" } 
+    let expected = Map.ofList [
+        Technique, { id = None; name = "Техника" }
         Theme, { id = None; name = "Тема" }
-    ] 
+    ]
 
     input
     |> Json.parseNativeAs<Config>
@@ -1075,25 +1075,25 @@ testCase "Simple maps with unqouted DU keys can be deserialized part 2" <| fun t
 testCase "Simple maps with unqouted DU keys can be deserialized interchanged" <| fun test ->
     // This is what received from Giraffe
     let input = """
-        { 
-            "Technique": { 
+        {
+            "Technique": {
                 "name": "Техника",
                 "id": null
-            }, 
-            "Theme": { 
+            },
+            "Theme": {
                 "name": "Тема",
-                "id": null 
+                "id": null
             }
         }
     """
-    
-    let expected = Map.ofList [ 
+
+    let expected = Map.ofList [
         Theme, { id = None; name = "Тема" }
-        Technique, { id = None; name = "Техника" } 
-    ] 
+        Technique, { id = None; name = "Техника" }
+    ]
 
     let deserialized = Json.parseNativeAs<Config> input
-    
+
     Map.containsKey Technique deserialized
     |> test.areEqual true
 
@@ -1103,37 +1103,37 @@ testCase "Simple maps with unqouted DU keys can be deserialized interchanged" <|
 testCase "Simple maps with unqouted DU keys can be deserialized interchanged: part 2" <| fun test ->
     // This is what received from Giraffe
     let input = """
-        { 
-            "Technique": { 
+        {
+            "Technique": {
                 "name": "Техника",
                 "id": null
-            }, 
-            "Theme": { 
+            },
+            "Theme": {
                 "name": "Тема",
-                "id": null 
-            }, 
+                "id": null
+            },
             "Collection": {
                 "name": "Коллекция",
                 "id": null
             }
         }
     """
-    
-    let expected = Map.ofList [ 
+
+    let expected = Map.ofList [
         Theme, { id = None; name = "Тема" }
-        Technique, { id = None; name = "Техника" } 
+        Technique, { id = None; name = "Техника" }
         Collection, { id = None; name = "Коллекция" }
-    ] 
+    ]
 
     let deserialized = Json.parseNativeAs<Config> input
-    
-    Map.containsKey Theme deserialized 
-    |> test.areEqual true 
 
-    Map.containsKey Technique deserialized 
+    Map.containsKey Theme deserialized
     |> test.areEqual true
 
-    Map.containsKey Collection deserialized 
+    Map.containsKey Technique deserialized
+    |> test.areEqual true
+
+    Map.containsKey Collection deserialized
     |> test.areEqual true
 
     test.areEqual expected deserialized
@@ -1145,7 +1145,7 @@ testCase "Maps with unqouted DU keys can be deserialized" <| fun test ->
     let expected =
         [ Collection, {id=None;name="Коллекция"}
           Technique, {id=None;name="Техника"}
-          Theme, {id=None;name="Тема"} ] 
+          Theme, {id=None;name="Тема"} ]
         |> Map.ofList
 
     input
@@ -1167,24 +1167,24 @@ testCase "Maps with quoted DU keys can be deserialized" <| fun test ->
 
 testCase "isQuoted works" <| fun test ->
     "\"text\""
-    |> Convert.isQuoted 
+    |> Convert.isQuoted
     |> test.areEqual true
 
 testCase "removeQuotes works" <| fun test ->
     "\"text\""
-    |> Convert.removeQuotes 
+    |> Convert.removeQuotes
     |> test.areEqual "text"
 
-testCase "Maps can use structural equality" <| fun test -> 
+testCase "Maps can use structural equality" <| fun test ->
     let firstInput =
         [ Collection, { id=None; name="Коллекция"}
           Technique,  { id=None; name="Техника"}
-          Theme,      { id=None; name="Тема"} ] |> Map.ofList 
+          Theme,      { id=None; name="Тема"} ] |> Map.ofList
 
     let secondInput =
         [ Theme,  { id = None; name="Тема"}
           Technique, { id = None; name="Техника"}
-          Collection, { id = None; name="Коллекция"} ] |> Map.ofList 
+          Collection, { id = None; name="Коллекция"} ] |> Map.ofList
 
     test.areEqual firstInput secondInput
 
@@ -1199,8 +1199,8 @@ testCase "Maps with DU keys can be converted" <| fun test ->
     |> Json.parseNativeAs<Config>
     |> test.areEqual input
 
-testCase "SimpleJson.readPath works" <| fun test -> 
-    let inputJson = 
+testCase "SimpleJson.readPath works" <| fun test ->
+    let inputJson =
         """
         {
             "keys": {
@@ -1210,15 +1210,15 @@ testCase "SimpleJson.readPath works" <| fun test ->
         }
         """
 
-    let input = SimpleJson.parse inputJson 
+    let input = SimpleJson.parse inputJson
     let read keys = SimpleJson.readPath keys input
-    match read ["keys"; "first"], read [ "keys"; "second" ] with 
-    | Some (JString first), Some (JString second) -> 
+    match read ["keys"; "first"], read [ "keys"; "second" ] with
+    | Some (JString first), Some (JString second) ->
         test.areEqual first "first value"
         test.areEqual second "second value"
     | result -> test.failwith (Json.stringify result)
 
-testCase "SimpleJson.readPath works with fromObjectLiteral" <| fun test -> 
+testCase "SimpleJson.readPath works with fromObjectLiteral" <| fun test ->
     let subscription = createObj [
         "keys" ==> createObj [
             "first" ==> "first value"
@@ -1230,8 +1230,8 @@ testCase "SimpleJson.readPath works with fromObjectLiteral" <| fun test ->
     |> SimpleJson.fromObjectLiteral
     |> Option.map (fun subscription ->
         let read keys = SimpleJson.readPath keys subscription
-        match read ["keys"; "first"], read [ "keys"; "second" ] with 
+        match read ["keys"; "first"], read [ "keys"; "second" ] with
         | Some (JString first), Some (JString second) -> first, second
         | _ -> "", ""
-    ) 
+    )
     |> test.areEqual (Some ("first value", "second value"))
