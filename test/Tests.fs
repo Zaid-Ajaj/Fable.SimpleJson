@@ -495,7 +495,14 @@ testCase "Deserialize string with escaped quotes" <| fun test ->
                         printfn "'a' value: '%s'" s
                         s |> test.areEqual "\"\""
                     | _ -> test.failwith "Unexpected value of property 'a'"
-    | _ -> test.failwith "Unexpected json type"            
+    | _ -> test.failwith "Unexpected json type"
+
+testCase "Deserialize string with special char" <| fun test ->
+    let str = "\t"
+    let o = { Str = str }
+    let json = o |> Json.stringify
+    let deserialized = json |> Json.parseAs<WithString>
+    deserialized.Str |> test.areEqual str
 
 type SimpleRec = { A: int; B: string; C: bool; D: float; E: decimal }
 

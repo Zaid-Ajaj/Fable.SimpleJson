@@ -70,17 +70,18 @@ module Parser =
                 | c   -> c) // every other char is mapped to itself
 
         let escapedCharSnippet = 
-            Parsimmon.str "\\"
-            |> Parsimmon.chain escape
+            Parsimmon.seq2 (Parsimmon.str "\\") escape
+            |> Parsimmon.map snd
 
-        let normalCharSnippet = 
-            Parsimmon.satisfy (fun c -> c <> "\"" && c <> "\\")
+        let normalCharSnippet = Parsimmon.satisfy (fun c -> c <> "\"" && c <> "\\")
+
+        let anyCharSnippet = 
+            normalCharSnippet
+            |> Parsimmon.orTry escapedCharSnippet
             |> Parsimmon.many
             |> Parsimmon.concat
 
-        normalCharSnippet
-        |> Parsimmon.seperateBy escapedCharSnippet
-        |> Parsimmon.concat
+        anyCharSnippet
         |> Parsimmon.between (Parsimmon.str "\"") (Parsimmon.str "\"")
         
     let jstring = stringLiteral.map JString
