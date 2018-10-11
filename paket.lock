@@ -11,7 +11,7 @@ NUGET
       FSharp.Core (>= 4.2.3) - restriction: && (< net45) (>= netstandard2.0)
     Fable.Core (2.0)
       FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
-    Fable.Parsimmon (3.0)
+    Fable.Parsimmon (3.1)
       Fable.Core (>= 2.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
     FSharp.Compiler.Service (25.0.1) - restriction: >= netcoreapp2.0

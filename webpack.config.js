@@ -2,7 +2,7 @@ var path = require("path");
 
 var babelOptions = {
   presets: [
-    ["env", {
+    ["@babel/preset-env", {
         "modules": false,
         "useBuiltIns": "usage",
     }]
@@ -17,7 +17,9 @@ module.exports = function (evn, argv) {
  return {
   mode: mode,
   devtool: isProduction ? false : "eval-source-map",
-  entry: './test/Tests.fsproj',
+  entry: {
+    app: ["@babel/polyfill", "./test/Tests.fsproj"]
+  },
   output: {
     filename: 'bundle.js',
     path: path.join(__dirname, './public'),

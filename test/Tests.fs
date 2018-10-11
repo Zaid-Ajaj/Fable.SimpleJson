@@ -476,25 +476,19 @@ testCase "Deserialize string with json inside" <| fun test ->
     let str = "1"
     let json1 = { Str = str } |> Json.stringify
     let json2 = { Str = json1 } |> Json.stringify
-
-    printf "json2 = '%s'" json2
-
     let parsed2 = Json.parseAs<WithString> json2
-    printf "parsed2.Str = '%s'" parsed2.Str
     let parsed1 = Json.parseAs<WithString> parsed2.Str
     test.areEqual str parsed1.Str
 
 testCase "Deserialize string with escaped quotes" <| fun test ->
     let jsonString = "{\"a\": \"\\\"\\\"\"}"
-    printfn "Original json: %s" jsonString 
     let json = jsonString |> SimpleJson.parse
 
     match json with
-    | JObject o -> match o |> Map.find "a" with 
-                    | JString s -> 
-                        printfn "'a' value: '%s'" s
-                        s |> test.areEqual "\"\""
-                    | _ -> test.failwith "Unexpected value of property 'a'"
+    | JObject literal -> 
+        match Map.find "a" literal with 
+        | JString "\"\"" -> test.pass()
+        | _ -> test.failwith "Unexpected value of property 'a'"
     | _ -> test.failwith "Unexpected json type"
 
 testCase "Deserialize string with special char" <| fun test ->
