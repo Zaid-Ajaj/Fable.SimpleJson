@@ -974,6 +974,61 @@ type User = {
     LastActivity: DateTime
 }
 
+testCase "Deserializing User array works" <| fun test -> 
+    let usersInput = [| 
+        { Login = "first"; IsAdmin = false; LastActivity = DateTime.Now } 
+        { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now } 
+    |]
+
+    let serialized = Json.stringify usersInput
+    match Json.tryParseNativeAs<User array>(serialized) with 
+    | Ok users -> 
+        test.areEqual 2 (Array.length users)
+        test.areEqual "first" users.[0].Login 
+        test.areEqual false users.[0].IsAdmin 
+        test.areEqual "second" users.[1].Login
+        test.areEqual true users.[1].IsAdmin
+
+    | Error msg -> test.failwith msg
+ 
+testCaseAsync "Async.bind runs after parsing arrays of users" <| fun test -> 
+    let usersInput = [| 
+        { Login = "first"; IsAdmin = false; LastActivity = DateTime.Now } 
+        { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now } 
+    |]
+
+    let pgetUsers() = Fable.Import.JS.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.stringify usersInput)))
+    let getUsers() = Async.AwaitPromise(pgetUsers())
+ 
+    async { 
+        let! users = getUsers()
+        do test.areEqual 2 (Array.length users)
+    }
+
+testCaseAsync "Async.bind runs after parsing arrays of users" <| fun test -> 
+    let input = [| 1 .. 5 |]
+
+    let pgetNumbers() = Fable.Import.JS.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.stringify input)))
+    let getNumbers() = Async.AwaitPromise(pgetNumbers())
+ 
+    async { 
+        let! users = getNumbers()
+        do test.areEqual 5 (Array.length users)
+    }
+
+type HighScore = { Name : string; Score : int }
+
+testCaseAsync "Async.bind runs after parsing arrays of HighScore" <| fun test -> 
+    let input = [| { Name = "first"; Score = 1 }; { Name = "second"; Score = 2 }; { Name = "third"; Score = 3 } |]
+
+    let pgetScores() = Fable.Import.JS.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.stringify input)))
+    let getScores() = Async.AwaitPromise(pgetScores())
+ 
+    async { 
+        let! users = getScores()
+        do test.areEqual 3 (Array.length users)
+    }
+
 testCase "Deserializing SecureRequest<User list> works" <| fun test ->
     let inputs = """
         {
