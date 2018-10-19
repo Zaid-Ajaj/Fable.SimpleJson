@@ -1,4 +1,4 @@
-# Fable.SimpleJson [![Build Status](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson.svg?branch=master)](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson)  [![Nuget](https://img.shields.io/nuget/v/Fable.SimpleJson.svg?maxAge=0&colorB=brightgreen)](https://www.nuget.org/packages/Fable.SimpleJson)
+# Fable.SimpleJson [![Build Status](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson.svg?branch=master)](https://travis-ci.org/Zaid-Ajaj/Fable.SimpleJson) [![Build status](https://ci.appveyor.com/api/projects/status/i17usjpn7bbiwm9n?svg=true)](https://ci.appveyor.com/project/Zaid-Ajaj/fable-simplejson) [![Nuget](https://img.shields.io/nuget/v/Fable.SimpleJson.svg?maxAge=0&colorB=brightgreen)](https://www.nuget.org/packages/Fable.SimpleJson)
 
 A simple library for easily parsing, transforming and converting JSON in Fable projects. It is written using parser combinators from [Fable.Parsimmon](https://github.com/Zaid-Ajaj/Fable.Parsimmon)
 
