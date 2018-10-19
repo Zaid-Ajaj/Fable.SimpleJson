@@ -1344,3 +1344,37 @@ testCase "SimpleJson.readPath works with fromObjectLiteral" <| fun test ->
         | _ -> "", ""
     )
     |> test.areEqual (Some ("first value", "second value"))
+
+type AlbumId = AlbumId of int
+type AlbumAuthor = AlbumAuthor of string
+
+testCase "Deserializing tuple of single case unions works in Fable 1 representation" <| fun test ->
+    [ 
+        // Fable 1 -> sent from server
+        """
+        {
+            "Ok": [
+                { "AlbumId": 5 }, 
+                { "AlbumAuthor": "author" }
+            ] 
+        }
+        """
+        // Mix Fable 1 and Fable 2
+        """
+        [ "Ok", [{ "AlbumId": 5 }, { "AlbumAuthor": "author" }]] 
+        """
+
+        """
+        { "Ok": [["AlbumId", 5], ["AlbumAuthor", "author"]] } 
+        """
+
+        // Fable 2
+        """
+        [ "Ok", [["AlbumId", 5], ["AlbumAuthor", "author"]]] 
+        """
+    ]
+    |> List.map Json.parseNativeAs<Result<AlbumId * AlbumAuthor, string>>
+    |> List.forall (function 
+        | Ok (AlbumId 5, AlbumAuthor "author") -> true
+        | somethingElse -> false)
+    |> test.equal true
