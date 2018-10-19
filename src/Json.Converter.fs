@@ -68,6 +68,7 @@ module Convert =
         | TypeInfo.Array _ -> true
         | TypeInfo.List _ -> true
         | TypeInfo.Seq _ -> true
+        | TypeInfo.Tuple _ -> true
         | _ -> false
 
     let isQuoted (input: string) = 
