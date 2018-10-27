@@ -7,6 +7,8 @@ open Fable.SimpleJson
 open Fable.SimpleJson.Parser
 open Fable.Core.JsInterop
 open System
+open System
+open System.Reflection
 
 registerModule "Simple Json Tests"
 
@@ -1378,3 +1380,92 @@ testCase "Deserializing tuple of single case unions works in Fable 1 representat
         | Ok (AlbumId 5, AlbumAuthor "author") -> true
         | somethingElse -> false)
     |> test.equal true
+
+testCase "string * string []" <| fun test -> 
+    let inputJson = "[\"first\", [\"1\"]]"
+
+    let deserialized = Json.parseNativeAs<string * string []> inputJson 
+    match deserialized with
+    | "first", [| "1" |] -> test.pass() 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "string * string [] - multi elements" <| fun test -> 
+    let inputJson = "[\"first\", [\"1\", \"2\"]]"
+
+    let deserialized = Json.parseNativeAs<string * string []> inputJson 
+    match deserialized with
+    | "first", [| "1"; "2" |] -> test.pass() 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "(string * string []) [] - part 1" <| fun test -> 
+    let inputJson = "[ [\"first\", [\"1\"]] ]"
+
+    let deserialized = Json.parseAs<(string * string []) [ ]> inputJson 
+    match deserialized with
+    | [| "first", [| "1" |] |] -> test.pass() 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "ParseNative works with outer arrays" <| fun test -> 
+    match SimpleJson.parseNative "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]" with  
+    | JArray [ JArray [ JString "first"; JArray [ JString "1" ] ]; JArray [ JString "second"; JArray [ JString "2" ] ] ] ->
+        test.pass() 
+    | _ -> test.fail()
+
+testCase "(string * string []) [] - part 2" <| fun test -> 
+    let inputJson = "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]"
+
+    let deserialized = Json.parseNativeAs<(string * string list) list> inputJson 
+    match deserialized with
+    | [ "first", [ "1" ]; "second", [ "2" ] ] -> test.pass() 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "(string * string list) list - part 3" <| fun test -> 
+    let inputJson = "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]"
+
+    let deserialized = Json.parseAs<(string * string []) list> inputJson 
+    match deserialized with
+    | [ "first", [| "1" |]; "second", [| "2" |] ] -> test.pass() 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "(string * string list) list - part 3" <| fun test -> 
+    let inputJson = "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]"
+    let deserialized = Json.parseAs<(string * string list) [ ]> inputJson 
+    match deserialized with
+    | [| "first", [ "1" ]; "second", [ "2" ] |] -> test.pass() 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "Converter works for array of tuple" <| fun test -> 
+    let typeInfo = TypeInfo.createFrom<(int * int) []>() 
+    match typeInfo with  
+    | TypeInfo.Array getElemType ->
+        match getElemType() with  
+        | TypeInfo.Tuple getTupleTypes -> 
+            match getTupleTypes() with 
+            | [| TypeInfo.Int32; TypeInfo.Int32 |] -> test.pass() 
+            | _ -> test.failwith "Expected int * int"
+        | _ -> test.failwith "Expected tuple"
+    | other -> test.failwith (sprintf "Expected array but got %A" other) 
+
+testCase "Array of tuples" <| fun test -> 
+    let inputJson = "[ [2,3], [4,5], [5,6] ]"
+    match Json.parseNativeAs<(int * int) []> inputJson with
+    | [| (2,3); (4,5); (5,6) |] -> test.pass()
+    | _ -> test.fail() 
+
+type TupleStringArrays = {
+    Highlights : (string * string []) [ ] 
+}
+
+testCase "Deserializing highlights" <| fun test ->  
+    let inputJson = """
+        {
+            "Highlights": [
+                [ "first", [ "1" ] ],
+                [ "second", [ "2" ] ]
+            ]
+        }
+    """ 
+    
+    match Json.parseNativeAs<TupleStringArrays> inputJson with  
+    | { Highlights = [| "first", [| "1" |]; "second", [| "2" |] |] } -> test.pass() 
+    | otherwise -> test.unexpected otherwise

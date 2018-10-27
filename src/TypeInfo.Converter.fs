@@ -73,7 +73,7 @@ module Converter =
         else None
 
     let (|ArrayType|_|) (t:Type) =
-        if (t.FullName.EndsWith "[]")
+        if t.IsArray
         then t.GetElementType() |> Some
         else None
 
@@ -83,7 +83,7 @@ module Converter =
         else None
 
     let (|TupleType|_|) (t: Type) =
-        if t.FullName.StartsWith "System.Tuple`"
+        if FSharpType.IsTuple t
         then FSharpType.GetTupleElements(t) |> Some
         else None
 
@@ -106,7 +106,6 @@ module Converter =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
         | FuncType (types) -> TypeInfo.Func (fun () -> Array.map createTypeInfo types)
-        | TupleType types -> TypeInfo.Tuple (fun () -> Array.map createTypeInfo types)
         | RecordType fields -> TypeInfo.Record <| fun () ->
             let fields =
                 [| for (fieldName, fieldType) in fields ->
@@ -122,6 +121,8 @@ module Converter =
 
         | ListType elemType -> TypeInfo.List (fun () -> createTypeInfo elemType)
         | ArrayType elemType -> TypeInfo.Array (fun () -> createTypeInfo elemType)
+        // Checking for tuples has to happen after checking for arrays
+        | TupleType types -> TypeInfo.Tuple (fun () -> Array.map createTypeInfo types)
         | OptionType elemType -> TypeInfo.Option (fun () -> createTypeInfo elemType)
         | SetType elemType -> TypeInfo.Set (fun () -> createTypeInfo elemType)
         | MapType (keyType, valueType) -> TypeInfo.Map (fun () -> createTypeInfo keyType, createTypeInfo valueType)
