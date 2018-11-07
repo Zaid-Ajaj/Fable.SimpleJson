@@ -195,6 +195,8 @@ module Convert =
                     let caseNames = Array.map (fun case -> sprintf " '%s' " case.CaseName) caseTypes
                     let expectedCases = String.concat ", " caseNames
                     failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
+        | JString serializedRecord, TypeInfo.Record getFields ->
+            fromJsonAs (SimpleJson.parse serializedRecord) typeInfo
         // convert unions from arrays
         // ["One", 20] -> One of int
         | JArray caseValue, TypeInfo.Union getTypes ->
@@ -331,9 +333,12 @@ module Convert =
                     let pairs = 
                         flattenMap internalMap
                         |> List.map (fun (key, value) ->
-                            let nextKey = unbox (fromJsonAs (JString key) keyType)
+                            let nextKey = 
+                                if not (isQuoted key)  
+                                then unbox (fromJsonAs (JString key) keyType)
+                                else unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
                             let nextValue = unbox (fromJsonAs value valueType)
-                            unbox<string> nextKey, nextValue)
+                            unbox<obj> nextKey, nextValue)
                     match keyType with 
                     | TypeInfo.Int32 
                     | TypeInfo.String 
@@ -359,7 +364,10 @@ module Convert =
                     map
                     |> Map.toList
                     |> List.map (fun (key, value) ->
-                        let nextKey = unbox (fromJsonAs (JString key) keyType)
+                        let nextKey =
+                            if not (isQuoted key)  
+                            then unbox (fromJsonAs (JString key) keyType)
+                            else unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
                         let nextValue = unbox (fromJsonAs value valueType)
                         unbox<string> nextKey, nextValue)
                         

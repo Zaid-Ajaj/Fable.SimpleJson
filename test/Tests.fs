@@ -1469,3 +1469,41 @@ testCase "Deserializing highlights" <| fun test ->
     match Json.parseNativeAs<TupleStringArrays> inputJson with  
     | { Highlights = [| "first", [| "1" |]; "second", [| "2" |] |] } -> test.pass() 
     | otherwise -> test.unexpected otherwise
+
+type RecordAsKey = { Key: int; Value : string }
+
+testCase "Deserializing maps with record as key" <| fun test -> 
+    [ { Key = 1; Value = "Value" }, 1 ]
+    |> Map.ofList 
+    |> Json.stringify 
+    |> Json.parseNativeAs<Map<RecordAsKey, int>>
+    |> Map.toList 
+    |> function 
+        | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
+        | otherwise -> test.unexpected otherwise
+
+
+testCase "Deserializing maps with record as quoted serialized key" <| fun test -> 
+    """
+    [
+        ["{\"Key\":1,\"Value\":\"Value\"}", 1] 
+    ]
+    """
+    |> Json.parseNativeAs<Map<RecordAsKey, int>>
+    |> Map.toList 
+    |> function 
+        | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
+        | otherwise -> test.unexpected otherwise
+
+
+testCase "Deserializing maps with record as quoted serialized key 2" <| fun test -> 
+    "
+    [
+        [{\"Key\":1,\"Value\":\"Value\"}, 1] 
+    ]
+    "
+    |> Json.parseNativeAs<Map<RecordAsKey, int>>
+    |> Map.toList 
+    |> function 
+        | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
+        | otherwise -> test.unexpected otherwise
