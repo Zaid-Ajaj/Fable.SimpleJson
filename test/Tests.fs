@@ -1507,3 +1507,21 @@ testCase "Deserializing maps with record as quoted serialized key 2" <| fun test
     |> function 
         | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
         | otherwise -> test.unexpected otherwise
+
+type WithByteArray = { Hash: byte [] }
+
+testCase "Deserializing byte[] serialized as base64" <| fun test ->
+    "{ \"Hash\": \"AQIDBAU=\" }"
+    |> Json.parseNativeAs<WithByteArray> 
+    |> function 
+        | { Hash = [| 1uy; 2uy; 3uy; 4uy; 5uy |] } -> test.pass() 
+        | otherwise -> test.unexpected otherwise
+
+type WithFloat32 = { Value: float32 }
+
+testCase "Deserializing flaot32/single" <| fun test ->
+    "{ \"Value\": 123 }"
+    |> Json.parseAs<WithFloat32> 
+    |> function 
+        | { Value = 123.0f } -> test.pass()
+        | otherwise -> test.unexpected otherwise

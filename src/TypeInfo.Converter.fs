@@ -14,6 +14,7 @@ module Converter =
         | "System.DateTime" -> Some TypeInfo.DateTime
         | "System.DateTimeOffset" -> Some TypeInfo.DateTimeOffset
         | "System.Boolean" -> Some  TypeInfo.Bool
+        | "System.Single" -> Some TypeInfo.Float32
         | "System.Double" -> Some TypeInfo.Float
         | "System.Decimal" -> Some TypeInfo.Decimal
         | "System.Int64" -> Some TypeInfo.Long

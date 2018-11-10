@@ -7,7 +7,15 @@ open FSharp.Reflection
 open System.Numerics
 open System.Collections
 
+module Node = 
+    [<Emit("Array.prototype.slice.call(Buffer.from($0, 'base64'))")>]
+    let internal bytesFromBase64String (value: string) : int array = jsNative  
+    /// Converts Base64 string into a byte array in Node environment
+    let bytesFromBase64 = bytesFromBase64String >> Array.map byte
+
 module Convert =
+    [<Emit("new Function(\"try {return this===window;}catch(e){ return false;}\")")>]
+    let internal isBrowser : unit -> bool = jsNative
 
     [<Emit("$0[$1] = $2")>]
     let internal setProp o k v = jsNative
@@ -79,32 +87,46 @@ module Convert =
 
     let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj =
         match input, typeInfo with
-        | JNumber value, TypeInfo.Float _ -> unbox value
+        | JNumber value, TypeInfo.Float -> unbox value
+        | JNumber value, TypeInfo.Float32 -> unbox (float32 value)
+        | JString value, TypeInfo.Float32 -> unbox (float32 value) 
         // reading number as int -> floor it
-        | JNumber value, TypeInfo.Int32 _ -> unbox (Fable.Import.JS.Math.floor(value))
-        | JBool value, TypeInfo.Bool _ -> unbox value
+        | JNumber value, TypeInfo.Int32 -> unbox (Fable.Import.JS.Math.floor(value))
+        | JBool value, TypeInfo.Bool -> unbox value
         // reading int from string -> parse it
-        | JString value, TypeInfo.Int32 _ -> unbox (int value)
-        | JString value, TypeInfo.String _ -> unbox value
+        | JString value, TypeInfo.Int32 -> unbox (int value)
+        | JString value, TypeInfo.String -> unbox value
         // decimals
         | JString value, TypeInfo.Decimal -> unbox (decimal value) 
         | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
         | JString value, TypeInfo.Short -> unbox (int16 value)
         | JNumber value, TypeInfo.Short -> unbox (int16 value)
+
+        // byte[] coming from the server is serialized as base64 string
+        // convert it back to the actual byte array
+        | JString value, TypeInfo.Array getElemType ->
+            let elemType = getElemType()
+            match elemType with 
+            | TypeInfo.Byte ->
+                if isBrowser() 
+                then unbox (Convert.FromBase64String value) 
+                else unbox (Node.bytesFromBase64 value)
+            | otherType -> failwithf "Cannot convert string arbitrary string %s to %A" value otherType
+
         // null values for strings are just the null string
-        | JNull, TypeInfo.String _ -> unbox null 
+        | JNull, TypeInfo.String -> unbox null 
         | JNull, TypeInfo.Unit -> unbox ()
         // int64 as string -> parse it
-        | JString value, TypeInfo.Long _ -> unbox (int64 value)
+        | JString value, TypeInfo.Long -> unbox (int64 value)
         | JString value, TypeInfo.Byte -> unbox (byte value)
         | JNumber value, TypeInfo.Byte -> unbox (byte value)
         // BigInt as string -> parse it
-        | JString value, TypeInfo.BigInt _ -> unbox (BigInteger.Parse value)
-        | JNumber value, TypeInfo.BigInt _ -> unbox (bigint (Fable.Import.JS.Math.floor(value)))
+        | JString value, TypeInfo.BigInt -> unbox (BigInteger.Parse value)
+        | JNumber value, TypeInfo.BigInt -> unbox (bigint (Fable.Import.JS.Math.floor(value)))
         // parse formatted date time
-        | JString value, TypeInfo.DateTime _ -> unbox (DateTime.Parse(value))
+        | JString value, TypeInfo.DateTime -> unbox (DateTime.Parse(value))
         // parse formatted date time offset
-        | JString value, TypeInfo.DateTimeOffset _ -> unbox (DateTimeOffset.Parse(value))
+        | JString value, TypeInfo.DateTimeOffset -> unbox (DateTimeOffset.Parse(value))
         // deserialize union from objects
         // { "One": 20 } or {"One": [20]} -> One of int
         | JObject values, TypeInfo.Union (getTypes) ->
