@@ -8,10 +8,11 @@ open System.Numerics
 open System.Collections
 
 module Node = 
+
     [<Emit("Array.prototype.slice.call(Buffer.from($0, 'base64'))")>]
-    let internal bytesFromBase64String (value: string) : int array = jsNative  
     /// Converts Base64 string into a byte array in Node environment
-    let bytesFromBase64 = bytesFromBase64String >> Array.map byte
+    let bytesFromBase64 (value: string) : byte array = jsNative  
+    
 
 module Convert =
     [<Emit("new Function(\"try {return this===window;}catch(e){ return false;}\")")>]
@@ -111,7 +112,7 @@ module Convert =
                 if isBrowser() 
                 then unbox (Convert.FromBase64String value) 
                 else unbox (Node.bytesFromBase64 value)
-            | otherType -> failwithf "Cannot convert string arbitrary string %s to %A" value otherType
+            | otherType -> failwithf "Cannot convert arbitrary string '%s' to %A" value otherType
 
         // null values for strings are just the null string
         | JNull, TypeInfo.String -> unbox null 
