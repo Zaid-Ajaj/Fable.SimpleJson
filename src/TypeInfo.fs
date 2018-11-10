@@ -20,6 +20,7 @@ and TypeInfo =
     | String
     | Int32
     | Bool
+    | Float32
     | Float
     | Decimal
     | Short 
