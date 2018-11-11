@@ -10,15 +10,18 @@ module Converter =
     let (|PrimitiveType|_|) (primType: Type) =
         match primType.FullName with
         | "System.String" -> Some TypeInfo.String
+        | "System.Int16" -> Some TypeInfo.Short 
         | "System.Int32" -> Some TypeInfo.Int32
+        | "System.Int64" -> Some TypeInfo.Long
+        | "System.UInt16" -> Some TypeInfo.UInt16
+        | "System.UInt32" -> Some TypeInfo.UInt32
+        | "System.UInt64" -> Some TypeInfo.UInt64 
         | "System.DateTime" -> Some TypeInfo.DateTime
         | "System.DateTimeOffset" -> Some TypeInfo.DateTimeOffset
         | "System.Boolean" -> Some  TypeInfo.Bool
         | "System.Single" -> Some TypeInfo.Float32
         | "System.Double" -> Some TypeInfo.Float
         | "System.Decimal" -> Some TypeInfo.Decimal
-        | "System.Int64" -> Some TypeInfo.Long
-        | "System.Int16" -> Some TypeInfo.Short 
         | "System.Numerics.BigInteger" -> Some TypeInfo.BigInt
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit
         | "System.Guid" -> Some TypeInfo.Guid

@@ -102,7 +102,13 @@ module Convert =
         | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
         | JString value, TypeInfo.Short -> unbox (int16 value)
         | JNumber value, TypeInfo.Short -> unbox (int16 value)
-
+        // Unsigned integers
+        | JNumber value, TypeInfo.UInt16 -> unbox (uint16 value) 
+        | JString value, TypeInfo.UInt16 -> unbox (uint16 value) 
+        | JNumber value, TypeInfo.UInt32 -> unbox (uint32 value) 
+        | JString value, TypeInfo.UInt32 -> unbox (uint32 value) 
+        | JNumber value, TypeInfo.UInt64 -> unbox (uint64 value) 
+        | JString value, TypeInfo.UInt64 -> unbox (uint64 value) 
         // byte[] coming from the server is serialized as base64 string
         // convert it back to the actual byte array
         | JString value, TypeInfo.Array getElemType ->
