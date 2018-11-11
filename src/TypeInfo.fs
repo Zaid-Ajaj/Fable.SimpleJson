@@ -18,6 +18,9 @@ and UnionCase = {
 and TypeInfo =
     | Unit
     | String
+    | UInt16
+    | UInt32
+    | UInt64
     | Int32
     | Bool
     | Float32

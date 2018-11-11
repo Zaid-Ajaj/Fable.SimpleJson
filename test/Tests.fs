@@ -1525,3 +1525,16 @@ testCase "Deserializing flaot32/single" <| fun test ->
     |> function 
         | { Value = 123.0f } -> test.pass()
         | otherwise -> test.unexpected otherwise
+
+type UnsignedIntegers = { 
+    Sixteen: uint16 
+    ThirtyTwo: uint32 
+    SixtyFour: uint64
+}
+
+testCase "Deserializing unsigned integers" <| fun test ->
+    "{ \"Sixteen\": 10, \"ThirtyTwo\": 10, \"SixtyFour\":10 }"
+    |> Json.parseNativeAs<UnsignedIntegers> 
+    |> function 
+        | { Sixteen = first; ThirtyTwo = 10u;  SixtyFour = 10UL } when int first = 10 -> test.pass()  
+        | otherValue -> test.unexpected otherValue
