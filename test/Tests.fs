@@ -1482,7 +1482,6 @@ testCase "Deserializing maps with record as key" <| fun test ->
         | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
         | otherwise -> test.unexpected otherwise
 
-
 testCase "Deserializing maps with record as quoted serialized key" <| fun test -> 
     """
     [
@@ -1538,3 +1537,36 @@ testCase "Deserializing unsigned integers" <| fun test ->
     |> function 
         | { Sixteen = first; ThirtyTwo = 10u;  SixtyFour = 10UL } when int first = 10 -> test.pass()  
         | otherValue -> test.unexpected otherValue
+ 
+testCase "BigInt can be detected in run time" <| fun test ->
+    InteropUtil.isBigInt (bigint 5)
+    |> test.equal true 
+
+    InteropUtil.isBigInt null 
+    |> test.equal false 
+
+    InteropUtil.isBigInt (bigint -5)
+    |> test.equal true
+
+testCase "BigInt can be JSON.stringified" <| fun test ->
+    match Json.stringify 5I with 
+    | "\"5\"" -> test.pass()
+    | otherwise -> test.unexpected otherwise
+
+type RecordWithDateOffset = { DateOffset:  DateTimeOffset }
+
+testCase "Stringifying DateTimeOffset preserves timezone" <| fun test -> 
+    let dateOffset = DateTimeOffset.Now 
+    let record = { DateOffset = dateOffset }
+    let stringified = dateOffset.ToString("O")
+    match SimpleJson.parseNative (Json.stringify record) with 
+    | JObject dict -> 
+        match Map.tryFind "DateOffset" dict with 
+        | Some (JString value) -> test.areEqual value stringified 
+        | otherwise -> test.unexpected otherwise 
+    | otherwise -> test.unexpected otherwise  
+
+testCase "Testing for DateTimeOffset works in runtime" <| fun test ->
+    let dateOffset = DateTimeOffset.Now 
+    InteropUtil.isDateOffset dateOffset 
+    |> test.areEqual true
