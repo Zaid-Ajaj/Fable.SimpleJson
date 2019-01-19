@@ -4,7 +4,32 @@ open Fable.Core
 open Fable.Parsimmon
 open Parser
 open Fable.Import
+open System
+open Fable.Core.JsInterop
 
+[<AutoOpen>]
+module InteropUtil =    
+    [<Emit("$1[$0]")>]
+    let get<'a> (key: string) (x: obj) : 'a = jsNative
+    [<Emit("$0 instanceof Date")>]
+    let isDate (x: obj) = jsNative
+    [<Emit("$0 in $1")>]
+    let hasKey (key: string) (x: 'a) = jsNative
+    let isDateOffset (x: obj) = isDate x && hasKey "offset" x
+    [<Emit("typeof $0")>]
+    let getTypeOf (x: obj) : string = jsNative
+    let isObjectLiteral (x: obj) = getTypeOf x = "object" 
+    let isBigInt (x: obj) = 
+        not (isNull x)
+        && isObjectLiteral x
+        && hasKey "signInt" x 
+        && hasKey "v" x 
+        && hasKey "digits" (get "v" x)
+        && hasKey "bound" (get "v" x)
+
+    [<Emit("console.log($0)")>]
+    let log (x: 'a) : unit = jsNative
+     
 module SimpleJson = 
     /// Tries to parse a string into a Json structured JSON data.
     let tryParse (input: string) : Option<Json> = 
@@ -36,18 +61,23 @@ module SimpleJson =
             |> sprintf "{%s}"
 
     let stringify (value: 'a) : string =
-        JS.JSON.stringify(value, (fun _ v ->
+        JS.JSON.stringify(value, (fun key v ->
+            if isDateOffset (get key jsThis) then 
+                let dateOffset : DateTimeOffset = get key jsThis
+                box (dateOffset.ToString("O"))
+            elif isBigInt (get key jsThis) then 
+                let bigInt : bigint = get key jsThis
+                box (string (decimal bigInt))
+            else 
             match v with
             | :? string -> v
             | :? System.Collections.IEnumerable ->
-                if JS.Array.isArray(v)
-                then v
+                if JS.Array.isArray(v) then v
                 else JS.Array.from(v :?> JS.Iterable<obj>) |> box
+            | _ when isBigInt v -> box (string (decimal (unbox<bigint> v)))
+            | _ when isDateOffset v -> box ((unbox<DateTimeOffset> v).ToString("O"))
             | _ -> v
         ), 0)
-
-    [<Emit("$1[$0]")>]
-    let internal get<'a> (key: string) (x: obj) : 'a = jsNative
 
     let rec internal parseNative' (x: obj) = 
         match x with  

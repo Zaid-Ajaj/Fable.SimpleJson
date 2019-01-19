@@ -414,7 +414,7 @@ module Convert =
                     |> Map.ofList
                     |> unbox
         | _ ->
-            failwithf "Cannot convert %s to %s" (Fable.Import.JS.JSON.stringify input) (Fable.Import.JS.JSON.stringify typeInfo)
+            failwithf "Cannot convert %s to %s" (SimpleJson.toString input) (Fable.Import.JS.JSON.stringify typeInfo)
 
     let fromJson<'t> json typeInfo =
         unbox<'t> (fromJsonAs json typeInfo)
