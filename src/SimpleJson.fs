@@ -65,6 +65,9 @@ module SimpleJson =
             if isDateOffset (get key jsThis) then 
                 let dateOffset : DateTimeOffset = get key jsThis
                 box (dateOffset.ToString("O"))
+            elif isBigInt (get key jsThis) then 
+                let bigInt : bigint = get key jsThis
+                box (string (decimal bigInt))
             else 
             match v with
             | :? string -> v
@@ -72,6 +75,7 @@ module SimpleJson =
                 if JS.Array.isArray(v) then v
                 else JS.Array.from(v :?> JS.Iterable<obj>) |> box
             | _ when isBigInt v -> box (string (decimal (unbox<bigint> v)))
+            | _ when isDateOffset v -> box ((unbox<DateTimeOffset> v).ToString("O"))
             | _ -> v
         ), 0)
 
