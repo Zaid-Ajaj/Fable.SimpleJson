@@ -1570,3 +1570,10 @@ testCase "Testing for DateTimeOffset works in runtime" <| fun test ->
     let dateOffset = DateTimeOffset.Now 
     InteropUtil.isDateOffset dateOffset 
     |> test.areEqual true
+
+testCase "DateTimeOffset uses ToString('O') when stringified" <| fun test -> 
+    let dateOffset = DateTimeOffset.Now
+    let expected = dateOffset.ToString("O")
+    match SimpleJson.parseNative (Json.stringify dateOffset) with 
+    | JString actual -> test.areEqual actual expected 
+    | otherwise -> test.unexpected otherwise  
