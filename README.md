@@ -16,6 +16,14 @@ nuget Fable.SimpleJson
 Fable.SimpleJson
 ```
 
+## Raison d'être
+
+Fable.SimpleJson allows for generic JSON data maniplution and treats JSON as a data structure like `List` or `Map`. Manipulation JSON as data means that you can util low-level API's to transform and convert the JSON into desired structure or extracting values from the JSON without defining intermediate types.
+
+ The automatic serialization and deserialization to typed entities  happen to be utility functions but are not the main purpose of the library (as in with [Thoth.Json](https://github.com/MangelMaxime/Thoth)). 
+
+Because of the flexibility it provides, it forms a solid foundation for JSON handling in [Fable.Remoting](https://github.com/Zaid-Ajaj/Fable.Remoting). 
+
 ### Using the library
 
 JSON Parsing and Transformation API
