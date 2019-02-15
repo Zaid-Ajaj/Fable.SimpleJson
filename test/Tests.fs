@@ -1577,3 +1577,37 @@ testCase "DateTimeOffset uses ToString('O') when stringified" <| fun test ->
     match SimpleJson.parseNative (Json.stringify dateOffset) with 
     | JString actual -> test.areEqual actual expected 
     | otherwise -> test.unexpected otherwise  
+
+
+type Balance = { Value : decimal }
+testCase "decimal arithmetic works after deserialization" <| fun test ->
+    let input = """{ "Value": 9.5 }"""
+    match Json.tryParseNativeAs<Balance> input with 
+    | Ok balance -> 
+        let value = balance.Value
+        let discount = value - 9.0M
+        test.areEqual discount 0.5M
+    
+    | Error error -> 
+        test.unexpected error
+
+testCase "decimal arithmetic works after deserialization from generic type: Result" <| fun test ->
+    let input = """{ "Ok": { "Value": 9.5  } }"""
+    match Json.parseNativeAs<Result<Balance, int>> input with 
+    | Ok balance -> 
+        let value = balance.Value
+        let discount = value - 9.0M
+        test.areEqual discount 0.5M
+    
+    | Error error -> 
+        test.unexpected error
+
+testCase "decimal arithmetic works after deserialization from generic type: Maybe" <| fun test ->
+    let input = """{ "Just": { "Value": 9.5  } }"""
+    match Json.parseNativeAs<Maybe<Balance>> input with 
+    | Just balance -> 
+        let value = balance.Value
+        let discount = value - 9.0M
+        test.areEqual discount 0.5M
+    
+    | Nothing -> test.unexpected "should not happen"
