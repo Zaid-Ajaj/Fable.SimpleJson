@@ -140,3 +140,33 @@ module Converter =
         static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : Fable.SimpleJson.TypeInfo =
             let resolvedType = resolver.Value.ResolveType()
             createTypeInfo resolvedType
+
+    /// returns whether a type is primitive
+    let isPrimitive = function 
+        | Unit
+        | String
+        | UInt16
+        | UInt32
+        | UInt64
+        | Int32
+        | Bool
+        | Float32
+        | Float
+        | Decimal
+        | Short 
+        | Long
+        | Byte
+        | DateTime
+        | DateTimeOffset
+        | BigInt
+        | Guid
+        | Option _ -> true
+        | otherwise -> false
+
+    /// returns whether the discrimiated union type is like a enum
+    let enumUnion = function 
+        | TypeInfo.Union getCases -> 
+            getCases()
+            |> fst
+            |> Array.forall (fun case -> Array.isEmpty case.CaseTypes) 
+        | otherwise -> false 

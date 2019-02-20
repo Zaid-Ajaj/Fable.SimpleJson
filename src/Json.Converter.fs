@@ -395,8 +395,17 @@ module Convert =
                     |> List.map (fun (key, value) ->
                         let nextKey =
                             if not (isQuoted key)  
-                            then unbox (fromJsonAs (JString key) keyType)
-                            else unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
+                            then
+                                if Converter.isPrimitive keyType || Converter.enumUnion keyType
+                                then 
+                                    // for primitive type, just read them as string and parse
+                                    unbox (fromJsonAs (JString key) keyType)
+                                else
+                                    // server-side JSON can still be complex (for complex types) 
+                                    // but doesn't have to be quoted, parse again here 
+                                    unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
+                            else 
+                                unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
                         let nextValue = unbox (fromJsonAs value valueType)
                         unbox<string> nextKey, nextValue)
                         
