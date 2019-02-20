@@ -1611,3 +1611,58 @@ testCase "decimal arithmetic works after deserialization from generic type: Mayb
         test.areEqual discount 0.5M
     
     | Nothing -> test.unexpected "should not happen"
+
+type ComplexKey<'t> = ComplexKey of 't
+
+testCase "Deserializing complex keys for Map" <| fun test ->
+    let value = Map.ofList [ ComplexKey 1, Just 5 ]
+    let input = Json.stringify value
+    input
+    |> Json.parseNativeAs<Map<ComplexKey<int>, Maybe<int>>>
+    |> Map.tryFind (ComplexKey 1)
+    |> function 
+        | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
+        | otherwise -> test.unexpected otherwise
+
+testCase "Deserializing complex keys with guids for Map" <| fun test ->
+    let guid = Guid.NewGuid()
+    let value = Map.ofList [ ComplexKey guid, Just guid ]
+    let input = Json.stringify value
+    input
+    |> Json.parseNativeAs<Map<ComplexKey<Guid>, Maybe<Guid>>>
+    |> Map.tryFind (ComplexKey guid)
+    |> function 
+        | Some (Just value) -> test.areEqual value guid
+        | otherwise -> test.unexpected otherwise
+
+testCase "Deserializing complex keys with guids for Map" <| fun test ->
+    let value = Map.ofList [ ComplexKey "key", Just "value" ]
+    let input = Json.stringify value
+    input
+    |> Json.parseNativeAs<Map<ComplexKey<string>, Maybe<string>>>
+    |> Map.tryFind (ComplexKey "key")
+    |> function 
+        | Some (Just "value") -> test.pass()
+        | otherwise -> test.unexpected otherwise 
+
+testCase "Deserializing complex keys for Map from server" <| fun test ->
+    let input = """
+        {"{\"ComplexKey\":1}":{"Just":5}}
+    """
+    input
+    |> Json.parseNativeAs<Map<ComplexKey<int>, Maybe<int>>>
+    |> Map.tryFind (ComplexKey 1)
+    |> function 
+        | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
+        | otherwise -> test.unexpected otherwise
+
+testCase "Deserializing complex keys as strings for Map from server" <| fun test ->
+    let input = """
+        {"{\"ComplexKey\":\"key\"}":{"Just":5}}
+    """
+    input
+    |> Json.parseNativeAs<Map<ComplexKey<string>, Maybe<int>>>
+    |> Map.tryFind (ComplexKey "key")
+    |> function 
+        | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
+        | otherwise -> test.unexpected otherwise
