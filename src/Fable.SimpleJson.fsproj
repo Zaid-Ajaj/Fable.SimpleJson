@@ -23,5 +23,8 @@
   <ItemGroup>
     <Content Include="*.fsproj; *.fs;" PackagePath="fable\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\paket-files\Zaid-Ajaj\Fable.Parsimmon\Fable.Parsimmon\Fable.Parsimmon.fsproj" />
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

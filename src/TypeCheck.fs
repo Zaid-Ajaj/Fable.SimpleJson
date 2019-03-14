@@ -2,9 +2,8 @@ namespace Fable.SimpleJson
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Import.JS
 
-module TypeCheck = 
+module TypeCheck =
 
     [<Emit("typeof ($0) === 'string'")>]
     let typeofString (x: obj) : bool = jsNative
@@ -18,31 +17,31 @@ module TypeCheck =
     let typeofObject (x: obj) : bool = jsNative
 
     let (|NativeString|_|) (x: obj) =
-        if typeofString x 
+        if typeofString x
         then Some (unbox<string> x)
-        else None 
+        else None
 
     let (|NativeBool|_|) (x: obj) =
-        if typeofBool x 
+        if typeofBool x
         then Some (unbox<bool> x)
-        else None 
+        else None
 
-    let (|NativeNumber|_|) (x: obj) = 
+    let (|NativeNumber|_|) (x: obj) =
         if typeofNumber x
         then Some (unbox<float> x)
-        else None 
+        else None
 
-    let (|NativeObject|_|) (x: obj) = 
-        if typeofObject x 
-        then Some x 
-        else None 
+    let (|NativeObject|_|) (x: obj) =
+        if typeofObject x
+        then Some x
+        else None
 
-    let (|Null|_|) (x: obj) = 
-        if isNull x 
-        then Some x 
-        else None  
-        
-    let (|NativeArray|_|) (x: obj) =    
-        if (Fable.Import.JS.Array.isArray x) 
+    let (|Null|_|) (x: obj) =
+        if isNull x
+        then Some x
+        else None
+
+    let (|NativeArray|_|) (x: obj) =
+        if (JS.Array.isArray x)
         then Some (unbox<obj[]> x)
-        else None 
+        else None

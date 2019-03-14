@@ -425,7 +425,7 @@ testCase "fromJsonAs works with simple DU's serialized as objects with values as
 testCase "Parsing maps serialized with JSON.stringify" <| fun test ->
     [ "A", "a"; "B", "b"; "C", "c" ]
     |> Map.ofList
-    |> Fable.Import.JS.JSON.stringify
+    |> Fable.Core.JS.JSON.stringify
     |> Json.parseAs<Map<string, string>>
     |> Map.toList
     |> test.areEqual [ "A", "a"; "B", "b"; "C", "c" ]
@@ -459,7 +459,7 @@ testCase "Parsing maps with integers as keys" <| fun test ->
 testCase "Parsing maps with strings as keys with complex values" <| fun test ->
     [ "test", [ One; Two 20; Three "some value" ] ]
     |> Map.ofList
-    |> Fable.Import.JS.JSON.stringify
+    |> Fable.Core.JS.JSON.stringify
     |> Json.parseAs<Map<string, SimpleDU list>>
     |> Map.toList
     |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
@@ -487,8 +487,8 @@ testCase "Deserialize string with escaped quotes" <| fun test ->
     let json = jsonString |> SimpleJson.parse
 
     match json with
-    | JObject literal -> 
-        match Map.find "a" literal with 
+    | JObject literal ->
+        match Map.find "a" literal with
         | JString "\"\"" -> test.pass()
         | _ -> test.failwith "Unexpected value of property 'a'"
     | _ -> test.failwith "Unexpected json type"
@@ -618,7 +618,7 @@ testCase "TypeInfo of Maybe<<Maybe<int>> can be generated" <| fun test ->
 testCase "Converting maps works" <| fun test ->
     [ "test", [ One; Two 20; Three "some value" ] ]
     |> Map.ofList
-    |> Fable.Import.JS.JSON.stringify
+    |> Fable.Core.JS.JSON.stringify
     |> Json.parseAs<Map<string, SimpleDU list>>
     |> Map.toList
     |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
@@ -626,7 +626,7 @@ testCase "Converting maps works" <| fun test ->
 testCase "Native: Converting maps works" <| fun test ->
     [ "test", [ One; Two 20; Three "some value" ] ]
     |> Map.ofList
-    |> Fable.Import.JS.JSON.stringify
+    |> Fable.Core.JS.JSON.stringify
     |> Json.parseNativeAs<Map<string, SimpleDU list>>
     |> Map.toList
     |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
@@ -687,7 +687,7 @@ testCase "Native: Converting record with Int16" <| fun test ->
     { shortValue = int16 200  }
     |> Json.stringify
     |> Json.parseNativeAs<RecWithShort>
-    |> test.areEqual { shortValue = int16 200 } 
+    |> test.areEqual { shortValue = int16 200 }
 
 testCase "Converting record with negative Int16" <| fun test ->
     { shortValue = int16 -200  }
@@ -699,7 +699,7 @@ testCase "Native: Converting record with negative Int16" <| fun test ->
     { shortValue = int16 -200  }
     |> Json.stringify
     |> Json.parseNativeAs<RecWithShort>
-    |> test.areEqual { shortValue = int16 -200 } 
+    |> test.areEqual { shortValue = int16 -200 }
 
 type ComplexRecord<'t> = {
     Value: 't;
@@ -976,57 +976,57 @@ type User = {
     LastActivity: DateTime
 }
 
-testCase "Deserializing User array works" <| fun test -> 
-    let usersInput = [| 
-        { Login = "first"; IsAdmin = false; LastActivity = DateTime.Now } 
-        { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now } 
+testCase "Deserializing User array works" <| fun test ->
+    let usersInput = [|
+        { Login = "first"; IsAdmin = false; LastActivity = DateTime.Now }
+        { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now }
     |]
 
     let serialized = Json.stringify usersInput
-    match Json.tryParseNativeAs<User array>(serialized) with 
-    | Ok users -> 
+    match Json.tryParseNativeAs<User array>(serialized) with
+    | Ok users ->
         test.areEqual 2 (Array.length users)
-        test.areEqual "first" users.[0].Login 
-        test.areEqual false users.[0].IsAdmin 
+        test.areEqual "first" users.[0].Login
+        test.areEqual false users.[0].IsAdmin
         test.areEqual "second" users.[1].Login
         test.areEqual true users.[1].IsAdmin
 
     | Error msg -> test.failwith msg
- 
-testCaseAsync "Async.bind runs after parsing arrays of users" <| fun test -> 
-    let usersInput = [| 
-        { Login = "first"; IsAdmin = false; LastActivity = DateTime.Now } 
-        { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now } 
+
+testCaseAsync "Async.bind runs after parsing arrays of users" <| fun test ->
+    let usersInput = [|
+        { Login = "first"; IsAdmin = false; LastActivity = DateTime.Now }
+        { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now }
     |]
 
-    let pgetUsers() = Fable.Import.JS.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.stringify usersInput)))
+    let pgetUsers() = Fable.Core.JS.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.stringify usersInput)))
     let getUsers() = Async.AwaitPromise(pgetUsers())
- 
-    async { 
+
+    async {
         let! users = getUsers()
         do test.areEqual 2 (Array.length users)
     }
 
-testCaseAsync "Async.bind runs after parsing arrays of users" <| fun test -> 
+testCaseAsync "Async.bind runs after parsing arrays of users" <| fun test ->
     let input = [| 1 .. 5 |]
 
-    let pgetNumbers() = Fable.Import.JS.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.stringify input)))
+    let pgetNumbers() = Fable.Core.JS.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.stringify input)))
     let getNumbers() = Async.AwaitPromise(pgetNumbers())
- 
-    async { 
+
+    async {
         let! users = getNumbers()
         do test.areEqual 5 (Array.length users)
     }
 
 type HighScore = { Name : string; Score : int }
 
-testCaseAsync "Async.bind runs after parsing arrays of HighScore" <| fun test -> 
+testCaseAsync "Async.bind runs after parsing arrays of HighScore" <| fun test ->
     let input = [| { Name = "first"; Score = 1 }; { Name = "second"; Score = 2 }; { Name = "third"; Score = 3 } |]
 
-    let pgetScores() = Fable.Import.JS.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.stringify input)))
+    let pgetScores() = Fable.Core.JS.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.stringify input)))
     let getScores() = Async.AwaitPromise(pgetScores())
- 
-    async { 
+
+    async {
         let! users = getScores()
         do test.areEqual 3 (Array.length users)
     }
@@ -1351,112 +1351,112 @@ type AlbumId = AlbumId of int
 type AlbumAuthor = AlbumAuthor of string
 
 testCase "Deserializing tuple of single case unions works in Fable 1 representation" <| fun test ->
-    [ 
+    [
         // Fable 1 -> sent from server
         """
         {
             "Ok": [
-                { "AlbumId": 5 }, 
+                { "AlbumId": 5 },
                 { "AlbumAuthor": "author" }
-            ] 
+            ]
         }
         """
         // Mix Fable 1 and Fable 2
         """
-        [ "Ok", [{ "AlbumId": 5 }, { "AlbumAuthor": "author" }]] 
+        [ "Ok", [{ "AlbumId": 5 }, { "AlbumAuthor": "author" }]]
         """
 
         """
-        { "Ok": [["AlbumId", 5], ["AlbumAuthor", "author"]] } 
+        { "Ok": [["AlbumId", 5], ["AlbumAuthor", "author"]] }
         """
 
         // Fable 2
         """
-        [ "Ok", [["AlbumId", 5], ["AlbumAuthor", "author"]]] 
+        [ "Ok", [["AlbumId", 5], ["AlbumAuthor", "author"]]]
         """
     ]
     |> List.map Json.parseNativeAs<Result<AlbumId * AlbumAuthor, string>>
-    |> List.forall (function 
+    |> List.forall (function
         | Ok (AlbumId 5, AlbumAuthor "author") -> true
         | somethingElse -> false)
     |> test.equal true
 
-testCase "string * string []" <| fun test -> 
+testCase "string * string []" <| fun test ->
     let inputJson = "[\"first\", [\"1\"]]"
 
-    let deserialized = Json.parseNativeAs<string * string []> inputJson 
+    let deserialized = Json.parseNativeAs<string * string []> inputJson
     match deserialized with
-    | "first", [| "1" |] -> test.pass() 
-    | otherwise -> test.unexpected otherwise  
+    | "first", [| "1" |] -> test.pass()
+    | otherwise -> test.unexpected otherwise
 
-testCase "string * string [] - multi elements" <| fun test -> 
+testCase "string * string [] - multi elements" <| fun test ->
     let inputJson = "[\"first\", [\"1\", \"2\"]]"
 
-    let deserialized = Json.parseNativeAs<string * string []> inputJson 
+    let deserialized = Json.parseNativeAs<string * string []> inputJson
     match deserialized with
-    | "first", [| "1"; "2" |] -> test.pass() 
-    | otherwise -> test.unexpected otherwise  
+    | "first", [| "1"; "2" |] -> test.pass()
+    | otherwise -> test.unexpected otherwise
 
-testCase "(string * string []) [] - part 1" <| fun test -> 
+testCase "(string * string []) [] - part 1" <| fun test ->
     let inputJson = "[ [\"first\", [\"1\"]] ]"
 
-    let deserialized = Json.parseAs<(string * string []) [ ]> inputJson 
+    let deserialized = Json.parseAs<(string * string []) [ ]> inputJson
     match deserialized with
-    | [| "first", [| "1" |] |] -> test.pass() 
-    | otherwise -> test.unexpected otherwise  
+    | [| "first", [| "1" |] |] -> test.pass()
+    | otherwise -> test.unexpected otherwise
 
-testCase "ParseNative works with outer arrays" <| fun test -> 
-    match SimpleJson.parseNative "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]" with  
+testCase "ParseNative works with outer arrays" <| fun test ->
+    match SimpleJson.parseNative "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]" with
     | JArray [ JArray [ JString "first"; JArray [ JString "1" ] ]; JArray [ JString "second"; JArray [ JString "2" ] ] ] ->
-        test.pass() 
+        test.pass()
     | _ -> test.fail()
 
-testCase "(string * string []) [] - part 2" <| fun test -> 
+testCase "(string * string []) [] - part 2" <| fun test ->
     let inputJson = "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]"
 
-    let deserialized = Json.parseNativeAs<(string * string list) list> inputJson 
+    let deserialized = Json.parseNativeAs<(string * string list) list> inputJson
     match deserialized with
-    | [ "first", [ "1" ]; "second", [ "2" ] ] -> test.pass() 
-    | otherwise -> test.unexpected otherwise  
+    | [ "first", [ "1" ]; "second", [ "2" ] ] -> test.pass()
+    | otherwise -> test.unexpected otherwise
 
-testCase "(string * string list) list - part 3" <| fun test -> 
+testCase "(string * string list) list - part 3" <| fun test ->
     let inputJson = "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]"
 
-    let deserialized = Json.parseAs<(string * string []) list> inputJson 
+    let deserialized = Json.parseAs<(string * string []) list> inputJson
     match deserialized with
-    | [ "first", [| "1" |]; "second", [| "2" |] ] -> test.pass() 
-    | otherwise -> test.unexpected otherwise  
+    | [ "first", [| "1" |]; "second", [| "2" |] ] -> test.pass()
+    | otherwise -> test.unexpected otherwise
 
-testCase "(string * string list) list - part 3" <| fun test -> 
+testCase "(string * string list) list - part 3" <| fun test ->
     let inputJson = "[ [\"first\", [\"1\"]], [\"second\", [\"2\"]] ]"
-    let deserialized = Json.parseAs<(string * string list) [ ]> inputJson 
+    let deserialized = Json.parseAs<(string * string list) [ ]> inputJson
     match deserialized with
-    | [| "first", [ "1" ]; "second", [ "2" ] |] -> test.pass() 
-    | otherwise -> test.unexpected otherwise  
+    | [| "first", [ "1" ]; "second", [ "2" ] |] -> test.pass()
+    | otherwise -> test.unexpected otherwise
 
-testCase "Converter works for array of tuple" <| fun test -> 
-    let typeInfo = TypeInfo.createFrom<(int * int) []>() 
-    match typeInfo with  
+testCase "Converter works for array of tuple" <| fun test ->
+    let typeInfo = TypeInfo.createFrom<(int * int) []>()
+    match typeInfo with
     | TypeInfo.Array getElemType ->
-        match getElemType() with  
-        | TypeInfo.Tuple getTupleTypes -> 
-            match getTupleTypes() with 
-            | [| TypeInfo.Int32; TypeInfo.Int32 |] -> test.pass() 
+        match getElemType() with
+        | TypeInfo.Tuple getTupleTypes ->
+            match getTupleTypes() with
+            | [| TypeInfo.Int32; TypeInfo.Int32 |] -> test.pass()
             | _ -> test.failwith "Expected int * int"
         | _ -> test.failwith "Expected tuple"
-    | other -> test.failwith (sprintf "Expected array but got %A" other) 
+    | other -> test.failwith (sprintf "Expected array but got %A" other)
 
-testCase "Array of tuples" <| fun test -> 
+testCase "Array of tuples" <| fun test ->
     let inputJson = "[ [2,3], [4,5], [5,6] ]"
     match Json.parseNativeAs<(int * int) []> inputJson with
     | [| (2,3); (4,5); (5,6) |] -> test.pass()
-    | _ -> test.fail() 
+    | _ -> test.fail()
 
 type TupleStringArrays = {
-    Highlights : (string * string []) [ ] 
+    Highlights : (string * string []) [ ]
 }
 
-testCase "Deserializing highlights" <| fun test ->  
+testCase "Deserializing highlights" <| fun test ->
     let inputJson = """
         {
             "Highlights": [
@@ -1464,46 +1464,46 @@ testCase "Deserializing highlights" <| fun test ->
                 [ "second", [ "2" ] ]
             ]
         }
-    """ 
-    
-    match Json.parseNativeAs<TupleStringArrays> inputJson with  
-    | { Highlights = [| "first", [| "1" |]; "second", [| "2" |] |] } -> test.pass() 
+    """
+
+    match Json.parseNativeAs<TupleStringArrays> inputJson with
+    | { Highlights = [| "first", [| "1" |]; "second", [| "2" |] |] } -> test.pass()
     | otherwise -> test.unexpected otherwise
 
 type RecordAsKey = { Key: int; Value : string }
 
-testCase "Deserializing maps with record as key" <| fun test -> 
+testCase "Deserializing maps with record as key" <| fun test ->
     [ { Key = 1; Value = "Value" }, 1 ]
-    |> Map.ofList 
-    |> Json.stringify 
+    |> Map.ofList
+    |> Json.stringify
     |> Json.parseNativeAs<Map<RecordAsKey, int>>
-    |> Map.toList 
-    |> function 
+    |> Map.toList
+    |> function
         | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
         | otherwise -> test.unexpected otherwise
 
-testCase "Deserializing maps with record as quoted serialized key" <| fun test -> 
+testCase "Deserializing maps with record as quoted serialized key" <| fun test ->
     """
     [
-        ["{\"Key\":1,\"Value\":\"Value\"}", 1] 
+        ["{\"Key\":1,\"Value\":\"Value\"}", 1]
     ]
     """
     |> Json.parseNativeAs<Map<RecordAsKey, int>>
-    |> Map.toList 
-    |> function 
+    |> Map.toList
+    |> function
         | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
         | otherwise -> test.unexpected otherwise
 
 
-testCase "Deserializing maps with record as quoted serialized key 2" <| fun test -> 
+testCase "Deserializing maps with record as quoted serialized key 2" <| fun test ->
     "
     [
-        [{\"Key\":1,\"Value\":\"Value\"}, 1] 
+        [{\"Key\":1,\"Value\":\"Value\"}, 1]
     ]
     "
     |> Json.parseNativeAs<Map<RecordAsKey, int>>
-    |> Map.toList 
-    |> function 
+    |> Map.toList
+    |> function
         | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
         | otherwise -> test.unexpected otherwise
 
@@ -1511,105 +1511,105 @@ type WithByteArray = { Hash: byte [] }
 
 testCase "Deserializing byte[] serialized as base64" <| fun test ->
     "{ \"Hash\": \"AQIDBAU=\" }"
-    |> Json.parseNativeAs<WithByteArray> 
-    |> function 
-        | { Hash = [| 1uy; 2uy; 3uy; 4uy; 5uy |] } -> test.pass() 
+    |> Json.parseNativeAs<WithByteArray>
+    |> function
+        | { Hash = [| 1uy; 2uy; 3uy; 4uy; 5uy |] } -> test.pass()
         | otherwise -> test.unexpected otherwise
 
 type WithFloat32 = { Value: float32 }
 
 testCase "Deserializing flaot32/single" <| fun test ->
     "{ \"Value\": 123 }"
-    |> Json.parseAs<WithFloat32> 
-    |> function 
+    |> Json.parseAs<WithFloat32>
+    |> function
         | { Value = 123.0f } -> test.pass()
         | otherwise -> test.unexpected otherwise
 
-type UnsignedIntegers = { 
-    Sixteen: uint16 
-    ThirtyTwo: uint32 
+type UnsignedIntegers = {
+    Sixteen: uint16
+    ThirtyTwo: uint32
     SixtyFour: uint64
 }
 
 testCase "Deserializing unsigned integers" <| fun test ->
     "{ \"Sixteen\": 10, \"ThirtyTwo\": 10, \"SixtyFour\":10 }"
-    |> Json.parseNativeAs<UnsignedIntegers> 
-    |> function 
-        | { Sixteen = first; ThirtyTwo = 10u;  SixtyFour = 10UL } when int first = 10 -> test.pass()  
+    |> Json.parseNativeAs<UnsignedIntegers>
+    |> function
+        | { Sixteen = first; ThirtyTwo = 10u;  SixtyFour = 10UL } when int first = 10 -> test.pass()
         | otherValue -> test.unexpected otherValue
- 
+
 testCase "BigInt can be detected in run time" <| fun test ->
     InteropUtil.isBigInt (bigint 5)
-    |> test.equal true 
+    |> test.equal true
 
-    InteropUtil.isBigInt null 
-    |> test.equal false 
+    InteropUtil.isBigInt null
+    |> test.equal false
 
     InteropUtil.isBigInt (bigint -5)
     |> test.equal true
 
 testCase "BigInt can be JSON.stringified" <| fun test ->
-    match Json.stringify 5I with 
+    match Json.stringify 5I with
     | "\"5\"" -> test.pass()
     | otherwise -> test.unexpected otherwise
 
 type RecordWithDateOffset = { DateOffset:  DateTimeOffset }
 
-testCase "Stringifying DateTimeOffset preserves timezone" <| fun test -> 
-    let dateOffset = DateTimeOffset.Now 
+testCase "Stringifying DateTimeOffset preserves timezone" <| fun test ->
+    let dateOffset = DateTimeOffset.Now
     let record = { DateOffset = dateOffset }
     let stringified = dateOffset.ToString("O")
-    match SimpleJson.parseNative (Json.stringify record) with 
-    | JObject dict -> 
-        match Map.tryFind "DateOffset" dict with 
-        | Some (JString value) -> test.areEqual value stringified 
-        | otherwise -> test.unexpected otherwise 
-    | otherwise -> test.unexpected otherwise  
+    match SimpleJson.parseNative (Json.stringify record) with
+    | JObject dict ->
+        match Map.tryFind "DateOffset" dict with
+        | Some (JString value) -> test.areEqual value stringified
+        | otherwise -> test.unexpected otherwise
+    | otherwise -> test.unexpected otherwise
 
 testCase "Testing for DateTimeOffset works in runtime" <| fun test ->
-    let dateOffset = DateTimeOffset.Now 
-    InteropUtil.isDateOffset dateOffset 
+    let dateOffset = DateTimeOffset.Now
+    InteropUtil.isDateOffset dateOffset
     |> test.areEqual true
 
-testCase "DateTimeOffset uses ToString('O') when stringified" <| fun test -> 
+testCase "DateTimeOffset uses ToString('O') when stringified" <| fun test ->
     let dateOffset = DateTimeOffset.Now
     let expected = dateOffset.ToString("O")
-    match SimpleJson.parseNative (Json.stringify dateOffset) with 
-    | JString actual -> test.areEqual actual expected 
-    | otherwise -> test.unexpected otherwise  
+    match SimpleJson.parseNative (Json.stringify dateOffset) with
+    | JString actual -> test.areEqual actual expected
+    | otherwise -> test.unexpected otherwise
 
 
 type Balance = { Value : decimal }
 testCase "decimal arithmetic works after deserialization" <| fun test ->
     let input = """{ "Value": 9.5 }"""
-    match Json.tryParseNativeAs<Balance> input with 
-    | Ok balance -> 
+    match Json.tryParseNativeAs<Balance> input with
+    | Ok balance ->
         let value = balance.Value
         let discount = value - 9.0M
         test.areEqual discount 0.5M
-    
-    | Error error -> 
+
+    | Error error ->
         test.unexpected error
 
 testCase "decimal arithmetic works after deserialization from generic type: Result" <| fun test ->
     let input = """{ "Ok": { "Value": 9.5  } }"""
-    match Json.parseNativeAs<Result<Balance, int>> input with 
-    | Ok balance -> 
+    match Json.parseNativeAs<Result<Balance, int>> input with
+    | Ok balance ->
         let value = balance.Value
         let discount = value - 9.0M
         test.areEqual discount 0.5M
-    
-    | Error error -> 
+
+    | Error error ->
         test.unexpected error
 
 testCase "decimal arithmetic works after deserialization from generic type: Maybe" <| fun test ->
     let input = """{ "Just": { "Value": 9.5  } }"""
-    match Json.parseNativeAs<Maybe<Balance>> input with 
-    | Just balance -> 
+    match Json.parseNativeAs<Maybe<Balance>> input with
+    | Just balance ->
         let value = balance.Value
         let discount = value - 9.0M
         test.areEqual discount 0.5M
-    
+
     | Nothing -> test.unexpected "should not happen"
 
 type ComplexKey<'t> = ComplexKey of 't
@@ -1620,7 +1620,7 @@ testCase "Deserializing complex keys for Map" <| fun test ->
     input
     |> Json.parseNativeAs<Map<ComplexKey<int>, Maybe<int>>>
     |> Map.tryFind (ComplexKey 1)
-    |> function 
+    |> function
         | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
         | otherwise -> test.unexpected otherwise
 
@@ -1631,7 +1631,7 @@ testCase "Deserializing complex keys with guids for Map" <| fun test ->
     input
     |> Json.parseNativeAs<Map<ComplexKey<Guid>, Maybe<Guid>>>
     |> Map.tryFind (ComplexKey guid)
-    |> function 
+    |> function
         | Some (Just value) -> test.areEqual value guid
         | otherwise -> test.unexpected otherwise
 
@@ -1641,9 +1641,9 @@ testCase "Deserializing complex keys with guids for Map" <| fun test ->
     input
     |> Json.parseNativeAs<Map<ComplexKey<string>, Maybe<string>>>
     |> Map.tryFind (ComplexKey "key")
-    |> function 
+    |> function
         | Some (Just "value") -> test.pass()
-        | otherwise -> test.unexpected otherwise 
+        | otherwise -> test.unexpected otherwise
 
 testCase "Deserializing complex keys for Map from server" <| fun test ->
     let input = """
@@ -1652,7 +1652,7 @@ testCase "Deserializing complex keys for Map from server" <| fun test ->
     input
     |> Json.parseNativeAs<Map<ComplexKey<int>, Maybe<int>>>
     |> Map.tryFind (ComplexKey 1)
-    |> function 
+    |> function
         | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
         | otherwise -> test.unexpected otherwise
 
@@ -1663,6 +1663,6 @@ testCase "Deserializing complex keys as strings for Map from server" <| fun test
     input
     |> Json.parseNativeAs<Map<ComplexKey<string>, Maybe<int>>>
     |> Map.tryFind (ComplexKey "key")
-    |> function 
+    |> function
         | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
         | otherwise -> test.unexpected otherwise

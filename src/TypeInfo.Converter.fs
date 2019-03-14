@@ -10,12 +10,12 @@ module Converter =
     let (|PrimitiveType|_|) (primType: Type) =
         match primType.FullName with
         | "System.String" -> Some TypeInfo.String
-        | "System.Int16" -> Some TypeInfo.Short 
+        | "System.Int16" -> Some TypeInfo.Short
         | "System.Int32" -> Some TypeInfo.Int32
         | "System.Int64" -> Some TypeInfo.Long
         | "System.UInt16" -> Some TypeInfo.UInt16
         | "System.UInt32" -> Some TypeInfo.UInt32
-        | "System.UInt64" -> Some TypeInfo.UInt64 
+        | "System.UInt64" -> Some TypeInfo.UInt64
         | "System.DateTime" -> Some TypeInfo.DateTime
         | "System.DateTimeOffset" -> Some TypeInfo.DateTimeOffset
         | "System.Boolean" -> Some  TypeInfo.Bool
@@ -102,7 +102,7 @@ module Converter =
         else None
 
     let (|PromiseType|_|) (t:Type) =
-        if t.FullName.StartsWith "Fable.Import.JS.Promise`1"
+        if t.FullName.StartsWith "Fable.Core.JS.Promise`1"
         then t.GetGenericArguments().[0] |> Some
         else None
 
@@ -142,7 +142,7 @@ module Converter =
             createTypeInfo resolvedType
 
     /// returns whether a type is primitive
-    let isPrimitive = function 
+    let isPrimitive = function
         | Unit
         | String
         | UInt16
@@ -153,7 +153,7 @@ module Converter =
         | Float32
         | Float
         | Decimal
-        | Short 
+        | Short
         | Long
         | Byte
         | DateTime
@@ -164,9 +164,9 @@ module Converter =
         | otherwise -> false
 
     /// returns whether the discrimiated union type is like a enum
-    let enumUnion = function 
-        | TypeInfo.Union getCases -> 
+    let enumUnion = function
+        | TypeInfo.Union getCases ->
             getCases()
             |> fst
-            |> Array.forall (fun case -> Array.isEmpty case.CaseTypes) 
-        | otherwise -> false 
+            |> Array.forall (fun case -> Array.isEmpty case.CaseTypes)
+        | otherwise -> false

@@ -3,9 +3,8 @@ group Main
     storage:none
 
     nuget FSharp.Core
-    nuget Fable.Core 
-    nuget Fable.Parsimmon
-    clitool dotnet-fable 
+    nuget Fable.Core prerelease
+    github Zaid-Ajaj/Fable.Parsimmon
 
 group Build
   framework >= net45

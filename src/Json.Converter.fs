@@ -2,17 +2,17 @@ namespace Fable.SimpleJson
 
 open System
 open Fable.Core
-open Fable.Core.JsInterop
+open JsInterop
 open FSharp.Reflection
 open System.Numerics
 open System.Collections
 
-module Node = 
+module Node =
 
     [<Emit("Array.prototype.slice.call(Buffer.from($0, 'base64'))")>]
     /// Converts Base64 string into a byte array in Node environment
-    let bytesFromBase64 (value: string) : byte array = jsNative  
-    
+    let bytesFromBase64 (value: string) : byte array = jsNative
+
 
 module Convert =
     [<Emit("new Function(\"try {return this===window;}catch(e){ return false;}\")")>]
@@ -80,48 +80,48 @@ module Convert =
         | TypeInfo.Tuple _ -> true
         | _ -> false
 
-    let isQuoted (input: string) = 
+    let isQuoted (input: string) =
         input.StartsWith "\"" && input.EndsWith "\""
 
-    let removeQuotes (input: string) = 
+    let removeQuotes (input: string) =
         input.Substring(1, input.Length - 2)
 
     let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj =
         match input, typeInfo with
         | JNumber value, TypeInfo.Float -> unbox value
         | JNumber value, TypeInfo.Float32 -> unbox (float32 value)
-        | JString value, TypeInfo.Float32 -> unbox (float32 value) 
+        | JString value, TypeInfo.Float32 -> unbox (float32 value)
         // reading number as int -> floor it
-        | JNumber value, TypeInfo.Int32 -> unbox (Fable.Import.JS.Math.floor(value))
+        | JNumber value, TypeInfo.Int32 -> unbox (JS.Math.floor(value))
         | JBool value, TypeInfo.Bool -> unbox value
         // reading int from string -> parse it
         | JString value, TypeInfo.Int32 -> unbox (int value)
         | JString value, TypeInfo.String -> unbox value
         // decimals
-        | JString value, TypeInfo.Decimal -> unbox (decimal value) 
+        | JString value, TypeInfo.Decimal -> unbox (decimal value)
         | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
         | JString value, TypeInfo.Short -> unbox (int16 value)
         | JNumber value, TypeInfo.Short -> unbox (int16 value)
         // Unsigned integers
-        | JNumber value, TypeInfo.UInt16 -> unbox (uint16 value) 
-        | JString value, TypeInfo.UInt16 -> unbox (uint16 value) 
-        | JNumber value, TypeInfo.UInt32 -> unbox (uint32 value) 
-        | JString value, TypeInfo.UInt32 -> unbox (uint32 value) 
-        | JNumber value, TypeInfo.UInt64 -> unbox (uint64 value) 
-        | JString value, TypeInfo.UInt64 -> unbox (uint64 value) 
+        | JNumber value, TypeInfo.UInt16 -> unbox (uint16 value)
+        | JString value, TypeInfo.UInt16 -> unbox (uint16 value)
+        | JNumber value, TypeInfo.UInt32 -> unbox (uint32 value)
+        | JString value, TypeInfo.UInt32 -> unbox (uint32 value)
+        | JNumber value, TypeInfo.UInt64 -> unbox (uint64 value)
+        | JString value, TypeInfo.UInt64 -> unbox (uint64 value)
         // byte[] coming from the server is serialized as base64 string
         // convert it back to the actual byte array
         | JString value, TypeInfo.Array getElemType ->
             let elemType = getElemType()
-            match elemType with 
+            match elemType with
             | TypeInfo.Byte ->
-                if isBrowser() 
-                then unbox (Convert.FromBase64String value) 
+                if isBrowser()
+                then unbox (Convert.FromBase64String value)
                 else unbox (Node.bytesFromBase64 value)
             | otherType -> failwithf "Cannot convert arbitrary string '%s' to %A" value otherType
 
         // null values for strings are just the null string
-        | JNull, TypeInfo.String -> unbox null 
+        | JNull, TypeInfo.String -> unbox null
         | JNull, TypeInfo.Unit -> unbox ()
         // int64 as string -> parse it
         | JString value, TypeInfo.Long -> unbox (int64 value)
@@ -129,7 +129,7 @@ module Convert =
         | JNumber value, TypeInfo.Byte -> unbox (byte value)
         // BigInt as string -> parse it
         | JString value, TypeInfo.BigInt -> unbox (BigInteger.Parse value)
-        | JNumber value, TypeInfo.BigInt -> unbox (bigint (Fable.Import.JS.Math.floor(value)))
+        | JNumber value, TypeInfo.BigInt -> unbox (bigint (JS.Math.floor(value)))
         // parse formatted date time
         | JString value, TypeInfo.DateTime -> unbox (DateTime.Parse(value))
         // parse formatted date time offset
@@ -175,8 +175,8 @@ module Convert =
                         failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
             | otherwise ->
                 // TODO!!! Better error messages here
-                let unexpectedJson = Fable.Import.JS.JSON.stringify otherwise
-                let expectedType = Fable.Import.JS.JSON.stringify cases
+                let unexpectedJson = JS.JSON.stringify otherwise
+                let expectedType = JS.JSON.stringify cases
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         | JNull, TypeInfo.Option _ -> unbox None
         | jsonValue, TypeInfo.Option optionalTypeDelayed when jsonValue <> JNull ->
@@ -261,8 +261,8 @@ module Convert =
                         FSharpValue.MakeUnion(caseInfo, parsedValues)
                         |> unbox
             | otherwise ->
-                let unexpectedJson = Fable.Import.JS.JSON.stringify otherwise
-                let expectedType = Fable.Import.JS.JSON.stringify cases
+                let unexpectedJson = JS.JSON.stringify otherwise
+                let expectedType = JS.JSON.stringify cases
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         // Arrays
         | JArray values, TypeInfo.Array elementTypeDelayed ->
@@ -333,20 +333,20 @@ module Convert =
 
         | JArray tuples, TypeInfo.Map getTypes ->
             let (keyType, valueType) = getTypes()
-            let pairs = 
+            let pairs =
                 [ for keyValuePair in tuples do
                     let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
                     yield tuple ]
-            match keyType with 
-            | TypeInfo.Int32 
-            | TypeInfo.String 
-            | TypeInfo.Bool -> 
-                pairs 
+            match keyType with
+            | TypeInfo.Int32
+            | TypeInfo.String
+            | TypeInfo.Bool ->
+                pairs
                 |> unbox<(string * obj) list>
                 |> Map.ofList
                 |> unbox
-            | _ -> 
-                pairs 
+            | _ ->
+                pairs
                 |> unbox<(IStructuralComparable * obj) list>
                 |> Map.ofList
                 |> unbox
@@ -359,25 +359,25 @@ module Convert =
             | Some (JObject comparer), Some (JArray tree) when Map.isEmpty comparer ->
                 match generateMap (JArray tree) with
                 | Some internalMap ->
-                    let pairs = 
+                    let pairs =
                         flattenMap internalMap
                         |> List.map (fun (key, value) ->
-                            let nextKey = 
-                                if not (isQuoted key)  
+                            let nextKey =
+                                if not (isQuoted key)
                                 then unbox (fromJsonAs (JString key) keyType)
                                 else unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
                             let nextValue = unbox (fromJsonAs value valueType)
                             unbox<obj> nextKey, nextValue)
-                    match keyType with 
-                    | TypeInfo.Int32 
-                    | TypeInfo.String 
-                    | TypeInfo.Bool -> 
-                        pairs 
+                    match keyType with
+                    | TypeInfo.Int32
+                    | TypeInfo.String
+                    | TypeInfo.Bool ->
+                        pairs
                         |> unbox<(string * obj) list>
                         |> Map.ofList
                         |> unbox
-                    | _ -> 
-                        pairs 
+                    | _ ->
+                        pairs
                         |> unbox<(IStructuralComparable * obj) list>
                         |> Map.ofList
                         |> unbox
@@ -389,41 +389,41 @@ module Convert =
                 // if comparer and tree are not present,
                 // assume we are parsing Fable 1 object literal
                 // and converting that to map
-                let pairs = 
+                let pairs =
                     map
                     |> Map.toList
                     |> List.map (fun (key, value) ->
                         let nextKey =
-                            if not (isQuoted key)  
+                            if not (isQuoted key)
                             then
                                 if Converter.isPrimitive keyType || Converter.enumUnion keyType
-                                then 
+                                then
                                     // for primitive type, just read them as string and parse
                                     unbox (fromJsonAs (JString key) keyType)
                                 else
-                                    // server-side JSON can still be complex (for complex types) 
-                                    // but doesn't have to be quoted, parse again here 
+                                    // server-side JSON can still be complex (for complex types)
+                                    // but doesn't have to be quoted, parse again here
                                     unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
-                            else 
+                            else
                                 unbox (fromJsonAs (SimpleJson.parseNative key) keyType)
                         let nextValue = unbox (fromJsonAs value valueType)
                         unbox<string> nextKey, nextValue)
-                        
-                match keyType with 
-                | TypeInfo.Int32 
-                | TypeInfo.String 
-                | TypeInfo.Bool -> 
-                    pairs 
+
+                match keyType with
+                | TypeInfo.Int32
+                | TypeInfo.String
+                | TypeInfo.Bool ->
+                    pairs
                     |> unbox<(string * obj) list>
                     |> Map.ofList
                     |> unbox
-                | _ -> 
-                    pairs 
+                | _ ->
+                    pairs
                     |> unbox<(IStructuralComparable * obj) list>
                     |> Map.ofList
                     |> unbox
         | _ ->
-            failwithf "Cannot convert %s to %s" (SimpleJson.toString input) (Fable.Import.JS.JSON.stringify typeInfo)
+            failwithf "Cannot convert %s to %s" (SimpleJson.toString input) (JS.JSON.stringify typeInfo)
 
     let fromJson<'t> json typeInfo =
         unbox<'t> (fromJsonAs json typeInfo)
