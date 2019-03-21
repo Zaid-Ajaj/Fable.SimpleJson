@@ -1222,6 +1222,18 @@ testCase "Deserializing HashSet<int> works" <| fun test ->
     |> fun result -> 
         for n in [1..5] do test.isTrue (result.Contains n)
 
+
+testCase "HashSet<int> roundtrip" <| fun test -> 
+    let input = HashSet<int>()
+    for n in [1 .. 5] do 
+        input.Add n |> ignore 
+     
+    input
+    |> Json.stringify
+    |> Json.parseNativeAs<HashSet<int>> 
+    |> fun result -> 
+        for n in [1..5] do test.isTrue (result.Contains n)
+
 testCase "Deserializing HashSet<DictValue> works" <| fun test -> 
     "[{ \"name\": \"zaid\", \"age\":22 }, { \"name\": \"john\", \"age\":10 }]"
     |> Json.parseNativeAs<HashSet<DictValue>> 
@@ -1229,7 +1241,7 @@ testCase "Deserializing HashSet<DictValue> works" <| fun test ->
          test.isTrue (result.Contains { name = "zaid"; age = 22 })
          test.isTrue (result.Contains { name = "john"; age = 10 })
             
-testCase "Deserializing Dictionary<int, Record> works from object when keys are unions" <| fun test -> 
+testCase "Deserializing Dictionary<int, Record> works from object" <| fun test -> 
     let input = """ 
         { 
             "1": { "name": "Zaid", "age": 22 },
@@ -1249,7 +1261,7 @@ testCase "Deserializing Dictionary<int, Record> works from object when keys are 
         test.areEqual 22 result.[1].age
         test.areEqual 10 result.[2].age
 
-testCase "Deserializing Dictionary<string, Record> works from object when keys are unions" <| fun test -> 
+testCase "Deserializing Dictionary<string, Record> works from object " <| fun test -> 
     let input = """ 
         { 
             "1": { "name": "Zaid", "age": 22 },
@@ -1269,7 +1281,7 @@ testCase "Deserializing Dictionary<string, Record> works from object when keys a
         test.areEqual 22 result.["1"].age
         test.areEqual 10 result.["2"].age
 
-testCase "Deserializing Dictionary<int64, Record> works from object when keys are unions" <| fun test -> 
+testCase "Deserializing Dictionary<int64, Record> works from object" <| fun test -> 
     let input = """ 
         { 
             "1": { "name": "Zaid", "age": 22 },
