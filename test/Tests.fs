@@ -9,6 +9,7 @@ open Fable.Core.JsInterop
 open System
 open System
 open System.Reflection
+open System.Collections.Generic
 
 registerModule "Simple Json Tests"
 
@@ -1158,6 +1159,155 @@ testCase "Simple maps with unqouted DU keys can be deserialized" <| fun test ->
     |> Json.parseNativeAs<Config>
     |> test.areEqual expected
 
+
+type DictValue = { name: string; age: int }
+
+testCase "Deserializing Dictionary<string, Record> works from object" <| fun test -> 
+    let input = """ 
+        { 
+            "Technique": { "name": "Zaid", "age": 22 },
+            "Collection": { "name": "John", "age": 10 } 
+        }
+    """
+
+    input 
+    |> Json.parseNativeAs<Dictionary<string, DictValue>> 
+    |> fun result -> 
+        test.isTrue (result.ContainsKey "Technique")
+        test.isTrue (result.ContainsKey "Collection")
+        test.areEqual "Zaid" result.["Technique"].name
+        test.areEqual "John" result.["Collection"].name
+
+testCase "Deserializing Dictionary<ConfigKey, Record> works from object" <| fun test -> 
+    let input = """ 
+        { 
+            "Technique": { "name": "Zaid", "age": 22 },
+            "Collection": { "name": "John", "age": 10 } 
+        }
+    """
+
+    input 
+    |> Json.parseNativeAs<Dictionary<ConfigKey, DictValue>> 
+    |> fun result -> 
+        test.isTrue (result.ContainsKey Technique)
+        test.isTrue (result.ContainsKey Collection)
+        test.areEqual "Zaid" result.[Technique].name
+        test.areEqual "John" result.[Collection].name
+
+
+testCase "Deserializing ResizeArray<string> works" <| fun test -> 
+    "[\"One\", \"Two\"]"
+    |> Json.parseNativeAs<ResizeArray<string>> 
+    |> fun result -> 
+        test.areEqual "One" result.[0]
+        test.areEqual "Two" result.[1]
+
+testCase "Deserializing ResizeArray<int> works" <| fun test -> 
+    "[1, 2]"
+    |> Json.parseNativeAs<System.Collections.Generic.List<int>> 
+    |> fun result -> 
+        test.areEqual 1 result.[0]
+        test.areEqual 2 result.[1]
+
+testCase "Deserializing ResizeArray<Record> works" <| fun test -> 
+    "[{ \"name\": \"zaid\", \"age\":22 }]"
+    |> Json.parseNativeAs<System.Collections.Generic.List<DictValue>> 
+    |> fun result -> 
+        test.areEqual "zaid" result.[0].name
+        test.areEqual 22 result.[0].age
+
+testCase "Deserializing HashSet<int> works" <| fun test -> 
+    "[1,2,3,4,5]"
+    |> Json.parseNativeAs<HashSet<int>> 
+    |> fun result -> 
+        for n in [1..5] do test.isTrue (result.Contains n)
+
+testCase "Deserializing HashSet<DictValue> works" <| fun test -> 
+    "[{ \"name\": \"zaid\", \"age\":22 }, { \"name\": \"john\", \"age\":10 }]"
+    |> Json.parseNativeAs<HashSet<DictValue>> 
+    |> fun result -> 
+         test.isTrue (result.Contains { name = "zaid"; age = 22 })
+         test.isTrue (result.Contains { name = "john"; age = 10 })
+            
+testCase "Deserializing Dictionary<int, Record> works from object when keys are unions" <| fun test -> 
+    let input = """ 
+        { 
+            "1": { "name": "Zaid", "age": 22 },
+            "2": { "name": "John", "age": 10 } 
+        }
+    """
+
+    input 
+    |> Json.parseNativeAs<Dictionary<int, DictValue>> 
+    |> fun result -> 
+        test.isTrue (result.ContainsKey(1))
+        test.isTrue (result.ContainsKey(2))
+
+        test.areEqual "Zaid" result.[1].name
+        test.areEqual "John" result.[2].name
+
+        test.areEqual 22 result.[1].age
+        test.areEqual 10 result.[2].age
+
+testCase "Deserializing Dictionary<string, Record> works from object when keys are unions" <| fun test -> 
+    let input = """ 
+        { 
+            "1": { "name": "Zaid", "age": 22 },
+            "2": { "name": "John", "age": 10 } 
+        }
+    """
+
+    input 
+    |> Json.parseNativeAs<Dictionary<string, DictValue>> 
+    |> fun result -> 
+        test.isTrue (result.ContainsKey("1"))
+        test.isTrue (result.ContainsKey("2"))
+
+        test.areEqual "Zaid" result.["1"].name
+        test.areEqual "John" result.["2"].name
+
+        test.areEqual 22 result.["1"].age
+        test.areEqual 10 result.["2"].age
+
+testCase "Deserializing Dictionary<int64, Record> works from object when keys are unions" <| fun test -> 
+    let input = """ 
+        { 
+            "1": { "name": "Zaid", "age": 22 },
+            "2": { "name": "John", "age": 10 } 
+        }
+    """
+
+    input 
+    |> Json.parseNativeAs<Dictionary<int64, DictValue>> 
+    |> fun result -> 
+        test.isTrue (result.ContainsKey 1L)
+        test.isTrue (result.ContainsKey 2L)
+
+        test.areEqual "Zaid" result.[1L].name
+        test.areEqual "John" result.[2L].name
+
+        test.areEqual 22 result.[1L].age
+        test.areEqual 10 result.[2L].age
+
+testCase "Deserializing Dictionary<int, Record> works from array" <| fun test -> 
+    let input = """ 
+        [
+            ["1", { "name": "Zaid", "age": 22 }],
+            ["2", { "name": "John", "age": 10 }]
+        ]
+    """
+
+    input 
+    |> Json.parseNativeAs<Dictionary<int, DictValue>> 
+    |> fun result -> 
+        test.isTrue (result.ContainsKey(1))
+        test.isTrue (result.ContainsKey(2))
+
+        test.areEqual "Zaid" result.[1].name
+        test.areEqual "John" result.[2].name
+
+        test.areEqual 22 result.[1].age
+        test.areEqual 10 result.[2].age
 
 testCase "Simple maps with unqouted DU keys can be deserialized part 2" <| fun test ->
     // This is what received from Giraffe

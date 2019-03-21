@@ -4,6 +4,7 @@ open System
 open FSharp.Reflection
 open Fable.Core
 open System.Reflection
+open System.Collections.Generic
 
 [<AutoOpen>]
 module Converter =
@@ -96,6 +97,24 @@ module Converter =
         then  t.GetGenericArguments().[0] |> Some
         else None
 
+    let (|DictionaryType|_|) (t: Type) = 
+        if t.FullName.StartsWith "System.Collections.Generic.Dictionary"
+        then 
+          let genArgs = t.GetGenericArguments()
+          Some (genArgs.[0], genArgs.[1])
+        else 
+          None
+
+    let (|ResizeArrayType|_|) (t: Type) = 
+        if t.FullName.StartsWith "System.Collections.Generic.List"
+        then t.GetGenericArguments().[0] |> Some
+        else None 
+
+    let (|HashSetType|_|) (t: Type) = 
+        if t.FullName.StartsWith "System.Collections.Generic.HashSet"
+        then t.GetGenericArguments().[0] |> Some
+        else None 
+
     let (|AsyncType|_|) (t:Type) =
         if t.FullName.StartsWith "Microsoft.FSharp.Control.FSharpAsync`1"
         then  t.GetGenericArguments().[0] |> Some
@@ -124,12 +143,15 @@ module Converter =
                   CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType
 
         | ListType elemType -> TypeInfo.List (fun () -> createTypeInfo elemType)
+        | ResizeArrayType elemType -> TypeInfo.ResizeArray (fun () -> createTypeInfo elemType)
+        | HashSetType elemType -> TypeInfo.HashSet (fun () -> createTypeInfo elemType)
         | ArrayType elemType -> TypeInfo.Array (fun () -> createTypeInfo elemType)
         // Checking for tuples has to happen after checking for arrays
         | TupleType types -> TypeInfo.Tuple (fun () -> Array.map createTypeInfo types)
         | OptionType elemType -> TypeInfo.Option (fun () -> createTypeInfo elemType)
         | SetType elemType -> TypeInfo.Set (fun () -> createTypeInfo elemType)
         | MapType (keyType, valueType) -> TypeInfo.Map (fun () -> createTypeInfo keyType, createTypeInfo valueType)
+        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (fun () -> createTypeInfo keyType, createTypeInfo valueType)
         | SeqType elemType -> TypeInfo.Seq (fun () -> createTypeInfo elemType)
         | AsyncType elemType -> TypeInfo.Async (fun () -> createTypeInfo elemType)
         | PromiseType elemType -> TypeInfo.Promise (fun () -> createTypeInfo elemType)
