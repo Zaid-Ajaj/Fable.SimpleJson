@@ -14,10 +14,14 @@ module Node =
     /// Converts Base64 string into a byte array in Node environment
     let bytesFromBase64 (value: string) : byte array = jsNative
 
-
 module Convert =
     [<Emit("new Function(\"try {return this===window;}catch(e){ return false;}\")")>]
     let internal isBrowser : unit -> bool = jsNative
+
+    let insideBrowser = isBrowser()
+
+    [<Emit("typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope")>]
+    let internal insideWorker :  bool = jsNative
 
     [<Emit("$0[$1] = $2")>]
     let internal setProp o k v = jsNative
@@ -116,7 +120,7 @@ module Convert =
             let elemType = getElemType()
             match elemType with
             | TypeInfo.Byte ->
-                if isBrowser()
+                if insideWorker || insideBrowser
                 then unbox (Convert.FromBase64String value)
                 else unbox (Node.bytesFromBase64 value)
             | otherType -> failwithf "Cannot convert arbitrary string '%s' to %A" value otherType
