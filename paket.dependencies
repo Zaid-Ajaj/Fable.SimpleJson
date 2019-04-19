@@ -2,9 +2,9 @@ group Main
     source https://api.nuget.org/v3/index.json
     storage:none
 
-    nuget Fable.Parsimmon prerelease
+    nuget Fable.Parsimmon
     nuget FSharp.Core
-    nuget Fable.Core prerelease
+    nuget Fable.Core
 
 group Build
   framework >= net45
