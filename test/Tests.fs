@@ -1828,3 +1828,59 @@ testCase "Deserializing complex keys as strings for Map from server" <| fun test
     |> function
         | Some (Just 5) -> test.passWith (sprintf "Succesfully deserialized %s" input)
         | otherwise -> test.unexpected otherwise
+
+testCase "Deserializing JSON to anonymous records" <| fun test ->
+    """ { "name": "John"  } """
+    |> Json.parseNativeAs<{| name: string |}>
+    |> fun result ->  
+        match result.name with 
+        | "John" -> test.pass()
+        | other -> test.unexpected other
+
+testCase "Deserializing JSON to anonymous records with options" <| fun test ->
+    """ { "name": "John" } """
+    |> Json.parseNativeAs<{| name: string; age : int option |}>
+    |> fun result ->  
+        match result.name, result.age with 
+        | "John", None -> test.pass()
+        | other -> test.unexpected other
+
+testCase "Deserializing JSON to nested anonymous records" <| fun test ->
+    """ { "name": "John", "child": { "name": "child" }  } """
+    |> Json.parseNativeAs<{| name: string; child: {| name: string |} |}>
+    |> fun result ->  
+        match result.name, result.child.name with 
+        | "John", "child" -> test.pass()
+        | other -> test.unexpected other
+
+testCase "Deserializing JSON to optional nested anonymous records with props" <| fun test ->
+    """ { "name": "John", "child": {  }  } """
+    |> Json.parseNativeAs<{| name: string; child: {| name: string option |} |}>
+    |> fun result ->  
+        match result.name, result.child.name with 
+        | "John", None -> test.pass()
+        | other -> test.unexpected other
+
+testCase "Deserializing JSON to anonymous records with arrays" <| fun test ->
+    """ { "numbers": [1,2,3,4,5]  } """
+    |> Json.parseNativeAs<{| numbers: int array |}>
+    |> fun result -> result.numbers 
+    |> Array.sum   
+    |> test.areEqual 15
+
+testCase "Deserializing JSON to anonymous records with lists" <| fun test ->
+    """ { "numbers": [1,2,3,4,5]  } """
+    |> Json.parseNativeAs<{| numbers: int list |}>
+    |> fun result -> result.numbers 
+    |> List.sum   
+    |> test.areEqual 15
+
+type SimpleUnion = One | Two 
+
+testCase "Deserializing JSON to anonymous records with nested types" <| fun test ->
+    """ { "union": "One" } """
+    |> Json.parseNativeAs<{| union: SimpleUnion |}>
+    |> fun result -> result.union
+    |> function 
+        | One -> test.pass()
+        | Two -> test.fail()
