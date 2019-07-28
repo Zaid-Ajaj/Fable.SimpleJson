@@ -114,6 +114,7 @@ module Convert =
         | JString value, TypeInfo.UInt32 -> unbox (uint32 value)
         | JNumber value, TypeInfo.UInt64 -> unbox (uint64 value)
         | JString value, TypeInfo.UInt64 -> unbox (uint64 value)
+        | JNumber value, TypeInfo.TimeSpan -> unbox (JS.Math.floor value)
         // byte[] coming from the server is serialized as base64 string
         // convert it back to the actual byte array
         | JString value, TypeInfo.Array getElemType ->
@@ -364,28 +365,28 @@ module Convert =
                     yield tuple ]
             let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
             for (key, value) in (unbox<(IStructuralComparable * obj) list> pairs) do output.Add(unbox key, value)
-            output 
+            output
             |> unbox
-                
+
         | JObject dict, TypeInfo.Dictionary getTypes ->
             let (keyType, valueType) = getTypes()
-            dict 
+            dict
             |> Map.toList
-            |> List.map (fun (key, value) -> fromJsonAs (JString key) keyType, fromJsonAs value valueType ) 
-            |> fun pairs -> 
+            |> List.map (fun (key, value) -> fromJsonAs (JString key) keyType, fromJsonAs value valueType )
+            |> fun pairs ->
                 let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
                 for (key, value) in pairs do output.Add(unbox key, value)
                 output
                 |> unbox
 
-        | JArray items, TypeInfo.HashSet getType -> 
+        | JArray items, TypeInfo.HashSet getType ->
             let elemType = getType()
             let hashset = HashSet<IStructuralComparable>()
             for item in items do
                 let deserialized = fromJsonAs item elemType
                 hashset.Add(unbox deserialized) |> ignore
-            
-            unbox hashset 
+
+            unbox hashset
 
         | JObject map, TypeInfo.Map getTypes ->
             let (keyType, valueType) = getTypes()

@@ -26,12 +26,13 @@ and TypeInfo =
     | Float32
     | Float
     | Decimal
-    | Short 
+    | Short
     | Long
     | Byte
     | DateTime
     | DateTimeOffset
     | BigInt
+    | TimeSpan
     | Guid
     | Any of (unit -> Type)
     | Async of (unit -> TypeInfo)

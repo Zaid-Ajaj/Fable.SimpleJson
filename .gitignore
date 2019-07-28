@@ -15,11 +15,12 @@ node_modules/
 *.userprefs
 *.dll.mdb
 *.exe.mdb
-
+.ionide
 # Build results
-
+.local-chromium
 [Dd]ebug/
 [Rr]elease/
+.fable
 x64/
 [Bb]in/
 [Oo]bj/

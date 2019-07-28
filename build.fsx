@@ -54,7 +54,7 @@ Target "Clean" <| fun _ ->
 Target "InstallNpmPackages" (fun _ ->
   printfn "Node version:"
   run "node" "--version" __SOURCE_DIRECTORY__
-  run "yarn" "install" __SOURCE_DIRECTORY__
+  run "npm" "install" __SOURCE_DIRECTORY__
 )
 
 Target "RunLiveTests" <| fun _ ->
@@ -84,18 +84,15 @@ Target "CompileFableTestProject" <| fun _ ->
 
 Target "RunTests" <| fun _ ->
     printfn "Building %s with Fable" testsPath
-    printfn "Using QUnit cli to run the tests"
-    run "npm" "run test" "."
+    run "npm" "test" "."
     cleanBundles()
 
 "Clean"
   ==> "InstallNpmPackages"
   ==> "RunLiveTests"
 
-
 "Clean"
  ==> "InstallNpmPackages"
- ==> "CompileFableTestProject"
  ==> "RunTests"
 
 RunTargetOrDefault "RunTests"

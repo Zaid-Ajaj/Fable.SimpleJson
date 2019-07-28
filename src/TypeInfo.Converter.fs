@@ -18,6 +18,7 @@ module Converter =
         | "System.UInt32" -> Some TypeInfo.UInt32
         | "System.UInt64" -> Some TypeInfo.UInt64
         | "System.DateTime" -> Some TypeInfo.DateTime
+        | "System.TimeSpan" -> Some TypeInfo.TimeSpan
         | "System.DateTimeOffset" -> Some TypeInfo.DateTimeOffset
         | "System.Boolean" -> Some  TypeInfo.Bool
         | "System.Single" -> Some TypeInfo.Float32
@@ -97,23 +98,23 @@ module Converter =
         then  t.GetGenericArguments().[0] |> Some
         else None
 
-    let (|DictionaryType|_|) (t: Type) = 
+    let (|DictionaryType|_|) (t: Type) =
         if t.FullName.StartsWith "System.Collections.Generic.Dictionary"
-        then 
+        then
           let genArgs = t.GetGenericArguments()
           Some (genArgs.[0], genArgs.[1])
-        else 
+        else
           None
 
-    let (|ResizeArrayType|_|) (t: Type) = 
+    let (|ResizeArrayType|_|) (t: Type) =
         if t.FullName.StartsWith "System.Collections.Generic.List"
         then t.GetGenericArguments().[0] |> Some
-        else None 
+        else None
 
-    let (|HashSetType|_|) (t: Type) = 
+    let (|HashSetType|_|) (t: Type) =
         if t.FullName.StartsWith "System.Collections.Generic.HashSet"
         then t.GetGenericArguments().[0] |> Some
-        else None 
+        else None
 
     let (|AsyncType|_|) (t:Type) =
         if t.FullName.StartsWith "Microsoft.FSharp.Control.FSharpAsync`1"

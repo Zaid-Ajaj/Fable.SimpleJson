@@ -1,21 +1,23 @@
 {
-  "private": true,
-  "scripts": {
-    "build": "webpack-cli --mode production",
-    "start": "webpack-dev-server",
-    "test": "node ./node_modules/qunitjs/bin/qunit public/bundle.js"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/polyfill": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "babel-loader": "^8.0.0",
-    "fable-compiler": "^2.2.0-beta-018",
-    "fable-loader": "^2.1.x",
-    "loglevel": "^1.6.0",
-    "qunitjs": "^2.4.1",
-    "webpack": "^4.27.1",
-    "webpack-cli": "^3.0.1",
-    "webpack-dev-server": "^3.1.4"
-  }
+    "private": true,
+    "scripts": {
+        "build": "webpack-cli --mode production",
+        "start": "webpack-dev-server",
+        "pretest": "fable-splitter test -o dist/tests --commonjs",
+        "test": "mocha dist/tests",
+        "headless-tests": "webpack-cli --mode production && dotnet run --project ./headless/Headless.fsproj"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.0.0",
+        "@babel/polyfill": "^7.0.0",
+        "@babel/preset-env": "^7.0.0",
+        "babel-loader": "^8.0.0",
+        "fable-compiler": "^2.3.14",
+        "fable-loader": "^2.1.8",
+        "fable-splitter": "^2.1.10",
+        "mocha": "^6.2.0",
+        "webpack": "^4.27.1",
+        "webpack-cli": "^3.0.1",
+        "webpack-dev-server": "^3.7.2"
+    }
 }
