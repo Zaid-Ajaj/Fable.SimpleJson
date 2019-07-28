@@ -52,7 +52,7 @@ x64/
 *.pidb
 *.log
 *.scc
-
+dist
 # Visual C++ cache files
 ipch/
 *.aps
