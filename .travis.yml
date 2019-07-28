@@ -22,4 +22,3 @@ before_install:
 script:
   - npm install
   - npm test
-  - npm run headless-tests

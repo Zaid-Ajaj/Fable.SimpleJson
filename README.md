@@ -164,17 +164,20 @@ testCase "mapKeysByPath works" <| fun test ->
 ## Building and running tests
 Requirements
 
- - Dotnet 2.0
- - Mono
- - Node
+ - Dotnet 2.2+
+ - Node.js 10.0+
 
 
-Running the watching the tests live 
+Running and watching the tests live in the browser:
 ```sh
-bash build.sh RunLiveTests 
+npm install
+npm start
 ```
-Building the tests and running them using QUnut cli runner
+When the development server starts, navigate to `http://localhost:8080` to see the test results. 
+
+Building the tests and running them using Mocha on Node.js
 ```sh
-bash build.sh RunTests
+npm install
+npm test
 ```
-or just `Ctrl + Shift + B` to run the cli tests as a VS Code task
+This will compile the project using `fable-splitter` and run mocha against the generated files in `dist`. 
