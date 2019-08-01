@@ -118,7 +118,7 @@ module Convert =
         // byte[] coming from the server is serialized as base64 string
         // convert it back to the actual byte array
         | JString value, TypeInfo.Array getElemType ->
-            let elemType = getElemType.Value
+            let elemType = getElemType()
             match elemType with
             | TypeInfo.Byte ->
                 if insideWorker || insideBrowser
@@ -143,7 +143,7 @@ module Convert =
         // deserialize union from objects
         // { "One": 20 } or {"One": [20]} -> One of int
         | JObject values, TypeInfo.Union (getTypes) ->
-            let (cases, unionType) = getTypes.Value
+            let (cases, unionType) = getTypes()
             match Map.toList values with
             | [ caseName, JArray values ] ->
                 cases
@@ -186,7 +186,7 @@ module Convert =
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         | JNull, TypeInfo.Option _ -> unbox None
         | jsonValue, TypeInfo.Option optionalTypeDelayed when jsonValue <> JNull ->
-            let optionalType = optionalTypeDelayed.Value
+            let optionalType = optionalTypeDelayed()
             let parsedOptional = unbox (fromJsonAs jsonValue optionalType)
             unbox Some parsedOptional
         | JString value, TypeInfo.Guid _ -> unbox (System.Guid.Parse(value))
@@ -209,7 +209,7 @@ module Convert =
         // convert a single case string to union
         // "One" -> One, here is a special case where the case in quoted inside the string
         | JString caseName, TypeInfo.Union getTypes when isQuoted caseName ->
-            let (caseTypes, unionType) = getTypes.Value
+            let (caseTypes, unionType) = getTypes()
             caseTypes
             |> Array.tryFind (fun case -> case.CaseName = removeQuotes caseName)
             |> function
@@ -221,7 +221,7 @@ module Convert =
         // convert a single case string to union
         // "One" -> One
         | JString caseName, TypeInfo.Union getTypes ->
-            let (caseTypes, unionType) = getTypes.Value
+            let (caseTypes, unionType) = getTypes()
             caseTypes
             |> Array.tryFind (fun case -> case.CaseName = caseName)
             |> function
@@ -235,7 +235,7 @@ module Convert =
         // convert unions from arrays
         // ["One", 20] -> One of int
         | JArray caseValue, TypeInfo.Union getTypes ->
-            let (cases, unionType) = getTypes.Value
+            let (cases, unionType) = getTypes()
             match caseValue with
             // Union case without values
             | [ JString caseName ] ->
@@ -272,31 +272,31 @@ module Convert =
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         // Arrays
         | JArray values, TypeInfo.Array elementTypeDelayed ->
-            let elementType = elementTypeDelayed.Value
+            let elementType = elementTypeDelayed()
             values
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> Array.ofList
             |> unbox
         // Lists
         | JArray values, TypeInfo.List elementTypeDelayed ->
-            let elementType = elementTypeDelayed.Value
+            let elementType = elementTypeDelayed()
             values
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> unbox
         | JArray values, TypeInfo.Set elementTypeDelayed ->
-            let elementType = elementTypeDelayed.Value
+            let elementType = elementTypeDelayed()
             values
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> Set.ofList
             |> unbox
 
         | JArray values, TypeInfo.Seq elementTypeDelayed ->
-            let elementType = elementTypeDelayed.Value
+            let elementType = elementTypeDelayed()
             let converted = List.map (fun value -> unbox (fromJsonAs value elementType)) values
             unbox converted
         // Tuples, become just arrays
         | JArray array, TypeInfo.Tuple tupleTypesDelayed ->
-            let tupleTypes = tupleTypesDelayed.Value
+            let tupleTypes = tupleTypesDelayed()
             array
             |> Array.ofList
             |> Array.zip tupleTypes
@@ -304,7 +304,7 @@ module Convert =
             |> unbox
         // Records
         | JObject dict, TypeInfo.Record getTypes ->
-            let fields, recordType = getTypes.Value
+            let fields, recordType = getTypes()
             // Match the JSON object literal keys with their types
             let recordValues =
                 let values = Map.toList dict
@@ -338,10 +338,10 @@ module Convert =
             unbox (FSharpValue.MakeRecord(recordType, recordValues))
 
         | JArray tuples, TypeInfo.Map getTypes ->
-            let (keyType, valueType) = getTypes.Value
+            let (keyType, valueType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (lazy ([| keyType; valueType |])))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
                     yield tuple ]
             match keyType with
             | TypeInfo.Int32
@@ -358,10 +358,10 @@ module Convert =
                 |> unbox
 
         | JArray tuples, TypeInfo.Dictionary getTypes ->
-            let (keyType, valueType) = getTypes.Value
+            let (keyType, valueType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (lazy ( [| keyType; valueType |])))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
                     yield tuple ]
             let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
             for (key, value) in (unbox<(IStructuralComparable * obj) list> pairs) do output.Add(unbox key, value)
@@ -369,7 +369,7 @@ module Convert =
             |> unbox
 
         | JObject dict, TypeInfo.Dictionary getTypes ->
-            let (keyType, valueType) = getTypes.Value
+            let (keyType, valueType) = getTypes()
             dict
             |> Map.toList
             |> List.map (fun (key, value) -> fromJsonAs (JString key) keyType, fromJsonAs value valueType )
@@ -380,7 +380,7 @@ module Convert =
                 |> unbox
 
         | JArray items, TypeInfo.HashSet getType ->
-            let elemType = getType.Value
+            let elemType = getType()
             let hashset = HashSet<IStructuralComparable>()
             for item in items do
                 let deserialized = fromJsonAs item elemType
@@ -389,7 +389,7 @@ module Convert =
             unbox hashset
 
         | JObject map, TypeInfo.Map getTypes ->
-            let (keyType, valueType) = getTypes.Value
+            let (keyType, valueType) = getTypes()
             // check whether the map is serialized to it's internal representation
             // and convert that to back to a normal map from the data
             match Map.tryFind "comparer" map, Map.tryFind "tree" map with

@@ -126,39 +126,43 @@ module Converter =
         then t.GetGenericArguments().[0] |> Some
         else None
 
+    let private lazyToDelayed (l:Lazy<_>) = fun () -> l.Value
+
     let rec _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
-        | FuncType (types) -> TypeInfo.Func (lazy (Array.map createTypeInfo types))
+        | FuncType (types) -> TypeInfo.Func <| lazyToDelayed (lazy (Array.map createTypeInfo types))
         | RecordType fields ->
-          TypeInfo.Record <| lazy (
-            let fields =
-                [| for (fieldName, fieldType) in fields ->
-                    { FieldName = fieldName;
-                      FieldType = createTypeInfo fieldType } |]
-            fields, resolvedType)
+            let l = lazy (
+                let fields =
+                    [| for (fieldName, fieldType) in fields ->
+                        { FieldName = fieldName;
+                          FieldType = createTypeInfo fieldType } |]
+                fields, resolvedType)
+            TypeInfo.Record (lazyToDelayed l)
 
         | UnionType cases ->
-          TypeInfo.Union <| lazy (
-            [| for (caseName, caseInfo, caseTypes) in cases ->
-                { CaseName = caseName;
-                  Info = caseInfo;
-                  CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType)
+            let l = lazy (
+                [| for (caseName, caseInfo, caseTypes) in cases ->
+                    { CaseName = caseName;
+                      Info = caseInfo;
+                      CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType)
+            TypeInfo.Union (lazyToDelayed l)
 
-        | ListType elemType -> TypeInfo.List (lazy (createTypeInfo elemType))
-        | ResizeArrayType elemType -> TypeInfo.ResizeArray (lazy (createTypeInfo elemType))
-        | HashSetType elemType -> TypeInfo.HashSet (lazy (createTypeInfo elemType))
-        | ArrayType elemType -> TypeInfo.Array (lazy (createTypeInfo elemType))
+        | ListType elemType -> TypeInfo.List (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | ResizeArrayType elemType -> TypeInfo.ResizeArray (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | HashSetType elemType -> TypeInfo.HashSet (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | ArrayType elemType -> TypeInfo.Array (lazyToDelayed <| lazy (createTypeInfo elemType))
         // Checking for tuples has to happen after checking for arrays
-        | TupleType types -> TypeInfo.Tuple (lazy (Array.map createTypeInfo types))
-        | OptionType elemType -> TypeInfo.Option (lazy (createTypeInfo elemType))
-        | SetType elemType -> TypeInfo.Set (lazy (createTypeInfo elemType))
-        | MapType (keyType, valueType) -> TypeInfo.Map (lazy (createTypeInfo keyType, createTypeInfo valueType))
-        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazy (createTypeInfo keyType, createTypeInfo valueType))
-        | SeqType elemType -> TypeInfo.Seq (lazy (createTypeInfo elemType))
-        | AsyncType elemType -> TypeInfo.Async (lazy (createTypeInfo elemType))
-        | PromiseType elemType -> TypeInfo.Promise (lazy (createTypeInfo elemType))
-        | _ -> TypeInfo.Any (lazy (resolvedType))
+        | TupleType types -> TypeInfo.Tuple (lazyToDelayed <| lazy (Array.map createTypeInfo types))
+        | OptionType elemType -> TypeInfo.Option (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | SetType elemType -> TypeInfo.Set (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | MapType (keyType, valueType) -> TypeInfo.Map (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | SeqType elemType -> TypeInfo.Seq (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | AsyncType elemType -> TypeInfo.Async (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | PromiseType elemType -> TypeInfo.Promise (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | _ -> TypeInfo.Any (lazyToDelayed <| lazy (resolvedType))
 
     and typeInfoCache = Dictionary<string,Fable.SimpleJson.TypeInfo>()
 
@@ -200,7 +204,7 @@ module Converter =
     /// returns whether the discrimiated union type is like a enum
     let enumUnion = function
         | TypeInfo.Union getCases ->
-            getCases.Value
+            getCases()
             |> fst
             |> Array.forall (fun case -> Array.isEmpty case.CaseTypes)
         | otherwise -> false
