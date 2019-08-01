@@ -174,9 +174,16 @@ module Converter =
             // see https://github.com/fable-compiler/Fable/issues/1871
             // Type equality doesn't work for anonymous records - all anon records are considered equal.
             // For anonymous records, the name is the empty string.
-            if not (String.IsNullOrEmpty resolvedType.Name) then
+            let notAnonymousRecord =
+                not (String.IsNullOrEmpty resolvedType.FullName)
+                && not (resolvedType.FullName.EndsWith("`1[]"))
+                && not (resolvedType.FullName.EndsWith("`2[]"))
+
+            if notAnonymousRecord then
                 typeInfoCache.[resolvedType] <- ti
-            ti
+                ti
+            else
+                ti
 
     type Fable.SimpleJson.TypeInfo with
         static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : Fable.SimpleJson.TypeInfo =

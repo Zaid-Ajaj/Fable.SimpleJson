@@ -1767,6 +1767,15 @@ let everyTest =
         |> function
             | Just record -> test.areEqual 1  record.one
             | otherwise -> test.fail()
+
+    testCase "Nested anonymous records with generic unions" <| fun _ ->
+        """
+        {"Just":{"nested":{"name":"John"}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| nested: {| name: string |} |}>>
+        |> function
+            | Just record -> test.areEqual record.nested.name "John"
+            | otherwise -> test.unexpected otherwise
 ]
 
 
