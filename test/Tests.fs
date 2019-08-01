@@ -1759,6 +1759,14 @@ let everyTest =
         |> Json.stringify
         |> Json.parseNativeAs<TimeSpan>
         |> test.areEqual (TimeSpan.FromMilliseconds 1000.0)
+
+    testCase "Anonymous Records with generic unions" <| fun _ ->
+        Just {| one = 1 |}
+        |> Json.stringify
+        |> Json.parseNativeAs<Maybe<{| one: int |}>>
+        |> function
+            | Just record -> test.areEqual 1  record.one
+            | otherwise -> test.fail()
 ]
 
 
