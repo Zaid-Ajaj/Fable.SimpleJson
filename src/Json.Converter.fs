@@ -341,7 +341,7 @@ module Convert =
             let (keyType, valueType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
                     yield tuple ]
             match keyType with
             | TypeInfo.Int32
@@ -361,7 +361,7 @@ module Convert =
             let (keyType, valueType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
                     yield tuple ]
             let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
             for (key, value) in (unbox<(IStructuralComparable * obj) list> pairs) do output.Add(unbox key, value)
