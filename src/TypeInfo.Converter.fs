@@ -164,14 +164,14 @@ module Converter =
         | PromiseType elemType -> TypeInfo.Promise (lazyToDelayed <| lazy (createTypeInfo elemType))
         | _ -> TypeInfo.Any (lazyToDelayed <| lazy (resolvedType))
 
-    and typeInfoCache = Dictionary<string,Fable.SimpleJson.TypeInfo>()
+    and typeInfoCache = Dictionary<Type,Fable.SimpleJson.TypeInfo>()
 
     and createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
-        match typeInfoCache.TryGetValue resolvedType.FullName with
+        match typeInfoCache.TryGetValue resolvedType with
         | true, ti -> ti
         | false, _ ->
             let ti = _createTypeInfo resolvedType
-            typeInfoCache.[resolvedType.FullName] <- ti
+            typeInfoCache.[resolvedType] <- ti
             ti
 
     type Fable.SimpleJson.TypeInfo with
