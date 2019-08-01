@@ -171,7 +171,11 @@ module Converter =
         | true, ti -> ti
         | false, _ ->
             let ti = _createTypeInfo resolvedType
-            typeInfoCache.[resolvedType] <- ti
+            // see https://github.com/fable-compiler/Fable/issues/1871
+            // Type equality doesn't work for anonymous records - all anon records are considered equal.
+            // For anonymous records, the name is the empty string.
+            if not (String.IsNullOrEmpty resolvedType.Name) then
+                typeInfoCache.[resolvedType] <- ti
             ti
 
     type Fable.SimpleJson.TypeInfo with
