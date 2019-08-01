@@ -128,7 +128,7 @@ module Converter =
 
     let private lazyToDelayed (l:Lazy<_>) = fun () -> l.Value
 
-    let rec _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
+    let rec private _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
         | FuncType (types) -> TypeInfo.Func <| lazyToDelayed (lazy (Array.map createTypeInfo types))
@@ -164,7 +164,7 @@ module Converter =
         | PromiseType elemType -> TypeInfo.Promise (lazyToDelayed <| lazy (createTypeInfo elemType))
         | _ -> TypeInfo.Any (lazyToDelayed <| lazy (resolvedType))
 
-    and typeInfoCache = Dictionary<Type,Fable.SimpleJson.TypeInfo>()
+    and private typeInfoCache = Dictionary<Type,Fable.SimpleJson.TypeInfo>()
 
     and createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match typeInfoCache.TryGetValue resolvedType with
