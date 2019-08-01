@@ -34,19 +34,19 @@ and TypeInfo =
     | BigInt
     | TimeSpan
     | Guid
-    | Any of (unit -> Type)
-    | Async of (unit -> TypeInfo)
-    | Promise of (unit -> TypeInfo)
-    | Option of (unit -> TypeInfo)
-    | List of (unit -> TypeInfo)
-    | Set of (unit -> TypeInfo)
-    | Array of (unit -> TypeInfo)
-    | Seq of (unit -> TypeInfo)
-    | Tuple of (unit -> TypeInfo [ ])
-    | Map of (unit -> TypeInfo * TypeInfo)
-    | Dictionary of (unit -> TypeInfo * TypeInfo)
-    | ResizeArray of (unit -> TypeInfo)
-    | HashSet of (unit -> TypeInfo)
-    | Func of (unit -> TypeInfo [ ])
-    | Record of (unit -> RecordField [ ] * Type)
-    | Union of (unit -> UnionCase [ ] * Type)
+    | Any of Lazy<Type>
+    | Async of Lazy<TypeInfo>
+    | Promise of Lazy<TypeInfo>
+    | Option of Lazy<TypeInfo>
+    | List of Lazy<TypeInfo>
+    | Set of Lazy<TypeInfo>
+    | Array of Lazy<TypeInfo>
+    | Seq of Lazy<TypeInfo>
+    | Tuple of Lazy<TypeInfo [ ]>
+    | Map of Lazy<TypeInfo * TypeInfo>
+    | Dictionary of Lazy<TypeInfo * TypeInfo>
+    | ResizeArray of Lazy<TypeInfo>
+    | HashSet of Lazy<TypeInfo>
+    | Func of Lazy<TypeInfo [ ]>
+    | Record of Lazy<RecordField [ ] * Type>
+    | Union of Lazy<UnionCase [ ] * Type>

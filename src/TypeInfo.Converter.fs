@@ -129,34 +129,36 @@ module Converter =
     let rec _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
-        | FuncType (types) -> TypeInfo.Func (fun () -> Array.map createTypeInfo types)
-        | RecordType fields -> TypeInfo.Record <| fun () ->
+        | FuncType (types) -> TypeInfo.Func (lazy (Array.map createTypeInfo types))
+        | RecordType fields ->
+          TypeInfo.Record <| lazy (
             let fields =
                 [| for (fieldName, fieldType) in fields ->
                     { FieldName = fieldName;
                       FieldType = createTypeInfo fieldType } |]
-            fields, resolvedType
+            fields, resolvedType)
 
-        | UnionType cases -> TypeInfo.Union <| fun () ->
+        | UnionType cases ->
+          TypeInfo.Union <| lazy (
             [| for (caseName, caseInfo, caseTypes) in cases ->
                 { CaseName = caseName;
                   Info = caseInfo;
-                  CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType
+                  CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType)
 
-        | ListType elemType -> TypeInfo.List (fun () -> createTypeInfo elemType)
-        | ResizeArrayType elemType -> TypeInfo.ResizeArray (fun () -> createTypeInfo elemType)
-        | HashSetType elemType -> TypeInfo.HashSet (fun () -> createTypeInfo elemType)
-        | ArrayType elemType -> TypeInfo.Array (fun () -> createTypeInfo elemType)
+        | ListType elemType -> TypeInfo.List (lazy (createTypeInfo elemType))
+        | ResizeArrayType elemType -> TypeInfo.ResizeArray (lazy (createTypeInfo elemType))
+        | HashSetType elemType -> TypeInfo.HashSet (lazy (createTypeInfo elemType))
+        | ArrayType elemType -> TypeInfo.Array (lazy (createTypeInfo elemType))
         // Checking for tuples has to happen after checking for arrays
-        | TupleType types -> TypeInfo.Tuple (fun () -> Array.map createTypeInfo types)
-        | OptionType elemType -> TypeInfo.Option (fun () -> createTypeInfo elemType)
-        | SetType elemType -> TypeInfo.Set (fun () -> createTypeInfo elemType)
-        | MapType (keyType, valueType) -> TypeInfo.Map (fun () -> createTypeInfo keyType, createTypeInfo valueType)
-        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (fun () -> createTypeInfo keyType, createTypeInfo valueType)
-        | SeqType elemType -> TypeInfo.Seq (fun () -> createTypeInfo elemType)
-        | AsyncType elemType -> TypeInfo.Async (fun () -> createTypeInfo elemType)
-        | PromiseType elemType -> TypeInfo.Promise (fun () -> createTypeInfo elemType)
-        | _ -> TypeInfo.Any (fun () -> resolvedType)
+        | TupleType types -> TypeInfo.Tuple (lazy (Array.map createTypeInfo types))
+        | OptionType elemType -> TypeInfo.Option (lazy (createTypeInfo elemType))
+        | SetType elemType -> TypeInfo.Set (lazy (createTypeInfo elemType))
+        | MapType (keyType, valueType) -> TypeInfo.Map (lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | SeqType elemType -> TypeInfo.Seq (lazy (createTypeInfo elemType))
+        | AsyncType elemType -> TypeInfo.Async (lazy (createTypeInfo elemType))
+        | PromiseType elemType -> TypeInfo.Promise (lazy (createTypeInfo elemType))
+        | _ -> TypeInfo.Any (lazy (resolvedType))
 
     and typeInfoCache = Dictionary<string,Fable.SimpleJson.TypeInfo>()
 
@@ -167,7 +169,6 @@ module Converter =
             let ti = _createTypeInfo resolvedType
             typeInfoCache.[resolvedType.FullName] <- ti
             ti
-
 
     type Fable.SimpleJson.TypeInfo with
         static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : Fable.SimpleJson.TypeInfo =
@@ -199,7 +200,7 @@ module Converter =
     /// returns whether the discrimiated union type is like a enum
     let enumUnion = function
         | TypeInfo.Union getCases ->
-            getCases()
+            getCases.Value
             |> fst
             |> Array.forall (fun case -> Array.isEmpty case.CaseTypes)
         | otherwise -> false
