@@ -126,7 +126,7 @@ module Converter =
         then t.GetGenericArguments().[0] |> Some
         else None
 
-    let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
+    let rec _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
         | FuncType (types) -> TypeInfo.Func (fun () -> Array.map createTypeInfo types)
@@ -157,6 +157,16 @@ module Converter =
         | AsyncType elemType -> TypeInfo.Async (fun () -> createTypeInfo elemType)
         | PromiseType elemType -> TypeInfo.Promise (fun () -> createTypeInfo elemType)
         | _ -> TypeInfo.Any (fun () -> resolvedType)
+
+    and typeInfoCache = Dictionary<string,Fable.SimpleJson.TypeInfo>()
+
+    and createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
+        match typeInfoCache.TryGetValue resolvedType.FullName with
+        | true, ti -> ti
+        | false, _ ->
+            let ti = _createTypeInfo resolvedType
+            typeInfoCache.[resolvedType.FullName] <- ti
+            ti
 
 
     type Fable.SimpleJson.TypeInfo with
