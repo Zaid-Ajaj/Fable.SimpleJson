@@ -140,3 +140,5 @@ type DictValue = { name: string; age: int }
 type AlbumId = AlbumId of int
 
 type AlbumAuthor = AlbumAuthor of string
+
+type GenericValue<'t> = { value: 't }

@@ -1818,6 +1818,16 @@ let everyTest =
                 | Some child -> test.areEqual child.grandChild "Nested Node"
                 | None -> test.fail()
             | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Deserializing generic record with anonymous records" <| fun _ ->
+        """
+        {"value":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<GenericValue<{| parent: {| child: {| grandChild: string |} option |} |}>>
+        |> fun record ->
+            match record.value.parent.child with
+            | Some child -> test.areEqual child.grandChild "Nested Node"
+            | None -> test.fail()
 ]
 
 
