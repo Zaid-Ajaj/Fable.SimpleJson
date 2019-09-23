@@ -1775,7 +1775,49 @@ let everyTest =
         |> Json.parseNativeAs<Maybe<{| nested: {| name: string |} |}>>
         |> function
             | Just record -> test.areEqual record.nested.name "John"
-            | otherwise -> test.unexpected otherwise
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with generic unions" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":"Node"}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: string |} |}>>
+        |> function
+            | Just record -> test.areEqual record.parent.child "Node"
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with deeply nested generic unions" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string |} |} |}>>
+        |> function
+            | Just record -> test.areEqual record.parent.child.grandChild "Nested Node"
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with deeply nested generic unions and optional types" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string; whatever: string option |} |} |}>>
+        |> function
+            | Just record ->
+                test.areEqual record.parent.child.grandChild "Nested Node"
+                test.areEqual record.parent.child.whatever None
+
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with optional deeply nested generic unions and optional types" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string |} option |} |}>>
+        |> function
+            | Just record ->
+                match record.parent.child with
+                | Some child -> test.areEqual child.grandChild "Nested Node"
+                | None -> test.fail()
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
 ]
 
 
