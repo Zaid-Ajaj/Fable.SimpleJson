@@ -1828,6 +1828,26 @@ let everyTest =
             match record.value.parent.child with
             | Some child -> test.areEqual child.grandChild "Nested Node"
             | None -> test.fail()
+
+    testCase "Deserializing generic union with tuple option as type parameter" <| fun _ ->
+        """
+        {"ComplexKey": [1, "foo"] }
+        """
+        |> Json.parseNativeAs<ComplexKey<(int * string) option>>
+        |> fun union ->
+            match union with
+            | ComplexKey (Some (1, "foo")) -> test.pass()
+            | ComplexKey _ -> test.fail()
+
+    testCase "Deserializing generic union with nested tuple and options as type parameter" <| fun _ ->
+        """
+        {"ComplexKey": [1, [null, 3]] }
+        """
+        |> Json.parseNativeAs<ComplexKey<(int * (string option * int) option) option>>
+        |> fun union ->
+            match union with
+            | ComplexKey (Some (1, Some (None, 3))) -> test.pass()
+            | ComplexKey _ -> test.fail()
 ]
 
 
