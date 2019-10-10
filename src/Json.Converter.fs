@@ -85,6 +85,10 @@ module Convert =
         | TypeInfo.Tuple _ -> true
         | _ -> false
 
+    let optional = function
+        | TypeInfo.Option _ -> true
+        | _ -> false
+
     let isQuoted (input: string) =
         input.StartsWith "\"" && input.EndsWith "\""
 
@@ -156,6 +160,10 @@ module Convert =
                     | Some foundCase when Array.length foundCase.CaseTypes = 1 && arrayLike foundCase.CaseTypes.[0] ->
                         let deserialized = fromJsonAs (JArray values) foundCase.CaseTypes.[0]
                         FSharpValue.MakeUnion(foundCase.Info, [| deserialized |])
+                        |> unbox
+                    | Some foundCase when Array.length foundCase.CaseTypes = 1 && optional foundCase.CaseTypes.[0] ->
+                        let parsedOptional = unbox (fromJsonAs (JArray values) foundCase.CaseTypes.[0])
+                        FSharpValue.MakeUnion(foundCase.Info, [| parsedOptional |])
                         |> unbox
                     | Some foundCase ->
                         if Array.length foundCase.CaseTypes = 1
