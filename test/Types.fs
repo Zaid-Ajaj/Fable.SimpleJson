@@ -26,7 +26,13 @@ type Balance = { Value : decimal }
 
 type ComplexKey<'t> = ComplexKey of 't
 
-type SimpleUnion = One | Two
+type SimpleUnion =
+    | One
+    | Two
+
+type SimpleEnum =
+    | One = 1
+    | Two = 2
 
 type IStudent =
     abstract name: string with get,set
@@ -46,6 +52,8 @@ type SimpleDU =
 type WithString = { Str: string }
 
 type SimpleRec = { A: int; B: string; C: bool; D: float; E: decimal }
+
+type RecordWithEnum = { EnumValue : SimpleEnum }
 
 type Maybe<'t> =
     | Just of 't

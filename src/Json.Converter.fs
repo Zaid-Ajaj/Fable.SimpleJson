@@ -119,6 +119,31 @@ module Convert =
         | JNumber value, TypeInfo.UInt64 -> unbox (uint64 value)
         | JString value, TypeInfo.UInt64 -> unbox (uint64 value)
         | JNumber value, TypeInfo.TimeSpan -> unbox (JS.Math.floor value)
+        | JString value, TypeInfo.Enum getlElemType ->
+            let (underlyingType, originalType) = getlElemType()
+            match underlyingType with
+            | TypeInfo.Int32 ->
+                match Int32.TryParse(value) with
+                | true, parsedNumber ->
+                    if Enum.IsDefined(originalType, parsedNumber)
+                    then unbox parsedNumber
+                    else failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+                | false, _ ->
+                    failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+            | TypeInfo.Long ->
+                match Int64.TryParse(value) with
+                | true, parsedNumber ->
+                    if Enum.IsDefined(originalType, parsedNumber)
+                    then unbox parsedNumber
+                    else failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+                | false, _ ->
+                    failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+            | other ->
+                failwithf "The value '%s' cannot be converted to enum of type '%s'" value originalType.Name
+        | JNumber value, TypeInfo.Enum getElemType ->
+            let (_, originalType) = getElemType()
+            if Enum.IsDefined (originalType, value) then unbox value
+            else failwithf "Value %d cannot be converted to enum of type '%s'" (int value) originalType.Name
         // byte[] coming from the server is serialized as base64 string
         // convert it back to the actual byte array
         | JString value, TypeInfo.Array getElemType ->

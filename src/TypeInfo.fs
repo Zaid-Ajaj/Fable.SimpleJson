@@ -48,5 +48,6 @@ and TypeInfo =
     | ResizeArray of (unit -> TypeInfo)
     | HashSet of (unit -> TypeInfo)
     | Func of (unit -> TypeInfo [ ])
+    | Enum of (unit -> TypeInfo * Type)
     | Record of (unit -> RecordField [ ] * Type)
     | Union of (unit -> UnionCase [ ] * Type)

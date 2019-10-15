@@ -128,6 +128,11 @@ module Converter =
 
     let private lazyToDelayed (l:Lazy<_>) = fun () -> l.Value
 
+    let (|EnumType|_|) (t: Type) =
+        if t.IsEnum
+        then Enum.GetUnderlyingType(t) |> Some
+        else None
+
     let rec private _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
@@ -149,6 +154,7 @@ module Converter =
                       CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType)
             TypeInfo.Union (lazyToDelayed l)
 
+        | EnumType elemType -> TypeInfo.Enum (lazyToDelayed <| lazy (createTypeInfo elemType, resolvedType))
         | ListType elemType -> TypeInfo.List (lazyToDelayed <| lazy (createTypeInfo elemType))
         | ResizeArrayType elemType -> TypeInfo.ResizeArray (lazyToDelayed <| lazy (createTypeInfo elemType))
         | HashSetType elemType -> TypeInfo.HashSet (lazyToDelayed <| lazy (createTypeInfo elemType))

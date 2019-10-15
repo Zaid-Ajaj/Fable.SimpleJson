@@ -1848,6 +1848,47 @@ let everyTest =
             match union with
             | ComplexKey (Some (1, Some (None, 3))) -> test.pass()
             | ComplexKey _ -> test.fail()
+
+    testCase "Deserializing enums works from integers" <| fun _ ->
+        """
+        { "EnumValue": 1 }
+        """
+        |> Json.parseNativeAs<RecordWithEnum>
+        |> fun value ->
+            match value.EnumValue with
+            | SimpleEnum.One -> test.pass()
+            | _ -> test.fail()
+
+    testCase "Deserializing enums works from floats" <| fun _ ->
+        """
+        { "EnumValue": 1.0 }
+        """
+        |> Json.parseNativeAs<RecordWithEnum>
+        |> fun value ->
+            match value.EnumValue with
+            | SimpleEnum.One -> test.pass()
+            | _ -> test.fail()
+
+    testCase "Deserializing enums works from strings" <| fun _ ->
+        """
+        { "EnumValue": "2" }
+        """
+        |> Json.parseNativeAs<RecordWithEnum>
+        |> fun value ->
+            match value.EnumValue with
+            | SimpleEnum.Two -> test.pass()
+            | _ -> test.fail()
+
+    testCase "Deserializing enums from unknown values should fail" <| fun _ ->
+        try
+            """
+            { "EnumValue": "3" }
+            """
+            |> Json.parseNativeAs<RecordWithEnum>
+            |> ignore
+            test.fail()
+        with
+        | ex -> test.equal "The value '3' is not valid for enum of type 'SimpleEnum'" ex.Message
 ]
 
 
