@@ -2,7 +2,6 @@ namespace Fable.SimpleJson
 
 open System
 open Fable.Core
-open JsInterop
 open FSharp.Reflection
 open System.Numerics
 open System.Collections
@@ -505,35 +504,35 @@ module ConverterExtensions =
             SimpleJson.stringify x
 
         /// Parses the input string as JSON and tries to convert it as the given type argument
-        static member parseAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't =
+        static member inline parseAs<'t> (input: string) : 't =
             match SimpleJson.tryParse input with
             | None -> failwith "Couldn't parse the input JSON string because it seems to be invalid"
             | Some inputJson ->
-                let typeInfo = TypeInfo.createFrom<'t>(resolver.Value)
+                let typeInfo = TypeInfo.createFrom<'t> ()
                 Convert.fromJson<'t> inputJson typeInfo
 
         /// Parses the input string as JSON using native parsing and tries to convert it as the given type argument
-        static member parseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't =
+        static member inline parseNativeAs<'t> (input: string) : 't =
             let inputJson = SimpleJson.parseNative input
-            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value)
+            let typeInfo = TypeInfo.createFrom<'t> ()
             Convert.fromJson<'t> inputJson typeInfo
 
         /// Tries to parse the input string as JSON and tries to convert it as the given type argument, returing a (hopefully) useful error message when it fails
-        static member tryParseAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> =
-            try Ok (Json.parseAs<'t>(input, resolver.Value))
+        static member inline tryParseAs<'t> (input: string) : Result<'t, string> =
+            try Ok (Json.parseAs<'t> input)
             with | ex -> Error ex.Message
 
         /// Tries to parse the input string as JSON using native parsing and tries to convert it as the given type argument
-        static member tryParseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> =
-            try Ok (Json.parseNativeAs<'t>(input, resolver.Value))
+        static member inline tryParseNativeAs<'t> (input: string) : Result<'t, string> =
+            try Ok (Json.parseNativeAs<'t> input)
             with | ex -> Error ex.Message
 
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing
-        static member convertFromJsonAs<'t> (input: Json, [<Inject>] ?resolver: ITypeResolver<'t>) : 't =
-            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value)
+        static member inline convertFromJsonAs<'t> (input: Json) : 't =
+            let typeInfo = TypeInfo.createFrom<'t> ()
             Convert.fromJson<'t> input typeInfo
 
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing
-        static member trConvertFromJsonAs<'t> (input: Json, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> =
-            try Ok (Json.convertFromJsonAs<'t>(input, resolver.Value))
+        static member inline tryConvertFromJsonAs<'t> (input: Json) : Result<'t, string> =
+            try Ok (Json.convertFromJsonAs<'t> input)
             with | ex -> Error ex.Message

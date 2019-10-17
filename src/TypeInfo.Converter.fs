@@ -192,9 +192,8 @@ module Converter =
                 ti
 
     type Fable.SimpleJson.TypeInfo with
-        static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : Fable.SimpleJson.TypeInfo =
-            let resolvedType = resolver.Value.ResolveType()
-            createTypeInfo resolvedType
+        static member inline createFrom<'t> () : Fable.SimpleJson.TypeInfo =
+            createTypeInfo typeof<'t>
 
     /// returns whether a type is primitive
     let isPrimitive = function
