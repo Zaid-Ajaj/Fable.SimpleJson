@@ -13,6 +13,7 @@ module Converter =
         | "System.String" -> Some TypeInfo.String
         | "System.Int16" -> Some TypeInfo.Short
         | "System.Int32" -> Some TypeInfo.Int32
+        | "Microsoft.FSharp.Core.int64`1"
         | "System.Int64" -> Some TypeInfo.Long
         | "System.UInt16" -> Some TypeInfo.UInt16
         | "System.UInt32" -> Some TypeInfo.UInt32

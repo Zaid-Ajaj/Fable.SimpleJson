@@ -150,3 +150,6 @@ type AlbumId = AlbumId of int
 type AlbumAuthor = AlbumAuthor of string
 
 type GenericValue<'t> = { value: 't }
+
+[<Measure>]
+type someUnit
