@@ -1889,6 +1889,38 @@ let everyTest =
             test.fail()
         with
         | ex -> test.equal "The value '3' is not valid for enum of type 'SimpleEnum'" ex.Message
+
+    testCase "Deserializing int16 with a unit of measure" <| fun _ ->
+        let expected = 5s<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<int16<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
+    testCase "Deserializing int with a unit of measure" <| fun _ ->
+        let expected = 4<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<int<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
+    testCase "Deserializing int64 with a unit of measure" <| fun _ ->
+        let expected = 222222222222L<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<int64<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
+    testCase "Deserializing float with a unit of measure" <| fun _ ->
+        let expected = 42.3333<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<float<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
 ]
 
 
