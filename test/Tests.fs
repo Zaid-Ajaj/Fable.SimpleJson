@@ -1919,8 +1919,12 @@ let everyTest =
 
         Json.stringify expected
         |> Json.parseNativeAs<float<someUnit>>
-        |> fun value ->
-            test.areEqual value expected
+        |> fun value -> test.areEqual value expected
+
+    testCase "Reading a number as a string should just work" <| fun _ ->
+        "{\"value\": 2010 }"
+        |> Json.parseNativeAs<{| value: string |}>
+        |> fun result -> test.areEqual result.value "2010"
 ]
 
 

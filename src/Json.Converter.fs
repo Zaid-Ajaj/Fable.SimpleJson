@@ -104,7 +104,9 @@ module Convert =
         | JBool value, TypeInfo.Bool -> unbox value
         // reading int from string -> parse it
         | JString value, TypeInfo.Int32 -> unbox (int value)
+        // reading into strings
         | JString value, TypeInfo.String -> unbox value
+        | JNumber value, TypeInfo.String -> unbox (string value)
         // decimals
         | JString value, TypeInfo.Decimal -> unbox (decimal value)
         | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
