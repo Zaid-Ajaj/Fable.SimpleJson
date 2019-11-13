@@ -28,6 +28,9 @@ type test =
     static member failwith x = failwith x
     static member passWith x = Expect.isTrue true x
 
+[<Flags>]
+type FlagsEnum = A = 1 | B = 2 | C = 4
+
 let fromJson<'t> json typeInfo =
     unbox<'t> (Convert.fromJsonAs json typeInfo)
 
@@ -1879,17 +1882,6 @@ let everyTest =
             | SimpleEnum.Two -> test.pass()
             | _ -> test.fail()
 
-    testCase "Deserializing enums from unknown values should fail" <| fun _ ->
-        try
-            """
-            { "EnumValue": "3" }
-            """
-            |> Json.parseNativeAs<RecordWithEnum>
-            |> ignore
-            test.fail()
-        with
-        | ex -> test.equal "The value '3' is not valid for enum of type 'SimpleEnum'" ex.Message
-
     testCase "Deserializing int16 with a unit of measure" <| fun _ ->
         let expected = 5s<someUnit>
 
@@ -1925,6 +1917,15 @@ let everyTest =
         "{\"value\": 2010 }"
         |> Json.parseNativeAs<{| value: string |}>
         |> fun result -> test.areEqual result.value "2010"
+
+
+    testCase "Flags Enum roundtrip" <| fun _ ->
+        let input = FlagsEnum.A ||| FlagsEnum.C
+
+        input
+        |> Json.stringify
+        |> Json.parseNativeAs<FlagsEnum>
+        |> fun result -> test.areEqual result input
 ]
 
 
