@@ -28,6 +28,9 @@ type test =
     static member failwith x = failwith x
     static member passWith x = Expect.isTrue true x
 
+[<Flags>]
+type FlagsEnum = A = 1 | B = 2 | C = 4
+
 let fromJson<'t> json typeInfo =
     unbox<'t> (Convert.fromJsonAs json typeInfo)
 
@@ -1759,6 +1762,15 @@ let everyTest =
         |> Json.stringify
         |> Json.parseNativeAs<TimeSpan>
         |> test.areEqual (TimeSpan.FromMilliseconds 1000.0)
+
+
+    testCase "Flags Enum roundtrip" <| fun _ ->
+        let input = FlagsEnum.A ||| FlagsEnum.C
+
+        input
+        |> Json.stringify
+        |> Json.parseNativeAs<FlagsEnum>
+        |> fun result -> test.areEqual result input
 ]
 
 
