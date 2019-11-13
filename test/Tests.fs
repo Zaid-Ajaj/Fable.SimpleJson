@@ -1882,17 +1882,6 @@ let everyTest =
             | SimpleEnum.Two -> test.pass()
             | _ -> test.fail()
 
-    testCase "Deserializing enums from unknown values should fail" <| fun _ ->
-        try
-            """
-            { "EnumValue": "3" }
-            """
-            |> Json.parseNativeAs<RecordWithEnum>
-            |> ignore
-            test.fail()
-        with
-        | ex -> test.equal "The value '3' is not valid for enum of type 'SimpleEnum'" ex.Message
-
     testCase "Deserializing int16 with a unit of measure" <| fun _ ->
         let expected = 5s<someUnit>
 
