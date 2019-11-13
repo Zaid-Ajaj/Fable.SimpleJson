@@ -1763,6 +1763,172 @@ let everyTest =
         |> Json.parseNativeAs<TimeSpan>
         |> test.areEqual (TimeSpan.FromMilliseconds 1000.0)
 
+    testCase "Anonymous Records with generic unions" <| fun _ ->
+        Just {| one = 1 |}
+        |> Json.stringify
+        |> Json.parseNativeAs<Maybe<{| one: int |}>>
+        |> function
+            | Just record -> test.areEqual 1  record.one
+            | otherwise -> test.fail()
+
+    testCase "Nested anonymous records with generic unions" <| fun _ ->
+        """
+        {"Just":{"nested":{"name":"John"}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| nested: {| name: string |} |}>>
+        |> function
+            | Just record -> test.areEqual record.nested.name "John"
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with generic unions" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":"Node"}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: string |} |}>>
+        |> function
+            | Just record -> test.areEqual record.parent.child "Node"
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with deeply nested generic unions" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string |} |} |}>>
+        |> function
+            | Just record -> test.areEqual record.parent.child.grandChild "Nested Node"
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with deeply nested generic unions and optional types" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string; whatever: string option |} |} |}>>
+        |> function
+            | Just record ->
+                test.areEqual record.parent.child.grandChild "Nested Node"
+                test.areEqual record.parent.child.whatever None
+
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Nested anonymous records with optional deeply nested generic unions and optional types" <| fun _ ->
+        """
+        {"Just":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string |} option |} |}>>
+        |> function
+            | Just record ->
+                match record.parent.child with
+                | Some child -> test.areEqual child.grandChild "Nested Node"
+                | None -> test.fail()
+            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+
+    testCase "Deserializing generic record with anonymous records" <| fun _ ->
+        """
+        {"value":{"parent":{"child":{"grandChild": "Nested Node"}}}}
+        """
+        |> Json.parseNativeAs<GenericValue<{| parent: {| child: {| grandChild: string |} option |} |}>>
+        |> fun record ->
+            match record.value.parent.child with
+            | Some child -> test.areEqual child.grandChild "Nested Node"
+            | None -> test.fail()
+
+    testCase "Deserializing generic union with tuple option as type parameter" <| fun _ ->
+        """
+        {"ComplexKey": [1, "foo"] }
+        """
+        |> Json.parseNativeAs<ComplexKey<(int * string) option>>
+        |> fun union ->
+            match union with
+            | ComplexKey (Some (1, "foo")) -> test.pass()
+            | ComplexKey _ -> test.fail()
+
+    testCase "Deserializing generic union with nested tuple and options as type parameter" <| fun _ ->
+        """
+        {"ComplexKey": [1, [null, 3]] }
+        """
+        |> Json.parseNativeAs<ComplexKey<(int * (string option * int) option) option>>
+        |> fun union ->
+            match union with
+            | ComplexKey (Some (1, Some (None, 3))) -> test.pass()
+            | ComplexKey _ -> test.fail()
+
+    testCase "Deserializing enums works from integers" <| fun _ ->
+        """
+        { "EnumValue": 1 }
+        """
+        |> Json.parseNativeAs<RecordWithEnum>
+        |> fun value ->
+            match value.EnumValue with
+            | SimpleEnum.One -> test.pass()
+            | _ -> test.fail()
+
+    testCase "Deserializing enums works from floats" <| fun _ ->
+        """
+        { "EnumValue": 1.0 }
+        """
+        |> Json.parseNativeAs<RecordWithEnum>
+        |> fun value ->
+            match value.EnumValue with
+            | SimpleEnum.One -> test.pass()
+            | _ -> test.fail()
+
+    testCase "Deserializing enums works from strings" <| fun _ ->
+        """
+        { "EnumValue": "2" }
+        """
+        |> Json.parseNativeAs<RecordWithEnum>
+        |> fun value ->
+            match value.EnumValue with
+            | SimpleEnum.Two -> test.pass()
+            | _ -> test.fail()
+
+    testCase "Deserializing enums from unknown values should fail" <| fun _ ->
+        try
+            """
+            { "EnumValue": "3" }
+            """
+            |> Json.parseNativeAs<RecordWithEnum>
+            |> ignore
+            test.fail()
+        with
+        | ex -> test.equal "The value '3' is not valid for enum of type 'SimpleEnum'" ex.Message
+
+    testCase "Deserializing int16 with a unit of measure" <| fun _ ->
+        let expected = 5s<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<int16<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
+    testCase "Deserializing int with a unit of measure" <| fun _ ->
+        let expected = 4<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<int<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
+    testCase "Deserializing int64 with a unit of measure" <| fun _ ->
+        let expected = 222222222222L<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<int64<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
+    testCase "Deserializing float with a unit of measure" <| fun _ ->
+        let expected = 42.3333<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<float<someUnit>>
+        |> fun value -> test.areEqual value expected
+
+    testCase "Reading a number as a string should just work" <| fun _ ->
+        "{\"value\": 2010 }"
+        |> Json.parseNativeAs<{| value: string |}>
+        |> fun result -> test.areEqual result.value "2010"
+
 
     testCase "Flags Enum roundtrip" <| fun _ ->
         let input = FlagsEnum.A ||| FlagsEnum.C

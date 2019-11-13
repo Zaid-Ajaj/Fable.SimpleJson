@@ -13,6 +13,7 @@ module Converter =
         | "System.String" -> Some TypeInfo.String
         | "System.Int16" -> Some TypeInfo.Short
         | "System.Int32" -> Some TypeInfo.Int32
+        | "Microsoft.FSharp.Core.int64`1"
         | "System.Int64" -> Some TypeInfo.Long
         | "System.UInt16" -> Some TypeInfo.UInt16
         | "System.UInt32" -> Some TypeInfo.UInt32
@@ -126,43 +127,74 @@ module Converter =
         then t.GetGenericArguments().[0] |> Some
         else None
 
-    let rec createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
+    let private lazyToDelayed (l:Lazy<_>) = fun () -> l.Value
+
+    let (|EnumType|_|) (t: Type) =
+        if t.IsEnum
+        then Enum.GetUnderlyingType(t) |> Some
+        else None
+
+    let rec private _createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
         match resolvedType with
         | PrimitiveType typeInfo -> typeInfo
-        | FuncType (types) -> TypeInfo.Func (fun () -> Array.map createTypeInfo types)
-        | RecordType fields -> TypeInfo.Record <| fun () ->
-            let fields =
-                [| for (fieldName, fieldType) in fields ->
-                    { FieldName = fieldName;
-                      FieldType = createTypeInfo fieldType } |]
-            fields, resolvedType
+        | FuncType (types) -> TypeInfo.Func <| lazyToDelayed (lazy (Array.map createTypeInfo types))
+        | RecordType fields ->
+            let l = lazy (
+                let fields =
+                    [| for (fieldName, fieldType) in fields ->
+                        { FieldName = fieldName;
+                          FieldType = createTypeInfo fieldType } |]
+                fields, resolvedType)
+            TypeInfo.Record (lazyToDelayed l)
 
-        | UnionType cases -> TypeInfo.Union <| fun () ->
-            [| for (caseName, caseInfo, caseTypes) in cases ->
-                { CaseName = caseName;
-                  Info = caseInfo;
-                  CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType
+        | UnionType cases ->
+            let l = lazy (
+                [| for (caseName, caseInfo, caseTypes) in cases ->
+                    { CaseName = caseName;
+                      Info = caseInfo;
+                      CaseTypes = Array.map createTypeInfo caseTypes } |], resolvedType)
+            TypeInfo.Union (lazyToDelayed l)
 
-        | ListType elemType -> TypeInfo.List (fun () -> createTypeInfo elemType)
-        | ResizeArrayType elemType -> TypeInfo.ResizeArray (fun () -> createTypeInfo elemType)
-        | HashSetType elemType -> TypeInfo.HashSet (fun () -> createTypeInfo elemType)
-        | ArrayType elemType -> TypeInfo.Array (fun () -> createTypeInfo elemType)
+        | EnumType elemType -> TypeInfo.Enum (lazyToDelayed <| lazy (createTypeInfo elemType, resolvedType))
+        | ListType elemType -> TypeInfo.List (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | ResizeArrayType elemType -> TypeInfo.ResizeArray (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | HashSetType elemType -> TypeInfo.HashSet (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | ArrayType elemType -> TypeInfo.Array (lazyToDelayed <| lazy (createTypeInfo elemType))
         // Checking for tuples has to happen after checking for arrays
-        | TupleType types -> TypeInfo.Tuple (fun () -> Array.map createTypeInfo types)
-        | OptionType elemType -> TypeInfo.Option (fun () -> createTypeInfo elemType)
-        | SetType elemType -> TypeInfo.Set (fun () -> createTypeInfo elemType)
-        | MapType (keyType, valueType) -> TypeInfo.Map (fun () -> createTypeInfo keyType, createTypeInfo valueType)
-        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (fun () -> createTypeInfo keyType, createTypeInfo valueType)
-        | SeqType elemType -> TypeInfo.Seq (fun () -> createTypeInfo elemType)
-        | AsyncType elemType -> TypeInfo.Async (fun () -> createTypeInfo elemType)
-        | PromiseType elemType -> TypeInfo.Promise (fun () -> createTypeInfo elemType)
-        | _ -> TypeInfo.Any (fun () -> resolvedType)
+        | TupleType types -> TypeInfo.Tuple (lazyToDelayed <| lazy (Array.map createTypeInfo types))
+        | OptionType elemType -> TypeInfo.Option (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | SetType elemType -> TypeInfo.Set (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | MapType (keyType, valueType) -> TypeInfo.Map (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | SeqType elemType -> TypeInfo.Seq (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | AsyncType elemType -> TypeInfo.Async (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | PromiseType elemType -> TypeInfo.Promise (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | _ -> TypeInfo.Any (lazyToDelayed <| lazy (resolvedType))
 
+    and private typeInfoCache = Dictionary<Type,Fable.SimpleJson.TypeInfo>()
+
+    and createTypeInfo (resolvedType: Type) : Fable.SimpleJson.TypeInfo =
+        match typeInfoCache.TryGetValue resolvedType with
+        | true, ti -> ti
+        | false, _ ->
+            let ti = _createTypeInfo resolvedType
+            // see https://github.com/fable-compiler/Fable/issues/1871
+            // Type equality doesn't work for anonymous records - all anon records are considered equal.
+            // For anonymous records, the name is the empty string.
+            let notAnonymousRecord =
+                not (String.IsNullOrEmpty resolvedType.FullName)
+                && not (resolvedType.FullName.EndsWith("`1[]"))
+                && not (resolvedType.FullName.EndsWith("`2[]"))
+
+            if notAnonymousRecord then
+                typeInfoCache.[resolvedType] <- ti
+                ti
+            else
+                ti
 
     type Fable.SimpleJson.TypeInfo with
-        static member createFrom<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : Fable.SimpleJson.TypeInfo =
-            let resolvedType = resolver.Value.ResolveType()
-            createTypeInfo resolvedType
+        static member inline createFrom<'t> () : Fable.SimpleJson.TypeInfo =
+            createTypeInfo typeof<'t>
 
     /// returns whether a type is primitive
     let isPrimitive = function

@@ -2,7 +2,6 @@ namespace Fable.SimpleJson
 
 open System
 open Fable.Core
-open JsInterop
 open FSharp.Reflection
 open System.Numerics
 open System.Collections
@@ -85,6 +84,10 @@ module Convert =
         | TypeInfo.Tuple _ -> true
         | _ -> false
 
+    let optional = function
+        | TypeInfo.Option _ -> true
+        | _ -> false
+
     let isQuoted (input: string) =
         input.StartsWith "\"" && input.EndsWith "\""
 
@@ -101,7 +104,9 @@ module Convert =
         | JBool value, TypeInfo.Bool -> unbox value
         // reading int from string -> parse it
         | JString value, TypeInfo.Int32 -> unbox (int value)
+        // reading into strings
         | JString value, TypeInfo.String -> unbox value
+        | JNumber value, TypeInfo.String -> unbox (string value)
         // decimals
         | JString value, TypeInfo.Decimal -> unbox (decimal value)
         | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
@@ -115,6 +120,31 @@ module Convert =
         | JNumber value, TypeInfo.UInt64 -> unbox (uint64 value)
         | JString value, TypeInfo.UInt64 -> unbox (uint64 value)
         | JNumber value, TypeInfo.TimeSpan -> unbox (JS.Math.floor value)
+        | JString value, TypeInfo.Enum getlElemType ->
+            let (underlyingType, originalType) = getlElemType()
+            match underlyingType with
+            | TypeInfo.Int32 ->
+                match Int32.TryParse(value) with
+                | true, parsedNumber ->
+                    if Enum.IsDefined(originalType, parsedNumber)
+                    then unbox parsedNumber
+                    else failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+                | false, _ ->
+                    failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+            | TypeInfo.Long ->
+                match Int64.TryParse(value) with
+                | true, parsedNumber ->
+                    if Enum.IsDefined(originalType, parsedNumber)
+                    then unbox parsedNumber
+                    else failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+                | false, _ ->
+                    failwithf "The value '%s' is not valid for enum of type '%s'" value originalType.Name
+            | other ->
+                failwithf "The value '%s' cannot be converted to enum of type '%s'" value originalType.Name
+        | JNumber value, TypeInfo.Enum getElemType ->
+            let (_, originalType) = getElemType()
+            if Enum.IsDefined (originalType, value) then unbox value
+            else failwithf "Value %d cannot be converted to enum of type '%s'" (int value) originalType.Name
         // byte[] coming from the server is serialized as base64 string
         // convert it back to the actual byte array
         | JString value, TypeInfo.Array getElemType ->
@@ -156,6 +186,10 @@ module Convert =
                     | Some foundCase when Array.length foundCase.CaseTypes = 1 && arrayLike foundCase.CaseTypes.[0] ->
                         let deserialized = fromJsonAs (JArray values) foundCase.CaseTypes.[0]
                         FSharpValue.MakeUnion(foundCase.Info, [| deserialized |])
+                        |> unbox
+                    | Some foundCase when Array.length foundCase.CaseTypes = 1 && optional foundCase.CaseTypes.[0] ->
+                        let parsedOptional = unbox (fromJsonAs (JArray values) foundCase.CaseTypes.[0])
+                        FSharpValue.MakeUnion(foundCase.Info, [| parsedOptional |])
                         |> unbox
                     | Some foundCase ->
                         if Array.length foundCase.CaseTypes = 1
@@ -341,7 +375,7 @@ module Convert =
             let (keyType, valueType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
                     yield tuple ]
             match keyType with
             | TypeInfo.Int32
@@ -361,7 +395,7 @@ module Convert =
             let (keyType, valueType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
                     yield tuple ]
             let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
             for (key, value) in (unbox<(IStructuralComparable * obj) list> pairs) do output.Add(unbox key, value)
@@ -472,35 +506,35 @@ module ConverterExtensions =
             SimpleJson.stringify x
 
         /// Parses the input string as JSON and tries to convert it as the given type argument
-        static member parseAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't =
+        static member inline parseAs<'t> (input: string) : 't =
             match SimpleJson.tryParse input with
             | None -> failwith "Couldn't parse the input JSON string because it seems to be invalid"
             | Some inputJson ->
-                let typeInfo = TypeInfo.createFrom<'t>(resolver.Value)
+                let typeInfo = TypeInfo.createFrom<'t> ()
                 Convert.fromJson<'t> inputJson typeInfo
 
         /// Parses the input string as JSON using native parsing and tries to convert it as the given type argument
-        static member parseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : 't =
+        static member inline parseNativeAs<'t> (input: string) : 't =
             let inputJson = SimpleJson.parseNative input
-            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value)
+            let typeInfo = TypeInfo.createFrom<'t> ()
             Convert.fromJson<'t> inputJson typeInfo
 
         /// Tries to parse the input string as JSON and tries to convert it as the given type argument, returing a (hopefully) useful error message when it fails
-        static member tryParseAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> =
-            try Ok (Json.parseAs<'t>(input, resolver.Value))
+        static member inline tryParseAs<'t> (input: string) : Result<'t, string> =
+            try Ok (Json.parseAs<'t> input)
             with | ex -> Error ex.Message
 
         /// Tries to parse the input string as JSON using native parsing and tries to convert it as the given type argument
-        static member tryParseNativeAs<'t> (input: string, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> =
-            try Ok (Json.parseNativeAs<'t>(input, resolver.Value))
+        static member inline tryParseNativeAs<'t> (input: string) : Result<'t, string> =
+            try Ok (Json.parseNativeAs<'t> input)
             with | ex -> Error ex.Message
 
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing
-        static member convertFromJsonAs<'t> (input: Json, [<Inject>] ?resolver: ITypeResolver<'t>) : 't =
-            let typeInfo = TypeInfo.createFrom<'t>(resolver.Value)
+        static member inline convertFromJsonAs<'t> (input: Json) : 't =
+            let typeInfo = TypeInfo.createFrom<'t> ()
             Convert.fromJson<'t> input typeInfo
 
         /// Tries to convert parsed JSON object as the given type parameter argument, this method is used when you want to apply transformations to the JSON object before parsing
-        static member trConvertFromJsonAs<'t> (input: Json, [<Inject>] ?resolver: ITypeResolver<'t>) : Result<'t, string> =
-            try Ok (Json.convertFromJsonAs<'t>(input, resolver.Value))
+        static member inline tryConvertFromJsonAs<'t> (input: Json) : Result<'t, string> =
+            try Ok (Json.convertFromJsonAs<'t> input)
             with | ex -> Error ex.Message

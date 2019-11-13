@@ -85,6 +85,7 @@ Target "CompileFableTestProject" <| fun _ ->
 Target "RunTests" <| fun _ ->
     printfn "Building %s with Fable" testsPath
     run "npm" "test" "."
+    run "npm" "run headless-tests" "."
     cleanBundles()
 
 "Clean"

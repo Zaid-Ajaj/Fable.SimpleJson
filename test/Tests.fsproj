@@ -1,16 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-    </PropertyGroup>
-    <ItemGroup>
-        <Compile Include="Types.fs" />
-        <Compile Include="Tests.fs" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\src\Fable.SimpleJson.fsproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Fable.Core" Version="3.0.0" />
-      <PackageReference Include="Fable.Mocha" Version="2.4.0" />
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\Fable.SimpleJson.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Tests.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" Version="3.0.0" />
+    <PackageReference Include="Fable.Mocha" Version="2.5.0" />
+  </ItemGroup>
 </Project>
