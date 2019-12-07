@@ -1906,6 +1906,14 @@ let everyTest =
         |> fun value ->
             test.areEqual value expected
 
+    testCase "Deserializing decimal with a unit of measure" <| fun _ ->
+        let expected = 2.0M<someUnit>
+
+        Json.stringify expected
+        |> Json.parseNativeAs<decimal<someUnit>>
+        |> fun value ->
+            test.areEqual value expected
+
     testCase "Deserializing float with a unit of measure" <| fun _ ->
         let expected = 42.3333<someUnit>
 

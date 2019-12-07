@@ -24,6 +24,7 @@ module Converter =
         | "System.Boolean" -> Some  TypeInfo.Bool
         | "System.Single" -> Some TypeInfo.Float32
         | "System.Double" -> Some TypeInfo.Float
+        | "Microsoft.FSharp.Core.decimal`1"
         | "System.Decimal" -> Some TypeInfo.Decimal
         | "System.Numerics.BigInteger" -> Some TypeInfo.BigInt
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit

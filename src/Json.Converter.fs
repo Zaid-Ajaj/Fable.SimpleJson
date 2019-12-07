@@ -488,6 +488,9 @@ module Convert =
                     |> unbox<(IStructuralComparable * obj) list>
                     |> Map.ofList
                     |> unbox
+        | _, TypeInfo.Any getType ->
+            let unknownType = getType()
+            failwithf "Cannot convert %s to %s" (SimpleJson.toString input) unknownType.FullName
         | _ ->
             failwithf "Cannot convert %s to %s" (SimpleJson.toString input) (JS.JSON.stringify typeInfo)
 
