@@ -42,6 +42,6 @@ module TypeCheck =
         else None
 
     let (|NativeArray|_|) (x: obj) =
-        if (JS.Array.isArray x)
+        if (JS.Constructors.Array.isArray x)
         then Some (unbox<obj[]> x)
         else None

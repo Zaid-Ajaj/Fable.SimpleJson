@@ -197,3 +197,8 @@ docs/tools/FSharp.Formatting.svclog
 project.lock.json
 bundle.js
 bundle.js.map
+
+# Rider
+.idea
+
+
