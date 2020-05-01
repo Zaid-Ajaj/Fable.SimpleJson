@@ -74,7 +74,7 @@ module SimpleJson =
             match v with
             | :? string -> v
             | :? System.Collections.IEnumerable ->
-                if JS.Array.isArray(v) then v
+                if JS.Constructors.Array.isArray(v) then v
                 else arrayFrom v
             | _ when isBigInt v -> box (string (decimal (unbox<bigint> v)))
             | _ when isDateOffset v -> box ((unbox<DateTimeOffset> v).ToString("O"))
@@ -89,7 +89,7 @@ module SimpleJson =
         | TypeCheck.Null _ -> JNull
         | TypeCheck.NativeArray arr -> JArray (List.ofArray (Array.map parseNative' arr))
         | TypeCheck.NativeObject object ->
-            [ for key in JS.Object.keys object -> key, parseNative' (get<obj> key object)  ]
+            [ for key in JS.Constructors.Object.keys object -> key, parseNative' (get<obj> key object)  ]
             |> Map.ofList
             |> JObject
         | _ -> JNull

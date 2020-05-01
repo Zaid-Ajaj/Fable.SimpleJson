@@ -927,7 +927,7 @@ let everyTest =
                 { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now }
             |]
 
-            let pgetUsers() = Fable.Core.JS.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.stringify usersInput)))
+            let pgetUsers() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.stringify usersInput)))
             let getUsers() = Async.AwaitPromise(pgetUsers())
             let! users = getUsers()
             do test.areEqual 2 (Array.length users)
@@ -937,7 +937,7 @@ let everyTest =
         async {
             let input = [| 1 .. 5 |]
 
-            let pgetNumbers() = Fable.Core.JS.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.stringify input)))
+            let pgetNumbers() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.stringify input)))
             let getNumbers() = Async.AwaitPromise(pgetNumbers())
 
             let! users = getNumbers()
@@ -948,7 +948,7 @@ let everyTest =
         async {
             let input = [| { Name = "first"; Score = 1 }; { Name = "second"; Score = 2 }; { Name = "third"; Score = 3 } |]
 
-            let pgetScores() = Fable.Core.JS.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.stringify input)))
+            let pgetScores() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.stringify input)))
             let getScores() = Async.AwaitPromise(pgetScores())
 
             let! users = getScores()
