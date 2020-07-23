@@ -486,6 +486,27 @@ let everyTest =
         let parsed1 = Json.parseAs<WithString> parsed2.Str
         test.areEqual str parsed1.Str
 
+    // TODO: Wait for Nullable<'T> support in Fable
+    //testCase "Deserialize object with nullable" <| fun _ ->
+    //    let parsedWithNull = Json.parseAs<RecordWithNullable> "{ \"Content\": null }"
+    //    let parsedWithValue = Json.parseAs<RecordWithNullable> "{ \"Content\": 1 }"
+    //    test.isTrue (not parsedWithNull.Content.HasValue)
+    //    test.isTrue parsedWithValue.Content.HasValue
+    //    test.areEqual 1 parsedWithValue.Content.Value
+
+    //testCase "Nullable roundtrip from null" <| fun _ ->
+    //    let content = { Content = Nullable() }
+    //    let serialized = Json.stringify content
+    //    let deserialized = Json.parseAs<RecordWithNullable> serialized
+    //    test.isTrue (not deserialized.Content.HasValue)
+
+    //testCase "Nullable roundtrip from value" <| fun _ ->
+    //    let content = { Content = Nullable 42 }
+    //    let serialized = Json.stringify content
+    //    let deserialized = Json.parseAs<RecordWithNullable> serialized
+    //    test.isTrue deserialized.Content.HasValue
+    //    test.areEqual 42 deserialized.Content.Value
+
     testCase "Deserialize string with escaped quotes" <| fun _ ->
         let jsonString = "{\"a\": \"\\\"\\\"\"}"
         let json = jsonString |> SimpleJson.parse
@@ -1006,6 +1027,27 @@ let everyTest =
         |> function
             | Ok [{ Login = "foo"; IsAdmin = false }; { Login = "bar"; IsAdmin = false }] -> test.pass()
             | otherwise -> test.fail()
+
+    testCase "Parsing union of records using discriminator works" <| fun _ ->
+        let actors = """
+            [
+                {
+                    "__typename": "User",
+                    "id": 10,
+                    "username": "Zaid"
+                },
+
+                {
+                    "__typename": "Bot",
+                    "name": "Bot name"
+                }
+            ]
+        """
+
+        let deserialized = Json.parseNativeAs<Actor list> actors
+        let wasFound actor = Expect.isTrue (List.contains actor deserialized) "Actor was found"
+        User {| id = 10; username = "Zaid" |} |> wasFound
+        Bot {| name = "Bot name" |} |> wasFound
 
     testCase "Nice error messages are created for missing JSON keys" <| fun _ ->
         "{ \"answer\": 42 }"

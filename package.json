@@ -12,12 +12,12 @@
         "@babel/polyfill": "^7.0.0",
         "@babel/preset-env": "^7.0.0",
         "babel-loader": "^8.0.0",
-        "fable-compiler": "^2.8.4",
+        "fable-compiler": "^2.10.1",
         "fable-loader": "^2.1.9",
         "fable-splitter": "^2.1.13",
         "mocha": "^6.2.0",
         "webpack": "^4.27.1",
-        "webpack-cli": "^3.0.1",
-        "webpack-dev-server": "^3.7.2"
+        "webpack-cli": "^3.3.12",
+        "webpack-dev-server": "^3.11.0"
     }
 }

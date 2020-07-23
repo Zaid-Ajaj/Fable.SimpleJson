@@ -153,3 +153,7 @@ type GenericValue<'t> = { value: 't }
 
 [<Measure>]
 type someUnit
+
+type Actor =
+    | User of {| id: int; username: string |}
+    | Bot of {| name: string |}
