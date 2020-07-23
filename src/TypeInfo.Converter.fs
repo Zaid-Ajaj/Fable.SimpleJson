@@ -45,6 +45,11 @@ module Converter =
         then t.GetGenericArguments().[0] |> Some
         else None
 
+    let (|Nullable|_|) (t: Type) =
+        if t.FullName.StartsWith "System.Nullable`1"
+        then t.GetGenericArguments().[0] |> Some
+        else None
+
     let (|UnionType|_|) (t: Type) =
         if FSharpType.IsUnion t
         then
@@ -164,6 +169,7 @@ module Converter =
         // Checking for tuples has to happen after checking for arrays
         | TupleType types -> TypeInfo.Tuple (lazyToDelayed <| lazy (Array.map createTypeInfo types))
         | OptionType elemType -> TypeInfo.Option (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | Nullable elemType -> TypeInfo.Option (lazyToDelayed <| lazy (createTypeInfo elemType))
         | SetType elemType -> TypeInfo.Set (lazyToDelayed <| lazy (createTypeInfo elemType))
         | MapType (keyType, valueType) -> TypeInfo.Map (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
         | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))

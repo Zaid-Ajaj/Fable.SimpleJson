@@ -5,7 +5,7 @@ A simple library for easily parsing, transforming and converting JSON in Fable p
 ### Installation
 Install from nuget using paket
 ```sh
-paket add nuget Fable.SimpleJson --project path/to/YourProject.fsproj 
+paket add nuget Fable.SimpleJson --project path/to/YourProject.fsproj
 ```
 Make sure the references are added to your paket files
 ```sh
@@ -20,17 +20,17 @@ Fable.SimpleJson
 
 Fable.SimpleJson allows for generic JSON data maniplution and treats JSON as a [data structure](https://github.com/Zaid-Ajaj/Fable.SimpleJson/blob/master/src/Json.fs) like `List` or `Map`. Manipulating JSON as data means that you can use low-level API's to transform and convert JSON from one structure into another or extracting values from the JSON without defining intermediate types (similar to the [JToken](https://www.newtonsoft.com/json/help/html/CreateJsonManually.htm) API from Newtonsoft.Json)
 
-The automatic serialization and deserialization to typed entities happen to be utility functions, one use case, but are not the main purpose of the library (as in with [Thoth.Json](https://github.com/MangelMaxime/Thoth)). 
+The automatic serialization and deserialization to typed entities happen to be utility functions, one use case, but are not the main purpose of the library (as in with [Thoth.Json](https://github.com/MangelMaxime/Thoth)).
 
-Because of the flexibility it provides, it forms a solid foundation for JSON handling in [Fable.Remoting](https://github.com/Zaid-Ajaj/Fable.Remoting). 
+Because of the flexibility it provides, it forms a solid foundation for JSON handling in [Fable.Remoting](https://github.com/Zaid-Ajaj/Fable.Remoting), [Elmish.Bridge](https://github.com/Nhowka/Elmish.Bridge) and [Fable.SignalR](https://github.com/Shmew/Fable.SignalR).
 
 ### Using the library
 
 JSON Parsing and Transformation API
 ```fs
-open Fable.SimpleJson 
+open Fable.SimpleJson
 
-// ... 
+// ...
 
 SimpleJson.tryParse : string -> Option<Json>
 SimpleJson.parse : string -> Json
@@ -41,19 +41,19 @@ SimpleJson.mapKeysByPath : (f: string list -> string option) -> Json -> Json
 ```
 JSON Convertion API
 ```fs
-open Fable.SimpleJson 
+open Fable.SimpleJson
 
 // ...
 
-Json.parseAs<'t> (inputJson: string) : 't 
-Json.tryParseAs<'t> (inputJson: string) : Result<'t, string> 
-Json.parseFromJsonAs<'t> (parsedJson: Json) : 't 
-Json.tryParseFromJsonAs<'t> (parsedJson: Json) : Result<'t, string> 
+Json.parseAs<'t> (inputJson: string) : 't
+Json.tryParseAs<'t> (inputJson: string) : Result<'t, string>
+Json.parseFromJsonAs<'t> (parsedJson: Json) : 't
+Json.tryParseFromJsonAs<'t> (parsedJson: Json) : Result<'t, string>
 ```
 
 The AST looks like this:
 ```fs
-type Json = 
+type Json =
     | JNumber of float
     | JString of string
     | JBool of bool
@@ -62,13 +62,13 @@ type Json =
     | JObject of Map<string, Json>
 ```
 
-## Auto Deserialization 
+## Auto Deserialization
 Suppose you have the record of `Person`, you can then use `Json.parseAs<'t>` for automatic deserialization:
 ```fs
 type Person = { Name: string; Age: int }
 
 "{ \"Name\": \"John\", \"Age\": 42  }"
-|> Json.parseAs<Person> 
+|> Json.parseAs<Person>
 // result => { Name = "John"; Age = 42 }
 ```
 
@@ -93,7 +93,7 @@ open Fable.SimpleJson
         [value "name"; value "age"]
         |> List.choose id
         |> function
-            | [JString name; JNumber age]  -> 
+            | [JString name; JNumber age]  ->
                 Some { Name = name; Age = int age }
             | _ -> None
     | _ -> None
@@ -103,8 +103,8 @@ You could also use the non-safe version `SimpleJson.parse` if you know for sure 
 ## Auto Serialization
 
 ```fs
-let person = { Name = "John"; Age = 34 } 
-Json.stringify person 
+let person = { Name = "John"; Age = 34 }
+Json.stringify person
 ```
 
 ## Manual Serialization
@@ -113,7 +113,7 @@ Now, to serialize a typed entity into a JSON string, you build the JSON structur
 ```fs
 let person = { Name = "John"; Age = 34 }
 
-let serialized = 
+let serialized =
     [ "name", JString person.Name
       "age", JNumber (float person.Age) ]
     |> Map.ofList
@@ -127,7 +127,7 @@ let serialized =
 Suppose you want to deserialize the string:
 
 ```json
-{  "first_name": "John", 
+{  "first_name": "John",
    "last_name": "Doe"    }
 ```
 And you have the type
@@ -173,11 +173,11 @@ Running and watching the tests live in the browser:
 npm install
 npm start
 ```
-When the development server starts, navigate to `http://localhost:8080` to see the test results. 
+When the development server starts, navigate to `http://localhost:8080` to see the test results.
 
 Building the tests and running them using Mocha on Node.js
 ```sh
 npm install
 npm test
 ```
-This will compile the project using `fable-splitter` and run mocha against the generated files in `dist`. 
+This will compile the project using `fable-splitter` and run mocha against the generated files in `dist`.

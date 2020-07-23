@@ -84,6 +84,18 @@ module Convert =
         | TypeInfo.Tuple _ -> true
         | _ -> false
 
+    let isRecord = function
+        | TypeInfo.Record recordType -> true
+        | _ -> false
+
+    let unionOfRecords = function
+        | TypeInfo.Union getCases ->
+            let (unionCases, unionType) = getCases()
+            unionCases
+            |> Seq.forall (fun case -> case.CaseTypes.Length = 1 && isRecord case.CaseTypes.[0])
+        | _ ->
+            false
+
     let optional = function
         | TypeInfo.Option _ -> true
         | _ -> false
@@ -208,6 +220,34 @@ module Convert =
                         let caseNames = Array.map (fun case -> sprintf " '%s' " case.CaseName) cases
                         let expectedCases = String.concat ", " caseNames
                         failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
+            | otherwise when unionOfRecords typeInfo ->
+                let discriminators = ["__typename"; "$typename"; "$type" ]
+                let foundDiscriminatorKey =
+                    discriminators
+                    |> List.tryFind (fun keyword -> Map.containsKey keyword values)
+
+                match foundDiscriminatorKey with
+                | None ->
+                    failwithf "Could not serialize the JSON object into the union of records of type %s because the JSON did not contain a known discriminator. Expected '__typename', '$typeName' or '$type'" unionType.Name
+                | Some discriminatorKey ->
+                    let discriminatorValueJson = Map.find discriminatorKey values
+                    match discriminatorValueJson with
+                    | JString discriminatorValue ->
+                        let foundUnionCase =
+                            cases
+                            |> Seq.tryFind (fun case -> case.CaseName = discriminatorValue)
+
+                        match foundUnionCase with
+                        | None ->
+                            failwithf "Union of records of type '%s' does not have a matching case '%s'" unionType.Name discriminatorValue
+                        | Some case ->
+                            // Assuming the case types is [recordType]
+                            // one element of types and the first element is a record
+                            // as satisfied by the unionOfRecords function
+                            let record = unbox (fromJsonAs (JObject values) (case.CaseTypes.[0]))
+                            FSharpValue.MakeUnion(case.Info, [| record |])
+                    | otherwise ->
+                        failwithf "Union of records of type '%s' cannot be deserialized with the value of the discriminator key is not a string to match against a specific union case" unionType.Name
             | otherwise ->
                 // TODO!!! Better error messages here
                 let unexpectedJson = JS.JSON.stringify otherwise

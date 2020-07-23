@@ -63,7 +63,9 @@ module SimpleJson =
             |> sprintf "{%s}"
 
     let stringify (value: 'a) : string =
-        JS.JSON.stringify(value, (fun key v ->
+        if isNullOrUndefined value
+        then JS.JSON.stringify(null)
+        else JS.JSON.stringify(value, (fun key v ->
             if isDateOffset (get key jsThis) then
                 let dateOffset : DateTimeOffset = get key jsThis
                 box (dateOffset.ToString("O"))
