@@ -1006,6 +1006,10 @@ let everyTest =
         |> Json.parseNativeAs<Result<unit, string>>
         |> test.areEqual (Ok ())
 
+    testCase "Deserializing descriminated unions with sets works" <| fun _ ->
+        let deserialized = Json.parseNativeAs<DuWithSet> "{ \"CustomCase\": [\"SomeOtherCase\"] }"
+        test.areEqual deserialized (DuWithSet.CustomCase (set [ SomeOtherDU.SomeOtherCase ]))
+
     testCase "Deserializing SecureRequest<User list> works from Fable 2 representation" <| fun _ ->
         let inputs = """
             [ "Ok",

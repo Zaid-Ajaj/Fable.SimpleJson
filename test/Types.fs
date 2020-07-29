@@ -157,3 +157,10 @@ type someUnit
 type Actor =
     | User of {| id: int; username: string |}
     | Bot of {| name: string |}
+
+type SomeOtherDU =
+    | SomeOtherCase
+
+type DuWithSet =
+    | SomeCase
+    | CustomCase of Set<SomeOtherDU>

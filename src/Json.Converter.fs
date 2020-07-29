@@ -82,6 +82,7 @@ module Convert =
         | TypeInfo.List _ -> true
         | TypeInfo.Seq _ -> true
         | TypeInfo.Tuple _ -> true
+        | TypeInfo.Set _ -> true
         | _ -> false
 
     let isRecord = function
