@@ -236,7 +236,7 @@ module Convert =
                     | JString discriminatorValue ->
                         let foundUnionCase =
                             cases
-                            |> Seq.tryFind (fun case -> case.CaseName = discriminatorValue)
+                            |> Seq.tryFind (fun case -> case.CaseName.ToUpperInvariant() = discriminatorValue.ToUpperInvariant())
 
                         match foundUnionCase with
                         | None ->

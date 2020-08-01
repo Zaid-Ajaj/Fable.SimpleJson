@@ -1053,6 +1053,27 @@ let everyTest =
         User {| id = 10; username = "Zaid" |} |> wasFound
         Bot {| name = "Bot name" |} |> wasFound
 
+    testCase "Parsing union of records using lower-case discriminator works" <| fun _ ->
+        let actors = """
+            [
+                {
+                    "__typename": "user",
+                    "id": 10,
+                    "username": "Zaid"
+                },
+
+                {
+                    "__typename": "bot",
+                    "name": "Bot name"
+                }
+            ]
+        """
+
+        let deserialized = Json.parseNativeAs<Actor list> actors
+        let wasFound actor = Expect.isTrue (List.contains actor deserialized) "Actor was found"
+        User {| id = 10; username = "Zaid" |} |> wasFound
+        Bot {| name = "Bot name" |} |> wasFound
+
     testCase "Nice error messages are created for missing JSON keys" <| fun _ ->
         "{ \"answer\": 42 }"
         |> Json.tryParseAs<Rec>
