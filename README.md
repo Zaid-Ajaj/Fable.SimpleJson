@@ -18,7 +18,7 @@ Fable.SimpleJson
 
 ## Raison d'être
 
-Fable.SimpleJson allows for generic JSON data maniplution and treats JSON as a [data structure](https://github.com/Zaid-Ajaj/Fable.SimpleJson/blob/master/src/Json.fs) like `List` or `Map`. Manipulating JSON as data means that you can use low-level API's to transform and convert JSON from one structure into another or extracting values from the JSON without defining intermediate types (similar to the [JToken](https://www.newtonsoft.com/json/help/html/CreateJsonManually.htm) API from Newtonsoft.Json)
+Fable.SimpleJson allows for generic JSON data manipulation and treats JSON as a [data structure](https://github.com/Zaid-Ajaj/Fable.SimpleJson/blob/master/src/Json.fs) like `List` or `Map`. Manipulating JSON as data means that you can use low-level API's to transform and convert JSON from one structure into another or extracting values from the JSON without defining intermediate types (similar to the [JToken](https://www.newtonsoft.com/json/help/html/CreateJsonManually.htm) API from Newtonsoft.Json)
 
 The automatic serialization and deserialization to typed entities happen to be utility functions, one use case, but are not the main purpose of the library (as in with [Thoth.Json](https://github.com/MangelMaxime/Thoth)).
 
