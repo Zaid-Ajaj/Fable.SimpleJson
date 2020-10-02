@@ -18,7 +18,7 @@ module.exports = function (evn, argv) {
   mode: mode,
   devtool: isProduction ? false : "eval-source-map",
   entry: {
-    app: ["@babel/polyfill", "./test/Tests.fsproj"]
+    app: ["@babel/polyfill", "./test/Tests.fs.js"]
   },
   output: {
     filename: 'bundle.js',
@@ -30,10 +30,6 @@ module.exports = function (evn, argv) {
   },
   module: {
     rules: [
-      {
-        test: /\.fs(x|proj)?$/,
-        use: "fable-loader"
-      },
       {
         test: /\.js$/,
         exclude: /node_modules/,
