@@ -77,6 +77,32 @@ module Convert =
             | _ -> None
         | _ -> None
 
+    let rec flatteFable3Map (tree: Map<string, Json>) =
+        [
+            match Map.tryFind "k" tree, Map.tryFind "v" tree with
+            | Some (JString key), Some value -> (key, value)
+            | _ -> ()
+
+            match Map.tryFind "left" tree with
+            | Some (JObject left) -> yield! flatteFable3Map left
+            | _ -> ()
+
+            match Map.tryFind "right" tree with
+            | Some (JObject right) -> yield! flatteFable3Map right
+            | _ -> ()
+        ]
+
+    let rec flattenFable3Lists (linkedList: Map<string, Json>) =
+        [
+            match Map.tryFind "head" linkedList with
+            | Some value -> value
+            | None -> ()
+
+            match Map.tryFind "tail" linkedList with
+            | Some (JObject tail) -> yield! flattenFable3Lists tail
+            | _ -> ()
+        ]
+
     let arrayLike = function
         | TypeInfo.Array _ -> true
         | TypeInfo.List _ -> true
@@ -221,6 +247,21 @@ module Convert =
                         let caseNames = Array.map (fun case -> sprintf " '%s' " case.CaseName) cases
                         let expectedCases = String.concat ", " caseNames
                         failwithf "Case %s was not valid for type '%s', expected one of the cases [%s]" caseName unionType.Name expectedCases
+
+            // Specific for Fable 3
+            | otherwise when Map.containsKey "tag" values && Map.containsKey "fields" values && Map.count values = 2 ->
+                match Map.tryFind "tag" values, Map.tryFind "fields" values with
+                | Some (JNumber caseIndex), Some (JArray fieldValues) ->
+                    let foundCase = cases.[int caseIndex]
+                    let values =
+                        fieldValues
+                        |> Array.ofList
+                        |> Array.mapi (fun index value -> fromJsonAs value (foundCase.CaseTypes.[index]))
+
+                    FSharpValue.MakeUnion(foundCase.Info, values)
+                | _ ->
+                    failwithf "Could not deserialize JSON(%s) into type %s" (SimpleJson.toString (JObject values)) unionType.FullName
+
             | otherwise when unionOfRecords typeInfo ->
                 let discriminators = ["__typename"; "$typename"; "$type" ]
                 let foundDiscriminatorKey =
@@ -353,6 +394,15 @@ module Convert =
             values
             |> List.map (fun value -> unbox (fromJsonAs value elementType))
             |> unbox
+
+        // Specific for Fable 3
+        | JObject linkedList, TypeInfo.List elementTypeDelayed ->
+            let elementType = elementTypeDelayed()
+            let flattenedList = flattenFable3Lists linkedList
+            flattenedList
+            |> List.map (fun value -> unbox (fromJsonAs value elementType))
+            |> unbox
+
         | JArray values, TypeInfo.Set elementTypeDelayed ->
             let elementType = elementTypeDelayed()
             values
@@ -492,6 +542,11 @@ module Convert =
                 | None ->
                     let inputJson = SimpleJson.toString (JArray tree)
                     failwithf "Could not generate map from JSON\n %s" inputJson
+
+            // Specific for Fable 3
+            | Some (JObject comparer), Some (JObject tree) when Map.isEmpty comparer ->
+                let flattenedMap = Map.ofList (flatteFable3Map tree)
+                fromJsonAs (JObject flattenedMap) typeInfo
             | _ ->
                 // if comparer and tree are not present,
                 // assume we are parsing Fable 1 object literal

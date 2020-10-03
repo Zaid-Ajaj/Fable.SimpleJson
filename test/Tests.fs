@@ -896,12 +896,6 @@ let everyTest =
                 | [ { first = 10 } ] -> test.pass()
                 | _ -> test.fail()
 
-    testCase "Seq<'t> can be serialized correctly" <| fun _ ->
-        seq { yield { first = 10 } }
-        |> DummySeq
-        |> Json.stringify
-        |> test.areEqual "[\"DummySeq\",[{\"first\":10}]]"
-
     testCase "Multiple optional fields can be omitted from the JSON" <| fun _ ->
         "{ \"key\": 5 }"
         |> Json.parseAs<Optional>
