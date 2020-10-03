@@ -66,11 +66,11 @@ module SimpleJson =
         if isNullOrUndefined value
         then JS.JSON.stringify(null)
         else JS.JSON.stringify(value, (fun key v ->
-            if isDateOffset (get key jsThis) then
-                let dateOffset : DateTimeOffset = get key jsThis
+            if isDateOffset v then
+                let dateOffset : DateTimeOffset = !!v
                 box (dateOffset.ToString("O"))
-            elif isBigInt (get key jsThis) then
-                let bigInt : bigint = get key jsThis
+            elif isBigInt v then
+                let bigInt : bigint = !!v
                 box (string (decimal bigInt))
             else
             match v with

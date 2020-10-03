@@ -251,8 +251,8 @@ module Convert =
                         failwithf "Union of records of type '%s' cannot be deserialized with the value of the discriminator key is not a string to match against a specific union case" unionType.Name
             | otherwise ->
                 // TODO!!! Better error messages here
-                let unexpectedJson = JS.JSON.stringify otherwise
-                let expectedType = JS.JSON.stringify cases
+                let unexpectedJson = string otherwise
+                let expectedType = string cases
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         | JNull, TypeInfo.Option _ -> unbox None
         | jsonValue, TypeInfo.Option optionalTypeDelayed when jsonValue <> JNull ->
@@ -337,8 +337,8 @@ module Convert =
                         FSharpValue.MakeUnion(caseInfo, parsedValues)
                         |> unbox
             | otherwise ->
-                let unexpectedJson = JS.JSON.stringify otherwise
-                let expectedType = JS.JSON.stringify cases
+                let unexpectedJson = string otherwise
+                let expectedType = string cases
                 failwithf "Expected JSON:\n%s\nto match the type\n%s" unexpectedJson expectedType
         // Arrays
         | JArray values, TypeInfo.Array elementTypeDelayed ->
@@ -533,7 +533,7 @@ module Convert =
             let unknownType = getType()
             failwithf "Cannot convert %s to %s" (SimpleJson.toString input) unknownType.FullName
         | _ ->
-            failwithf "Cannot convert %s to %s" (SimpleJson.toString input) (JS.JSON.stringify typeInfo)
+            failwithf "Cannot convert %s to %s" (SimpleJson.toString input) (string typeInfo)
 
     let fromJson<'t> json typeInfo =
         unbox<'t> (fromJsonAs json typeInfo)
