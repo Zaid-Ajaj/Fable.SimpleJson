@@ -36,7 +36,7 @@ module Converter =
         if FSharpType.IsRecord t
         then
             FSharpType.GetRecordFields t
-            |> Array.map (fun prop -> prop.Name, prop.PropertyType)
+            |> Array.map (fun field -> field, field.Name, field.PropertyType)
             |> Some
         else None
 
@@ -147,8 +147,9 @@ module Converter =
         | RecordType fields ->
             let l = lazy (
                 let fields =
-                    [| for (fieldName, fieldType) in fields ->
-                        { FieldName = fieldName;
+                    [| for (field, fieldName, fieldType) in fields ->
+                        { PropertyInfo = field
+                          FieldName = fieldName;
                           FieldType = createTypeInfo fieldType } |]
                 fields, resolvedType)
             TypeInfo.Record (lazyToDelayed l)

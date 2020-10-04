@@ -130,6 +130,8 @@ module Convert =
     let isQuoted (input: string) =
         input.StartsWith "\"" && input.EndsWith "\""
 
+    let betweenQuotes (input: string) = "\"" + input + "\""
+
     let removeQuotes (input: string) =
         input.Substring(1, input.Length - 2)
 
@@ -593,11 +595,207 @@ module Convert =
     let fromJson<'t> json typeInfo =
         unbox<'t> (fromJsonAs json typeInfo)
 
+    let rec serialize value (typeInfo: TypeInfo) =
+        match typeInfo with
+        | TypeInfo.String ->
+            let content = unbox<string> value
+            if isNull content
+            then "null"
+            else betweenQuotes (content.Replace("\"", "\\\""))
+        | TypeInfo.Unit -> "null"
+        | TypeInfo.Float
+        | TypeInfo.Float32 -> string (unbox<double> value)
+        | TypeInfo.Byte
+        | TypeInfo.UInt16
+        | TypeInfo.UInt32
+        | TypeInfo.Short
+        | TypeInfo.Enum
+        | TypeInfo.TimeSpan
+        | TypeInfo.Int32 -> string (unbox<int> value)
+        | TypeInfo.UInt64
+        | TypeInfo.Long -> betweenQuotes (string (unbox<int64> value))
+        | TypeInfo.BigInt -> betweenQuotes (string (unbox<bigint> value))
+        | TypeInfo.Decimal -> betweenQuotes (string (unbox<decimal> value))
+        | TypeInfo.Bool -> if unbox<bool> value then "true" else "false"
+        | TypeInfo.Guid -> betweenQuotes ((unbox<Guid> value).ToString())
+        | TypeInfo.DateTime -> betweenQuotes ((unbox<DateTime> value).ToString("O"))
+        | TypeInfo.DateTimeOffset -> betweenQuotes ((unbox<DateTimeOffset> value).ToString("O"))
+        | TypeInfo.Record getFields ->
+            let (fieldTypes, recordType) = getFields()
+            let serializedFields =
+                fieldTypes
+                |> Array.map (fun field ->
+                    let fieldValue = FSharpValue.GetRecordField(value, field.PropertyInfo)
+                    sprintf "\"%s\": %s" field.FieldName (serialize fieldValue field.FieldType)
+                )
+
+            "{" + String.concat ", " serializedFields + "}"
+
+        | TypeInfo.ResizeArray getElementType ->
+            let elementType = getElementType()
+            let values =
+                value
+                |> unbox<ResizeArray<obj>>
+                |> Seq.map (fun element -> serialize element elementType)
+                |> String.concat ", "
+
+            "[" + values + "]"
+
+        | TypeInfo.HashSet getElementType ->
+            let elementType = getElementType()
+            let values =
+                value
+                |> unbox<HashSet<obj>>
+                |> Seq.map (fun element -> serialize element elementType)
+                |> String.concat ", "
+
+            "[" + values + "]"
+
+        | TypeInfo.Set getElementType -> 
+            let elementType = getElementType()
+            let values =
+                value
+                |> unbox<Set<IComparable>>
+                |> Seq.map (fun element -> serialize element elementType)
+                |> String.concat ", "
+
+            "[" + values + "]"
+
+        | TypeInfo.Array getElementType ->
+            let elementType = getElementType()
+            let values =
+                value
+                |> unbox<obj []>
+                |> Array.map (fun element -> serialize element elementType)
+                |> String.concat ", "
+
+            "[" + values + "]"
+
+        | TypeInfo.List getElementType ->
+            let elementType = getElementType()
+            let values =
+                value
+                |> unbox<obj list>
+                |> List.map (fun element -> serialize element elementType)
+                |> String.concat ", "
+
+            "[" + values + "]"
+
+        | TypeInfo.Seq getElementType ->
+            let elementType = getElementType()
+            let values =
+                value
+                |> unbox<obj seq>
+                |> Seq.toArray
+                |> Array.map (fun element -> serialize element elementType)
+                |> String.concat ", "
+
+            "[" + values + "]"
+
+        | TypeInfo.Option getElementType ->
+            match unbox<obj option> value with
+            | None -> "null"
+            | Some existingValue -> serialize existingValue (getElementType())
+
+        | TypeInfo.Union getCases ->
+            let (unionCases, unionType) = getCases()
+            let (usedCase, fields) = FSharpValue.GetUnionFields(value, unionType)
+            let caseTypes =
+                unionCases
+                |> Array.find (fun case -> case.CaseName = usedCase.Name)
+                |> fun case -> case.CaseTypes
+
+            if enumUnion typeInfo then
+                betweenQuotes usedCase.Name
+            elif caseTypes.Length = 1 then
+                "{" + betweenQuotes usedCase.Name + ": " + serialize fields.[0] caseTypes.[0] + "}"
+            else
+                let serializedFields =
+                    caseTypes
+                    |> Array.mapi (fun index caseType -> serialize fields.[index] caseType)
+                    |> String.concat ", "
+
+                "{" + betweenQuotes usedCase.Name + ": " + "[" + serializedFields + "] }"
+
+        | TypeInfo.Map getPairTypes ->
+            let (keyType, valueType) = getPairTypes()
+
+            let serializedValues =
+                value
+                |> unbox<Map<IComparable, obj>>
+                |> Map.toArray
+                |> Array.map (fun (key, value) ->
+                    let serializedKey = serialize key keyType
+                    let serializedValue = serialize value valueType
+
+                    if isPrimitive keyType || enumUnion keyType then
+                        if not (isQuoted serializedKey)
+                        then (betweenQuotes serializedKey) + ": " + serializedValue
+                        else serializedKey + ": " + serializedValue
+                    else 
+                        "[" + serializedKey + ", " + serializedValue + "]"
+                )
+                |> String.concat ", "
+
+            if isPrimitive keyType || enumUnion keyType
+            then "{" + serializedValues + "}"
+            else "[" + serializedValues + "]"
+
+        | TypeInfo.Dictionary getPairTypes ->
+            let (keyType, valueType) = getPairTypes()
+            let serializedValues =
+                value
+                |> unbox<Dictionary<IComparable, obj>>
+                |> Seq.map (fun pair -> 
+                    let (key, value) = pair.Key, pair.Value
+                    let serializedKey = serialize key keyType
+                    let serializedValue = serialize value valueType
+
+                    if isPrimitive keyType || enumUnion keyType then
+                        if not (isQuoted serializedKey)
+                        then (betweenQuotes serializedKey) + ": " + serializedValue
+                        else serializedKey + ": " + serializedValue
+                    else 
+                        "[" + serializedKey + ", " + serializedValue + "]"
+                )
+                |> String.concat ", "
+
+            if isPrimitive keyType || enumUnion keyType
+            then "{" + serializedValues + "}"
+            else "[" + serializedValues + "]"
+
+        | TypeInfo.Tuple getTupleTypes ->
+            let tupleTypes = getTupleTypes()
+
+            let serializedValues =
+                value
+                |> unbox<obj array>
+                |> Array.mapi (fun index element -> serialize element tupleTypes.[index])
+                |> String.concat ", "
+
+            "[" + serializedValues + "]"
+
+        | TypeInfo.Any getType -> 
+            // fallback to low-level serialization
+            SimpleJson.stringify value
+
+        | _ ->
+            "null"
+
 [<AutoOpenAttribute>]
 module ConverterExtensions =
     type Json with
-        static member stringify<'t> (x: 't) =
-            SimpleJson.stringify x
+        /// <summary>
+        /// Serialized the input value into JSON
+        /// </summary>
+        static member inline stringify<'t> (value: 't) : string =
+            let typeInfo = TypeInfo.createFrom<'t> ()
+            Convert.serialize value typeInfo
+
+        /// <summary>
+        /// Uses the old Json.stringify method
+        /// </summary>
+        static member inline stringify_Legacy(value: 't) : string = SimpleJson.stringify(value)
 
         /// Parses the input string as JSON and tries to convert it as the given type argument
         static member inline parseAs<'t> (input: string) : 't =

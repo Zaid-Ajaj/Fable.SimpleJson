@@ -6,8 +6,6 @@ open Fable.SimpleJson
 open Fable.SimpleJson.Parser
 open Fable.Core.JsInterop
 open System
-open System
-open System.Reflection
 open System.Collections.Generic
 open Fable.Mocha
 open Types
@@ -24,14 +22,14 @@ type test =
     static member pass() = Expect.isTrue true "It must be true"
     static member fail() = Expect.isTrue false "It must be false"
     static member isTrue x = Expect.isTrue x "It must be true"
-    static member unexpected (x: 't) = Expect.isTrue false (Json.stringify x)
+    static member inline unexpected (x: 't) = Expect.isTrue false (Json.stringify x)
     static member failwith x = failwith x
     static member passWith x = Expect.isTrue true x
 
 [<Flags>]
 type FlagsEnum = A = 1 | B = 2 | C = 4
 
-let fromJson<'t> json typeInfo =
+let inline fromJson<'t> json typeInfo =
     unbox<'t> (Convert.fromJsonAs json typeInfo)
 
 // A more realistic test sample
@@ -333,7 +331,6 @@ let everyTest =
             | None -> test.failwith "Could not deserialize json resulted from SimpleJson.toString"
         | otherResult -> test.unexpected otherResult
 
-
     testCase "Deserializing Person works" <| fun _ ->
         "{ \"name\":\"john\", \"age\":20 }"
         |> SimpleJson.tryParse
@@ -468,6 +465,14 @@ let everyTest =
         [ "test", [ One; Two 20; Three "some value" ] ]
         |> Map.ofList
         |> Fable.Core.JS.JSON.stringify
+        |> Json.parseAs<Map<string, SimpleDU list>>
+        |> Map.toList
+        |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
+
+    testCase "Parsing maps with strings as keys with complex values using Json.stringify" <| fun _ ->
+        [ "test", [ One; Two 20; Three "some value" ] ]
+        |> Map.ofList
+        |> Json.stringify
         |> Json.parseAs<Map<string, SimpleDU list>>
         |> Map.toList
         |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
@@ -637,6 +642,14 @@ let everyTest =
         |> Map.toList
         |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
 
+    testCase "Converting maps works with serialization" <| fun _ ->
+        [ "test", [ One; Two 20; Three "some value" ] ]
+        |> Map.ofList
+        |> Json.stringify
+        |> Json.parseNativeAs<Map<string, SimpleDU list>>
+        |> Map.toList
+        |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
+
     testCase "TypeInfo can be generated from GenericTestRecord" <| fun _ ->
         let typeInfo = TypeInfo.createFrom<Maybe<list<GenericTestRecord<string>>>>()
         test.pass()
@@ -664,6 +677,30 @@ let everyTest =
         |> Json.stringify
         |> Json.parseNativeAs<RecordWithArray>
         |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
+
+    testCase "simple dictionary roundtrip" <| fun _ -> 
+        let map = Dictionary()
+        map.Add(1, "one")
+        map.Add(2, "two")
+
+        let serialized = Json.stringify map
+        let deserialized = Json.parseNativeAs<Dictionary<int, string>> serialized
+
+        Expect.equal deserialized.Count 2 "There are two elements"
+        Expect.equal deserialized.[1] "one" "First element is correct"
+        Expect.equal deserialized.[2] "two" "second element is correct"
+
+    testCase "dictionary roundtrip with complex key" <| fun _ -> 
+        let map = Dictionary()
+        map.Add(Just 1, "one")
+        map.Add(Just 2, "two")
+
+        let serialized = Json.stringify map
+        let deserialized = Json.parseNativeAs<Dictionary<Maybe<int>, string>> serialized
+
+        Expect.equal deserialized.Count 2 "There are two elements"
+        Expect.equal deserialized.[Just 1] "one" "First element is correct"
+        Expect.equal deserialized.[Just 2] "two" "second element is correct"
 
     testCase "Converting record with bytes" <| fun _ ->
         { byteValue = byte 200  }
@@ -1194,6 +1231,18 @@ let everyTest =
         |> fun result ->
             for n in [1..5] do test.isTrue (result.Contains n)
 
+
+    testCase "HashSet<int> roundtrip with serialize" <| fun _ ->
+        let input = HashSet<int>()
+        for n in [1 .. 5] do
+            input.Add n |> ignore
+
+        input
+        |> Json.stringify
+        |> Json.parseNativeAs<HashSet<int>>
+        |> fun result ->
+            for n in [1..5] do test.isTrue (result.Contains n)
+
     testCase "Deserializing HashSet<DictValue> works" <| fun _ ->
         "[{ \"name\": \"zaid\", \"age\":22 }, { \"name\": \"john\", \"age\":10 }]"
         |> Json.parseNativeAs<HashSet<DictValue>>
@@ -1595,6 +1644,16 @@ let everyTest =
             | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
             | otherwise -> test.unexpected otherwise
 
+    testCase "Deserializing maps with record as key using serialize" <| fun _ ->
+        [ { Key = 1; Value = "Value" }, 1 ]
+        |> Map.ofList
+        |> Json.stringify
+        |> Json.parseNativeAs<Map<RecordAsKey, int>>
+        |> Map.toList
+        |> function
+            | [ { Key = 1; Value = "Value" }, 1 ] -> test.pass()
+            | otherwise -> test.unexpected otherwise
+
     testCase "Deserializing maps with record as quoted serialized key" <| fun _ ->
         """
         [
@@ -1652,6 +1711,11 @@ let everyTest =
         |> test.equal true
 
     testCase "BigInt can be JSON.stringified" <| fun _ ->
+        match Json.stringify 5I with
+        | "\"5\"" -> test.pass()
+        | otherwise -> test.unexpected otherwise
+
+    testCase "BigInt can be Json.stringifyd" <| fun _ ->
         match Json.stringify 5I with
         | "\"5\"" -> test.pass()
         | otherwise -> test.unexpected otherwise
@@ -1832,6 +1896,14 @@ let everyTest =
             | Just record -> test.areEqual 1  record.one
             | otherwise -> test.fail()
 
+    testCase "Anonymous Records with generic unions with Json.stringify" <| fun _ ->
+        Just {| one = 1 |}
+        |> Json.stringify
+        |> Json.parseNativeAs<Maybe<{| one: int |}>>
+        |> function
+            | Just record -> test.areEqual 1  record.one
+            | otherwise -> test.fail()
+
     testCase "Nested anonymous records with generic unions" <| fun _ ->
         """
         {"Just":{"nested":{"name":"John"}}}
@@ -1972,8 +2044,7 @@ let everyTest =
 
         Json.stringify expected
         |> Json.parseNativeAs<decimal<someUnit>>
-        |> fun value ->
-            test.areEqual value expected
+        |> fun value -> test.areEqual value expected
 
     testCase "Deserializing float with a unit of measure" <| fun _ ->
         let expected = 42.3333<someUnit>
@@ -1987,7 +2058,6 @@ let everyTest =
         |> Json.parseNativeAs<{| value: string |}>
         |> fun result -> test.areEqual result.value "2010"
 
-
     testCase "Flags Enum roundtrip" <| fun _ ->
         let input = FlagsEnum.A ||| FlagsEnum.C
 
@@ -1996,7 +2066,6 @@ let everyTest =
         |> Json.parseNativeAs<FlagsEnum>
         |> fun result -> test.areEqual result input
 ]
-
 
 [<EntryPoint>]
 let main args = Mocha.runTests everyTest

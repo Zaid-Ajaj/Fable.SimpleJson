@@ -2,10 +2,12 @@ namespace Fable.SimpleJson
 
 open System
 open FSharp.Reflection
+open System.Reflection
 
 type RecordField = {
     FieldName: string
     FieldType: TypeInfo
+    PropertyInfo : PropertyInfo
 }
 
 and UnionCase = {
