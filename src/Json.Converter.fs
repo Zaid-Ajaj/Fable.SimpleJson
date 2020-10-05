@@ -483,12 +483,17 @@ module Convert =
             let (keyType, valueType, originalType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
-                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
+                    let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (fun () -> [| keyType; valueType |]))
                     yield tuple ]
-            let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
+
+            let output =
+                match keyType with
+                | TypeInfo.Union _ ->  Dictionary<Result<_, _>, _>()
+                | TypeInfo.Record _ -> Dictionary<{| dummy: int |}, _>() |> unbox
+                | _ -> Dictionary<IStructuralComparable, _>() |> unbox
+
             for (key, value) in (unbox<(IStructuralComparable * obj) list> pairs) do output.Add(unbox key, value)
-            output
-            |> unbox
+            unbox output
 
         | JObject dict, TypeInfo.Dictionary getTypes ->
             let (keyType, valueType, originalType) = getTypes()
@@ -496,14 +501,24 @@ module Convert =
             |> Map.toList
             |> List.map (fun (key, value) -> fromJsonAs (JString key) keyType, fromJsonAs value valueType )
             |> fun pairs ->
-                let output = System.Collections.Generic.Dictionary<IStructuralComparable, _>()
+                let output =
+                    match keyType with
+                    | TypeInfo.Union _ -> Dictionary<Result<_, _>, _>()
+                    | TypeInfo.Record _ -> Dictionary<{| dummy: int |}, _>() |> unbox
+                    | _ -> Dictionary<IStructuralComparable, _>() |> unbox
+
                 for (key, value) in pairs do output.Add(unbox key, value)
-                output
-                |> unbox
+
+                unbox output
 
         | JArray items, TypeInfo.HashSet getType ->
             let elemType = getType()
-            let hashset = HashSet<IStructuralComparable>()
+            let hashset =
+                match elemType with
+                | TypeInfo.Union _ -> HashSet<Result<_, _>>()
+                | TypeInfo.Record _ -> HashSet<{| dummy: int |}>() |> unbox
+                | _ -> HashSet<IStructuralComparable>() |> unbox
+
             for item in items do
                 let deserialized = fromJsonAs item elemType
                 hashset.Add(unbox deserialized) |> ignore

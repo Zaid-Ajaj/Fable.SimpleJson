@@ -1,6 +1,6 @@
 language: csharp
 mono: "none"
-dotnet: 2.2.300
+dotnet: 3.1.300
 dist: xenial
 sudo: required
 addons:
@@ -22,4 +22,5 @@ before_install:
 script:
   - npm install
   - npm test
+  - npm run test-nagareyama
   - npm run headless-tests

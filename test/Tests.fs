@@ -705,11 +705,17 @@ let everyTest =
 
         let serialized = Json.stringify map
         let deserialized = Json.parseNativeAs<Dictionary<Maybe<int>, string>> serialized
-        log map
-        log deserialized
         Expect.equal deserialized.Count 2 "There are two elements"
         Expect.equal deserialized.[Just 1] "one" "First element is correct"
         Expect.equal deserialized.[Just 2] "two" "second element is correct"
+
+    testCase "dictionary roundtrip with complex key as record" <| fun _ ->
+        let map = Dictionary()
+        map.Add({ name = "John"; age = 42 }, "one")
+        let serialized = Json.stringify map
+        let deserialized = Json.parseNativeAs<Dictionary<DictValue, string>> serialized
+        Expect.equal deserialized.Count 1 "There are two elements"
+        Expect.equal deserialized.[{ name = "John"; age = 42 }] "one" "First element is correct"
 
     testCase "Converting record with bytes" <| fun _ ->
         { byteValue = byte 200  }
@@ -1228,7 +1234,6 @@ let everyTest =
         |> fun result ->
             for n in [1..5] do test.isTrue (result.Contains n)
 
-
     testCase "HashSet<int> roundtrip" <| fun _ ->
         let input = HashSet<int>()
         for n in [1 .. 5] do
@@ -1239,7 +1244,6 @@ let everyTest =
         |> Json.parseNativeAs<HashSet<int>>
         |> fun result ->
             for n in [1..5] do test.isTrue (result.Contains n)
-
 
     testCase "HashSet<int> roundtrip with serialize" <| fun _ ->
         let input = HashSet<int>()
@@ -1252,12 +1256,19 @@ let everyTest =
         |> fun result ->
             for n in [1..5] do test.isTrue (result.Contains n)
 
+    testCase "HashSet<DictValue> should work as is" <| fun _ ->
+        let hashSet = HashSet<DictValue>()
+        hashSet.Add { name = "zaid"; age = 22 } |> ignore
+        hashSet.Add { name = "john"; age = 10 } |> ignore
+        test.isTrue (hashSet.Contains { name = "zaid"; age = 22 })
+        test.isTrue (hashSet.Contains { name = "john"; age = 10 })
+
     testCase "Deserializing HashSet<DictValue> works" <| fun _ ->
         "[{ \"name\": \"zaid\", \"age\":22 }, { \"name\": \"john\", \"age\":10 }]"
         |> Json.parseNativeAs<HashSet<DictValue>>
         |> fun result ->
-             test.isTrue (result.Contains { name = "zaid"; age = 22 })
-             test.isTrue (result.Contains { name = "john"; age = 10 })
+            test.isTrue (result.Contains { name = "zaid"; age = 22 })
+            test.isTrue (result.Contains { name = "john"; age = 10 })
 
     testCase "Deserializing Dictionary<int, Record> works from object" <| fun _ ->
         let input = """
