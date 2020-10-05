@@ -480,7 +480,7 @@ module Convert =
                 |> unbox
 
         | JArray tuples, TypeInfo.Dictionary getTypes ->
-            let (keyType, valueType) = getTypes()
+            let (keyType, valueType, originalType) = getTypes()
             let pairs =
                 [ for keyValuePair in tuples do
                     let tuple = fromJsonAs keyValuePair (TypeInfo.Tuple (let a = [| keyType; valueType |] in fun () -> a))
@@ -491,7 +491,7 @@ module Convert =
             |> unbox
 
         | JObject dict, TypeInfo.Dictionary getTypes ->
-            let (keyType, valueType) = getTypes()
+            let (keyType, valueType, originalType) = getTypes()
             dict
             |> Map.toList
             |> List.map (fun (key, value) -> fromJsonAs (JString key) keyType, fromJsonAs value valueType )
@@ -609,7 +609,7 @@ module Convert =
         | TypeInfo.UInt16
         | TypeInfo.UInt32
         | TypeInfo.Short
-        | TypeInfo.Enum
+        | TypeInfo.Enum _
         | TypeInfo.TimeSpan
         | TypeInfo.Int32 -> string (unbox<int> value)
         | TypeInfo.UInt64
@@ -651,7 +651,7 @@ module Convert =
 
             "[" + values + "]"
 
-        | TypeInfo.Set getElementType -> 
+        | TypeInfo.Set getElementType ->
             let elementType = getElementType()
             let values =
                 value
@@ -732,7 +732,7 @@ module Convert =
                         if not (isQuoted serializedKey)
                         then (betweenQuotes serializedKey) + ": " + serializedValue
                         else serializedKey + ": " + serializedValue
-                    else 
+                    else
                         "[" + serializedKey + ", " + serializedValue + "]"
                 )
                 |> String.concat ", "
@@ -742,11 +742,11 @@ module Convert =
             else "[" + serializedValues + "]"
 
         | TypeInfo.Dictionary getPairTypes ->
-            let (keyType, valueType) = getPairTypes()
+            let (keyType, valueType, originalType) = getPairTypes()
             let serializedValues =
                 value
                 |> unbox<Dictionary<IComparable, obj>>
-                |> Seq.map (fun pair -> 
+                |> Seq.map (fun pair ->
                     let (key, value) = pair.Key, pair.Value
                     let serializedKey = serialize key keyType
                     let serializedValue = serialize value valueType
@@ -755,7 +755,7 @@ module Convert =
                         if not (isQuoted serializedKey)
                         then (betweenQuotes serializedKey) + ": " + serializedValue
                         else serializedKey + ": " + serializedValue
-                    else 
+                    else
                         "[" + serializedKey + ", " + serializedValue + "]"
                 )
                 |> String.concat ", "
@@ -775,7 +775,7 @@ module Convert =
 
             "[" + serializedValues + "]"
 
-        | TypeInfo.Any getType -> 
+        | TypeInfo.Any getType ->
             // fallback to low-level serialization
             SimpleJson.stringify value
 

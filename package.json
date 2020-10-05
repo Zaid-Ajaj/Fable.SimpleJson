@@ -5,6 +5,7 @@
         "start": "webpack-dev-server",
         "pretest": "fable-splitter test -o dist/tests --commonjs",
         "test": "mocha dist/tests",
+        "test-nagareyama": "dotnet tool restore && dotnet fable test --outDir dist/tests && mocha dist/tests -r esm",
         "headless-tests": "webpack-cli --mode production && dotnet run --project ./headless/Headless.fsproj"
     },
     "devDependencies": {
@@ -19,5 +20,9 @@
         "webpack": "^4.27.1",
         "webpack-cli": "^3.3.12",
         "webpack-dev-server": "^3.11.0"
+    },
+    "dependencies": {
+        "esm": "^3.2.25",
+        "save-dev": "0.0.1-security"
     }
 }

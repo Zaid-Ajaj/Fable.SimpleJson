@@ -1,23 +1,30 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{08CCFCF6-2248-43ED-A6EF-E972A2DA0E6A}"
-    ProjectSection(SolutionItems) = preProject
-        build.fsx = build.fsx
-        package.json = package.json
-        paket.dependencies = paket.dependencies
-        paket.lock = paket.lock
-        README.md = README.md
-        webpack.config.js = webpack.config.js
-    EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.travis.yml = .travis.yml
+		appveyor.yml = appveyor.yml
+		build.cmd = build.cmd
+		build.fsx = build.fsx
+		build.sh = build.sh
+		LICENSE = LICENSE
+		package-lock.json = package-lock.json
+		package.json = package.json
+		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
+		README.md = README.md
+		webpack.config.js = webpack.config.js
+	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fable.SimpleJson", "src\Fable.SimpleJson.fsproj", "{7C6253DD-E31D-421B-AF32-C009C19C30CD}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fable.SimpleJson", "src\Fable.SimpleJson.fsproj", "{7C6253DD-E31D-421B-AF32-C009C19C30CD}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Headless", "headless\Headless.fsproj", "{C8D3192B-1098-4C7D-B586-39396EDAB20A}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Headless", "headless\Headless.fsproj", "{C8D3192B-1098-4C7D-B586-39396EDAB20A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "test\Tests.fsproj", "{ECE4C133-0A74-4962-9407-F0B89F938309}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests", "test\Tests.fsproj", "{ECE4C133-0A74-4962-9407-F0B89F938309}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +34,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7C6253DD-E31D-421B-AF32-C009C19C30CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -68,5 +72,11 @@ Global
 		{ECE4C133-0A74-4962-9407-F0B89F938309}.Release|x64.Build.0 = Release|Any CPU
 		{ECE4C133-0A74-4962-9407-F0B89F938309}.Release|x86.ActiveCfg = Release|Any CPU
 		{ECE4C133-0A74-4962-9407-F0B89F938309}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A1CB8B9-9A62-4461-AC0D-ADCF4A7B11AC}
 	EndGlobalSection
 EndGlobal

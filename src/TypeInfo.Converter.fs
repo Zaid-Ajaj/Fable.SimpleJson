@@ -173,7 +173,7 @@ module Converter =
         | Nullable elemType -> TypeInfo.Option (lazyToDelayed <| lazy (createTypeInfo elemType))
         | SetType elemType -> TypeInfo.Set (lazyToDelayed <| lazy (createTypeInfo elemType))
         | MapType (keyType, valueType) -> TypeInfo.Map (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
-        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType))
+        | DictionaryType (keyType, valueType) -> TypeInfo.Dictionary (lazyToDelayed <| lazy (createTypeInfo keyType, createTypeInfo valueType, valueType))
         | SeqType elemType -> TypeInfo.Seq (lazyToDelayed <| lazy (createTypeInfo elemType))
         | AsyncType elemType -> TypeInfo.Async (lazyToDelayed <| lazy (createTypeInfo elemType))
         | PromiseType elemType -> TypeInfo.Promise (lazyToDelayed <| lazy (createTypeInfo elemType))
@@ -206,24 +206,24 @@ module Converter =
 
     /// returns whether a type is primitive
     let isPrimitive = function
-        | Unit
-        | String
-        | UInt16
-        | UInt32
-        | UInt64
-        | Int32
-        | Bool
-        | Float32
-        | Float
-        | Decimal
-        | Short
-        | Long
-        | Byte
-        | DateTime
-        | DateTimeOffset
-        | BigInt
-        | Guid
-        | Option _ -> true
+        | TypeInfo.Unit
+        | TypeInfo.String
+        | TypeInfo.UInt16
+        | TypeInfo.UInt32
+        | TypeInfo.UInt64
+        | TypeInfo.Int32
+        | TypeInfo.Bool
+        | TypeInfo.Float32
+        | TypeInfo.Float
+        | TypeInfo.Decimal
+        | TypeInfo.Short
+        | TypeInfo.Long
+        | TypeInfo.Byte
+        | TypeInfo.DateTime
+        | TypeInfo.DateTimeOffset
+        | TypeInfo.BigInt
+        | TypeInfo.Guid
+        | TypeInfo.Option _ -> true
         | otherwise -> false
 
     /// returns whether the discrimiated union type is like a enum

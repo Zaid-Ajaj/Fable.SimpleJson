@@ -1,4 +1,4 @@
-namespace Fable.SimpleJson
+namespace rec Fable.SimpleJson
 
 open System
 open FSharp.Reflection
@@ -10,14 +10,15 @@ type RecordField = {
     PropertyInfo : PropertyInfo
 }
 
-and UnionCase = {
+type UnionCase = {
     CaseName: string
     CaseTypes: TypeInfo [ ]
     Info: UnionCaseInfo
 }
 
 /// A type that encodes type information which is easily serializable
-and TypeInfo =
+[<RequireQualifiedAccess>]
+type TypeInfo =
     | Unit
     | String
     | UInt16
@@ -46,7 +47,7 @@ and TypeInfo =
     | Seq of (unit -> TypeInfo)
     | Tuple of (unit -> TypeInfo [ ])
     | Map of (unit -> TypeInfo * TypeInfo)
-    | Dictionary of (unit -> TypeInfo * TypeInfo)
+    | Dictionary of (unit -> TypeInfo * TypeInfo * Type)
     | ResizeArray of (unit -> TypeInfo)
     | HashSet of (unit -> TypeInfo)
     | Func of (unit -> TypeInfo [ ])

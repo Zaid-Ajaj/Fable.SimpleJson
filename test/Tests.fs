@@ -678,7 +678,7 @@ let everyTest =
         |> Json.parseNativeAs<RecordWithArray>
         |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
 
-    testCase "simple dictionary roundtrip" <| fun _ -> 
+    testCase "simple dictionary roundtrip" <| fun _ ->
         let map = Dictionary()
         map.Add(1, "one")
         map.Add(2, "two")
@@ -690,14 +690,23 @@ let everyTest =
         Expect.equal deserialized.[1] "one" "First element is correct"
         Expect.equal deserialized.[2] "two" "second element is correct"
 
-    testCase "dictionary roundtrip with complex key" <| fun _ -> 
+    testCase "dictionary works with complex key in Fable 3 " <| fun _ ->
+        let map = Dictionary()
+        map.Add(Just 1, "one")
+        map.Add(Just 2, "two")
+        Expect.equal map.Count 2 "There are two elements"
+        Expect.equal map.[Just 1] "one" "First element is correct"
+        Expect.equal map.[Just 2] "two" "second element is correct"
+
+    testCase "dictionary roundtrip with complex key" <| fun _ ->
         let map = Dictionary()
         map.Add(Just 1, "one")
         map.Add(Just 2, "two")
 
         let serialized = Json.stringify map
         let deserialized = Json.parseNativeAs<Dictionary<Maybe<int>, string>> serialized
-
+        log map
+        log deserialized
         Expect.equal deserialized.Count 2 "There are two elements"
         Expect.equal deserialized.[Just 1] "one" "First element is correct"
         Expect.equal deserialized.[Just 2] "two" "second element is correct"
