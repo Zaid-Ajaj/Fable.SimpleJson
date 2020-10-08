@@ -19,6 +19,18 @@ module Convert =
 
     let insideBrowser = isBrowser()
 
+    [<Emit "($0 === undefined)">]
+    let private isUndefined (value: obj) : bool = jsNative
+    let private isDefined (value: obj) : bool = not (isUndefined value)
+
+    /// <summary>Uses internal representation of F# maps to determine whether we are using Fable 3 or not</summary>
+    let usingFable3() =
+        let map = JS.JSON.parse(JS.JSON.stringify (Map.ofList [ 1, 1; 2, 2 ]))
+        let tree = get "tree" map
+        isDefined (get "k" tree) && isDefined (get "v" tree) && isDefined (get "h" tree)
+
+    let isUsingFable3 = usingFable3()
+
     [<Emit("typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope")>]
     let internal insideWorker :  bool = jsNative
 
@@ -800,17 +812,21 @@ module Convert =
 [<AutoOpenAttribute>]
 module ConverterExtensions =
     type Json with
-        /// <summary>
-        /// Serialized the input value into JSON
-        /// </summary>
-        static member inline stringify<'t> (value: 't) : string =
-            let typeInfo = TypeInfo.createFrom<'t> ()
-            Convert.serialize value typeInfo
 
         /// <summary>
-        /// Uses the old Json.stringify method
+        /// Serialized the input value object into JSON, uses built-in JSON.stringify and should be used with Fable 2.x or earlier
         /// </summary>
-        static member inline stringify_Legacy(value: 't) : string = SimpleJson.stringify(value)
+        static member stringify (value: obj) : string =
+            if Convert.isUsingFable3
+            then JS.console.warn("It looks like you using the function Json.stringify from Fable.SimpleJson while also using Fable 3 (nagareyama). Please use Json.serialize instead which supports both Fable 3 and Fable 2.x")
+            SimpleJson.stringify value
+
+        /// <summary>
+        /// Serialized the input value into JSON using Reflection. Compatible with Fable 2.x and Fable 3 (codename: nagareyama)
+        /// </summary>
+        static member inline serialize<'t> (value: 't) : string =
+            let typeInfo = TypeInfo.createFrom<'t>()
+            Convert.serialize value typeInfo
 
         /// Parses the input string as JSON and tries to convert it as the given type argument
         static member inline parseAs<'t> (input: string) : 't =

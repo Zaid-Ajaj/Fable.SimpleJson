@@ -200,4 +200,4 @@ bundle.js.map
 
 # Rider
 .idea
-.fs.js
+*.fs.js

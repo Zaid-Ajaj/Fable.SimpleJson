@@ -1,4 +1,4 @@
-module Tests
+module NagareyamaTests
 
 open Fable.Core
 open Fable.Parsimmon
@@ -80,8 +80,8 @@ let int64ToIntegers (n: int64) =
     let sndInteger = BitConverter.ToInt32(longBytes.[4 .. 7], 0)
     fstInteger, sndInteger
 
-let fable2xTests =
-  testList "Fable 2.x tests" [
+let everyTest =
+  testList "Nagareyama tests" [
 
     testCase "JNUmber parser works" <| fun _ ->
         ["1.0"; "2.5"; "22.010"; "1.05"; "not-valid"; ".1"; "100"]
@@ -456,7 +456,7 @@ let fable2xTests =
     testCase "Parsing maps with integers as keys" <| fun _ ->
         [ 1, "one"; 2, "two"; 3, "three" ]
         |> Map.ofList
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Map<int, string>>
         |> Map.toList
         |> test.areEqual [ 1, "one"; 2, "two"; 3, "three" ]
@@ -469,10 +469,10 @@ let fable2xTests =
         |> Map.toList
         |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
 
-    testCase "Parsing maps with strings as keys with complex values using Json.stringify" <| fun _ ->
+    testCase "Parsing maps with strings as keys with complex values using Json.serialize" <| fun _ ->
         [ "test", [ One; Two 20; Three "some value" ] ]
         |> Map.ofList
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Map<string, SimpleDU list>>
         |> Map.toList
         |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
@@ -485,8 +485,8 @@ let fable2xTests =
 
     testCase "Deserialize string with json inside" <| fun _ ->
         let str = "1"
-        let json1 = { Str = str } |> Json.stringify
-        let json2 = { Str = json1 } |> Json.stringify
+        let json1 = { Str = str } |> Json.serialize
+        let json2 = { Str = json1 } |> Json.serialize
         let parsed2 = Json.parseAs<WithString> json2
         let parsed1 = Json.parseAs<WithString> parsed2.Str
         test.areEqual str parsed1.Str
@@ -501,13 +501,13 @@ let fable2xTests =
 
     //testCase "Nullable roundtrip from null" <| fun _ ->
     //    let content = { Content = Nullable() }
-    //    let serialized = Json.stringify content
+    //    let serialized = Json.serialize content
     //    let deserialized = Json.parseAs<RecordWithNullable> serialized
     //    test.isTrue (not deserialized.Content.HasValue)
 
     //testCase "Nullable roundtrip from value" <| fun _ ->
     //    let content = { Content = Nullable 42 }
-    //    let serialized = Json.stringify content
+    //    let serialized = Json.serialize content
     //    let deserialized = Json.parseAs<RecordWithNullable> serialized
     //    test.isTrue deserialized.Content.HasValue
     //    test.areEqual 42 deserialized.Content.Value
@@ -526,82 +526,82 @@ let fable2xTests =
     testCase "Deserialize string with special char" <| fun _ ->
         let str = "\t"
         let o = { Str = str }
-        let json = o |> Json.stringify
+        let json = o |> Json.serialize
         let deserialized = json |> Json.parseAs<WithString>
         deserialized.Str |> test.areEqual str
 
     testCase "Converting records with simple types" <| fun _ ->
         { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<SimpleRec>
         |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
 
     testCase "Native: Converting records with simple types" <| fun _ ->
         { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<SimpleRec>
         |> test.areEqual { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
 
     testCase "Converting records with simple types, strings can be null" <| fun _ ->
         { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<SimpleRec>
         |> test.areEqual { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
 
 
     testCase "Native: Converting records with simple types, strings can be null" <| fun _ ->
         { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<SimpleRec>
         |> test.areEqual { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
 
     testCase "Converting lists records with simple types" <| fun _ ->
         [ { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<SimpleRec list>
         |> test.areEqual [ { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } ]
 
     testCase "Native: Converting records with simple types, strings can be null" <| fun _ ->
         { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<SimpleRec>
         |> test.areEqual { A = 20; B = null; C = false; D = 2.0451; E = 23.42M }
 
     testCase "Converting arrays records with simple types" <| fun _ ->
         [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<SimpleRec[]>
         |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
 
     testCase "Native: Converting arrays records with simple types" <| fun _ ->
         [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<SimpleRec[]>
         |> test.areEqual [| { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M } |]
 
     testCase "Converting optional (Some) records with simple types" <| fun _ ->
         { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
         |> Some
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Option<SimpleRec>>
         |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M })
 
     testCase "Native: Converting optional (Some) records with simple types" <| fun _ ->
         { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M }
         |> Some
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Option<SimpleRec>>
         |> test.areEqual (Some { A = 20; B = "BB"; C = false; D = 2.0451; E = 23.42M })
 
     testCase "Converting optional (None) records with simple types" <| fun _ ->
         None
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Option<SimpleRec>>
         |> test.areEqual None
 
     testCase "Native: Converting optional (None) records with simple types" <| fun _ ->
         None
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Option<SimpleRec>>
         |> test.areEqual None
 
@@ -645,7 +645,7 @@ let fable2xTests =
     testCase "Converting maps works with serialization" <| fun _ ->
         [ "test", [ One; Two 20; Three "some value" ] ]
         |> Map.ofList
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Map<string, SimpleDU list>>
         |> Map.toList
         |> test.areEqual [ "test", [ One; Two 20; Three "some value" ] ]
@@ -656,25 +656,25 @@ let fable2xTests =
 
     testCase "Converting generic record with Maybe<int> as a field" <| fun _ ->
         Just [ { Other = "wise"; Value = Just 20 } ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Maybe<list<RecWithGenDU<string>>>>
         |> test.areEqual (Just [ { Other = "wise"; Value = Just 20 } ] )
 
     testCase "Native: Converting generic record with Maybe<int> as a field" <| fun _ ->
         Just [ { Other = "wise"; Value = Just 20 } ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Maybe<list<RecWithGenDU<string>>>>
         |> test.areEqual (Just [ { Other = "wise"; Value = Just 20 } ] )
 
     testCase "Converting record with arrays" <| fun _ ->
         { Arr = [| Some Nothing; Some (Just 20) |] }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<RecordWithArray>
         |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
 
     testCase "Native: Converting record with arrays" <| fun _ ->
         { Arr = [| Some Nothing; Some (Just 20) |] }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<RecordWithArray>
         |> test.areEqual { Arr = [| Some Nothing; Some (Just 20) |] }
 
@@ -683,7 +683,7 @@ let fable2xTests =
         map.Add(1, "one")
         map.Add(2, "two")
 
-        let serialized = Json.stringify map
+        let serialized = Json.serialize map
         let deserialized = Json.parseNativeAs<Dictionary<int, string>> serialized
 
         Expect.equal deserialized.Count 2 "There are two elements"
@@ -703,7 +703,7 @@ let fable2xTests =
         map.Add(Just 1, "one")
         map.Add(Just 2, "two")
 
-        let serialized = Json.stringify map
+        let serialized = Json.serialize map
         let deserialized = Json.parseNativeAs<Dictionary<Maybe<int>, string>> serialized
         Expect.equal deserialized.Count 2 "There are two elements"
         Expect.equal deserialized.[Just 1] "one" "First element is correct"
@@ -712,44 +712,44 @@ let fable2xTests =
     testCase "dictionary roundtrip with complex key as record" <| fun _ ->
         let map = Dictionary()
         map.Add({ name = "John"; age = 42 }, "one")
-        let serialized = Json.stringify map
+        let serialized = Json.serialize map
         let deserialized = Json.parseNativeAs<Dictionary<DictValue, string>> serialized
         Expect.equal deserialized.Count 1 "There are two elements"
         Expect.equal deserialized.[{ name = "John"; age = 42 }] "one" "First element is correct"
 
     testCase "Converting record with bytes" <| fun _ ->
         { byteValue = byte 200  }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<RecWithByte>
         |> test.areEqual { byteValue = byte 200 }
 
     testCase "Native: Converting record with bytes" <| fun _ ->
         { byteValue = byte 200  }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<RecWithByte>
         |> test.areEqual { byteValue = byte 200 }
 
     testCase "Converting record with Int16" <| fun _ ->
         { shortValue = int16 200  }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<RecWithShort>
         |> test.areEqual { shortValue = int16 200 }
 
     testCase "Native: Converting record with Int16" <| fun _ ->
         { shortValue = int16 200  }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<RecWithShort>
         |> test.areEqual { shortValue = int16 200 }
 
     testCase "Converting record with negative Int16" <| fun _ ->
         { shortValue = int16 -200  }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<RecWithShort>
         |> test.areEqual { shortValue = int16 -200 }
 
     testCase "Native: Converting record with negative Int16" <| fun _ ->
         { shortValue = int16 -200  }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<RecWithShort>
         |> test.areEqual { shortValue = int16 -200 }
 
@@ -770,7 +770,7 @@ let fable2xTests =
             |> Just
 
         complexValue
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Maybe<ComplexRecord<SimpleRec> list>>
         |> test.areEqual complexValue
 
@@ -791,31 +791,31 @@ let fable2xTests =
             |> Just
 
         complexValue
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Maybe<ComplexRecord<SimpleRec> list>>
         |> test.areEqual complexValue
 
     testCase "Result can be converted" <| fun _ ->
         [ Ok "value"; Error (Maybe.Just 5) ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<list<Result<string, Maybe<int>>>>
         |> test.areEqual [ Ok "value"; Error (Maybe.Just 5) ]
 
     testCase "Native: Result can be converted" <| fun _ ->
         [ Ok "value"; Error (Maybe.Just 5) ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<list<Result<string, Maybe<int>>>>
         |> test.areEqual [ Ok "value"; Error (Maybe.Just 5) ]
 
     testCase "SingleCase of int64 can be converter" <| fun _ ->
         SingleCase 20L
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<SingleCase>
         |> test.areEqual (SingleCase 20L)
 
     testCase "Native: SingleCase of int64 can be converter" <| fun _ ->
         SingleCase 20L
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<SingleCase>
         |> test.areEqual (SingleCase 20L)
 
@@ -826,31 +826,31 @@ let fable2xTests =
 
     testCase "Long can be converted" <| fun _ ->
         { value = Just (Some 5L); other = "" }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<RecordWithLong>
         |> test.areEqual { value = Just (Some 5L); other = "" }
 
     testCase "Native: Long can be converted" <| fun _ ->
         { value = Just (Some 5L); other = "" }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<RecordWithLong>
         |> test.areEqual { value = Just (Some 5L); other = "" }
 
     testCase "BigInt can be converted" <| fun _ ->
         { value = Just (Some 5I) }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<RecordWithBigInt>
         |> test.areEqual { value = Just (Some 5I) }
 
     testCase "bigint list can be converted" <| fun _ ->
         [ 5I; 2I ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<bigint list>
         |> test.areEqual [ 5I; 2I ]
 
     testCase "Native: bigint list can be converted" <| fun _ ->
         [ 5I; 2I ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<bigint list>
         |> test.areEqual [ 5I; 2I ]
 
@@ -921,20 +921,20 @@ let fable2xTests =
 
     testCase "Simple Option<BigInt> can be converted" <| fun _ ->
         [ Some 5I; Some 2I; None ]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Option<bigint> list>
         |> test.areEqual [ Some 5I; Some 2I; None ]
 
     testCase "Native: BigInt can be converted" <| fun _ ->
         { value = Just (Some 5I) }
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<RecordWithBigInt>
         |> test.areEqual { value = Just (Some 5I) }
 
     testCase "List<'t> can be deserialized" <| fun _ ->
         [{ first = 10 }]
         |> DummyList
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<DummyList>
         |> test.areEqual (DummyList [{ first = 10 }])
 
@@ -960,13 +960,13 @@ let fable2xTests =
 
     testCase "Generic union types with list-like type arguments work" <| fun _ ->
         Just [1 .. 5]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Maybe<int list>>
         |> test.areEqual (Just [1;2;3;4;5])
 
     testCase "Result<int list, string> conversion works" <| fun _ ->
         Ok [1;2;3]
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Result<int list, string>>
         |> test.areEqual (Ok [1;2;3])
 
@@ -976,7 +976,7 @@ let fable2xTests =
             { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now }
         |]
 
-        let serialized = Json.stringify usersInput
+        let serialized = Json.serialize usersInput
         match Json.tryParseNativeAs<User array>(serialized) with
         | Ok users ->
             test.areEqual 2 (Array.length users)
@@ -994,7 +994,7 @@ let fable2xTests =
                 { Login = "second"; IsAdmin = true; LastActivity = DateTime.Now }
             |]
 
-            let pgetUsers() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.stringify usersInput)))
+            let pgetUsers() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<User array>(Json.serialize usersInput)))
             let getUsers() = Async.AwaitPromise(pgetUsers())
             let! users = getUsers()
             do test.areEqual 2 (Array.length users)
@@ -1004,7 +1004,7 @@ let fable2xTests =
         async {
             let input = [| 1 .. 5 |]
 
-            let pgetNumbers() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.stringify input)))
+            let pgetNumbers() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<int array>(Json.serialize input)))
             let getNumbers() = Async.AwaitPromise(pgetNumbers())
 
             let! users = getNumbers()
@@ -1015,7 +1015,7 @@ let fable2xTests =
         async {
             let input = [| { Name = "first"; Score = 1 }; { Name = "second"; Score = 2 }; { Name = "third"; Score = 3 } |]
 
-            let pgetScores() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.stringify input)))
+            let pgetScores() = Fable.Core.JS.Constructors.Promise.Create(fun res rej -> res(Json.parseAs<HighScore array>(Json.serialize input)))
             let getScores() = Async.AwaitPromise(pgetScores())
 
             let! users = getScores()
@@ -1048,7 +1048,7 @@ let fable2xTests =
 
     testCase "Result of unit can be converted" <| fun _ ->
         Ok ()
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Result<unit, string>>
         |> test.areEqual (Ok ())
 
@@ -1143,7 +1143,7 @@ let fable2xTests =
         }
 
         input
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Recursive>
         |> test.areEqual input
 
@@ -1151,7 +1151,7 @@ let fable2xTests =
         let input = Branch(Branch(Leaf 10, Leaf 5), Leaf 5)
 
         input
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseAs<Tree>
         |> test.areEqual input
 
@@ -1240,7 +1240,7 @@ let fable2xTests =
             input.Add n |> ignore
 
         input
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<HashSet<int>>
         |> fun result ->
             for n in [1..5] do test.isTrue (result.Contains n)
@@ -1251,7 +1251,7 @@ let fable2xTests =
             input.Add n |> ignore
 
         input
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<HashSet<int>>
         |> fun result ->
             for n in [1..5] do test.isTrue (result.Contains n)
@@ -1497,7 +1497,7 @@ let fable2xTests =
               Theme,      { id=None; name="Тема"} ] |> Map.ofList
 
         input
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Config>
         |> test.areEqual input
 
@@ -1518,7 +1518,7 @@ let fable2xTests =
         | Some (JString first), Some (JString second) ->
             test.areEqual first "first value"
             test.areEqual second "second value"
-        | result -> test.failwith (Json.stringify result)
+        | result -> test.failwith (Json.serialize result)
 
     testCase "SimpleJson.readPath works with fromObjectLiteral" <| fun _ ->
         let subscription = createObj [
@@ -1657,7 +1657,7 @@ let fable2xTests =
     testCase "Deserializing maps with record as key" <| fun _ ->
         [ { Key = 1; Value = "Value" }, 1 ]
         |> Map.ofList
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Map<RecordAsKey, int>>
         |> Map.toList
         |> function
@@ -1667,7 +1667,7 @@ let fable2xTests =
     testCase "Deserializing maps with record as key using serialize" <| fun _ ->
         [ { Key = 1; Value = "Value" }, 1 ]
         |> Map.ofList
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Map<RecordAsKey, int>>
         |> Map.toList
         |> function
@@ -1731,12 +1731,12 @@ let fable2xTests =
         |> test.equal true
 
     testCase "BigInt can be JSON.stringified" <| fun _ ->
-        match Json.stringify 5I with
+        match Json.serialize 5I with
         | "\"5\"" -> test.pass()
         | otherwise -> test.unexpected otherwise
 
-    testCase "BigInt can be Json.stringifyd" <| fun _ ->
-        match Json.stringify 5I with
+    testCase "BigInt can be Json.serialized" <| fun _ ->
+        match Json.serialize 5I with
         | "\"5\"" -> test.pass()
         | otherwise -> test.unexpected otherwise
 
@@ -1744,7 +1744,7 @@ let fable2xTests =
         let dateOffset = DateTimeOffset.Now
         let record = { DateOffset = dateOffset }
         let stringified = dateOffset.ToString("O")
-        match SimpleJson.parseNative (Json.stringify record) with
+        match SimpleJson.parseNative (Json.serialize record) with
         | JObject dict ->
             match Map.tryFind "DateOffset" dict with
             | Some (JString value) -> test.areEqual value stringified
@@ -1759,7 +1759,7 @@ let fable2xTests =
     testCase "DateTimeOffset uses ToString('O') when stringified" <| fun _ ->
         let dateOffset = DateTimeOffset.Now
         let expected = dateOffset.ToString("O")
-        match SimpleJson.parseNative (Json.stringify dateOffset) with
+        match SimpleJson.parseNative (Json.serialize dateOffset) with
         | JString actual -> test.areEqual actual expected
         | otherwise -> test.unexpected otherwise
 
@@ -1797,7 +1797,7 @@ let fable2xTests =
 
     testCase "Deserializing complex keys for Map" <| fun _ ->
         let value = Map.ofList [ ComplexKey 1, Just 5 ]
-        let input = Json.stringify value
+        let input = Json.serialize value
         input
         |> Json.parseNativeAs<Map<ComplexKey<int>, Maybe<int>>>
         |> Map.tryFind (ComplexKey 1)
@@ -1808,7 +1808,7 @@ let fable2xTests =
     testCase "Deserializing complex keys with guids for Map" <| fun _ ->
         let guid = Guid.NewGuid()
         let value = Map.ofList [ ComplexKey guid, Just guid ]
-        let input = Json.stringify value
+        let input = Json.serialize value
         input
         |> Json.parseNativeAs<Map<ComplexKey<Guid>, Maybe<Guid>>>
         |> Map.tryFind (ComplexKey guid)
@@ -1818,7 +1818,7 @@ let fable2xTests =
 
     testCase "Deserializing complex keys with guids for Map" <| fun _ ->
         let value = Map.ofList [ ComplexKey "key", Just "value" ]
-        let input = Json.stringify value
+        let input = Json.serialize value
         input
         |> Json.parseNativeAs<Map<ComplexKey<string>, Maybe<string>>>
         |> Map.tryFind (ComplexKey "key")
@@ -1904,21 +1904,21 @@ let fable2xTests =
 
     testCase "Converting TimeSpans works" <| fun _ ->
         TimeSpan.FromMilliseconds 1000.0
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<TimeSpan>
         |> test.areEqual (TimeSpan.FromMilliseconds 1000.0)
 
     testCase "Anonymous Records with generic unions" <| fun _ ->
         Just {| one = 1 |}
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Maybe<{| one: int |}>>
         |> function
             | Just record -> test.areEqual 1  record.one
             | otherwise -> test.fail()
 
-    testCase "Anonymous Records with generic unions with Json.stringify" <| fun _ ->
+    testCase "Anonymous Records with generic unions with Json.serialize" <| fun _ ->
         Just {| one = 1 |}
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<Maybe<{| one: int |}>>
         |> function
             | Just record -> test.areEqual 1  record.one
@@ -1931,7 +1931,7 @@ let fable2xTests =
         |> Json.parseNativeAs<Maybe<{| nested: {| name: string |} |}>>
         |> function
             | Just record -> test.areEqual record.nested.name "John"
-            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+            | otherwise -> failwithf "%s" (Json.serialize otherwise)
 
     testCase "Nested anonymous records with generic unions" <| fun _ ->
         """
@@ -1940,7 +1940,7 @@ let fable2xTests =
         |> Json.parseNativeAs<Maybe<{| parent: {| child: string |} |}>>
         |> function
             | Just record -> test.areEqual record.parent.child "Node"
-            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+            | otherwise -> failwithf "%s" (Json.serialize otherwise)
 
     testCase "Nested anonymous records with deeply nested generic unions" <| fun _ ->
         """
@@ -1949,7 +1949,7 @@ let fable2xTests =
         |> Json.parseNativeAs<Maybe<{| parent: {| child: {| grandChild: string |} |} |}>>
         |> function
             | Just record -> test.areEqual record.parent.child.grandChild "Nested Node"
-            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+            | otherwise -> failwithf "%s" (Json.serialize otherwise)
 
     testCase "Nested anonymous records with deeply nested generic unions and optional types" <| fun _ ->
         """
@@ -1961,7 +1961,7 @@ let fable2xTests =
                 test.areEqual record.parent.child.grandChild "Nested Node"
                 test.areEqual record.parent.child.whatever None
 
-            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+            | otherwise -> failwithf "%s" (Json.serialize otherwise)
 
     testCase "Nested anonymous records with optional deeply nested generic unions and optional types" <| fun _ ->
         """
@@ -1973,7 +1973,7 @@ let fable2xTests =
                 match record.parent.child with
                 | Some child -> test.areEqual child.grandChild "Nested Node"
                 | None -> test.fail()
-            | otherwise -> failwithf "%s" (Json.stringify otherwise)
+            | otherwise -> failwithf "%s" (Json.serialize otherwise)
 
     testCase "Deserializing generic record with anonymous records" <| fun _ ->
         """
@@ -2038,7 +2038,7 @@ let fable2xTests =
     testCase "Deserializing int16 with a unit of measure" <| fun _ ->
         let expected = 5s<someUnit>
 
-        Json.stringify expected
+        Json.serialize expected
         |> Json.parseNativeAs<int16<someUnit>>
         |> fun value ->
             test.areEqual value expected
@@ -2046,7 +2046,7 @@ let fable2xTests =
     testCase "Deserializing int with a unit of measure" <| fun _ ->
         let expected = 4<someUnit>
 
-        Json.stringify expected
+        Json.serialize expected
         |> Json.parseNativeAs<int<someUnit>>
         |> fun value ->
             test.areEqual value expected
@@ -2054,7 +2054,7 @@ let fable2xTests =
     testCase "Deserializing int64 with a unit of measure" <| fun _ ->
         let expected = 222222222222L<someUnit>
 
-        Json.stringify expected
+        Json.serialize expected
         |> Json.parseNativeAs<int64<someUnit>>
         |> fun value ->
             test.areEqual value expected
@@ -2062,14 +2062,14 @@ let fable2xTests =
     testCase "Deserializing decimal with a unit of measure" <| fun _ ->
         let expected = 2.0M<someUnit>
 
-        Json.stringify expected
+        Json.serialize expected
         |> Json.parseNativeAs<decimal<someUnit>>
         |> fun value -> test.areEqual value expected
 
     testCase "Deserializing float with a unit of measure" <| fun _ ->
         let expected = 42.3333<someUnit>
 
-        Json.stringify expected
+        Json.serialize expected
         |> Json.parseNativeAs<float<someUnit>>
         |> fun value -> test.areEqual value expected
 
@@ -2082,15 +2082,7 @@ let fable2xTests =
         let input = FlagsEnum.A ||| FlagsEnum.C
 
         input
-        |> Json.stringify
+        |> Json.serialize
         |> Json.parseNativeAs<FlagsEnum>
         |> fun result -> test.areEqual result input
 ]
-
-let tests = testList "All tests" [
-    if not (Convert.usingFable3()) then fable2xTests
-    NagareyamaTests.everyTest
-]
-
-[<EntryPoint>]
-let main args = Mocha.runTests tests
