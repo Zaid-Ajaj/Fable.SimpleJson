@@ -410,6 +410,12 @@ let everyTest =
         let deserialized = Json.parseAs<SimpleDU list> jsonInput
         test.areEqual expected deserialized
 
+    testCase "Tuple<'a, 'b, 'c> roundtrip" <| fun _ ->
+        (1, true, [ One; Two 20 ])
+        |> Json.serialize
+        |> Json.parseNativeAs<int * bool * SimpleDU list>
+        |> test.areEqual (1, true, [ One; Two 20 ])
+
     testCase "Auto derserialization: parsing lists of unions from Fable 1" <| fun _ ->
         let jsonInput =  """["One", { "Two" : [20] }, {"Three": ["some value"] }]"""
         let expected =  [ One; Two 20; Three "some value" ]

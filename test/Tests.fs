@@ -263,7 +263,6 @@ let fable2xTests =
             | other -> test.unexpected other
         | None -> test.fail()
 
-
     testCase "Json parser can parse list of objects" <| fun _ ->
         "[{}]"
         |> SimpleJson.tryParse
@@ -434,6 +433,12 @@ let fable2xTests =
         |> Json.parseAs<Map<string, string>>
         |> Map.toList
         |> test.areEqual [ "A", "a"; "B", "b"; "C", "c" ]
+
+    testCase "Tuple<'a, 'b, 'c> roundtrip" <| fun _ ->
+        (1, true, [ One; Two 20 ])
+        |> Json.stringify
+        |> Json.parseNativeAs<int * bool * SimpleDU list>
+        |> test.areEqual (1, true, [ One; Two 20 ])
 
     testCase "Parsing maps serialized with toJson from Fable 1" <| fun _ ->
         let inputJson = """ { "A":"a", "B":"b", "C":"c" } """
