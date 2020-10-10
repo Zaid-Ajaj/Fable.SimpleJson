@@ -410,6 +410,15 @@ let everyTest =
         let deserialized = Json.parseAs<SimpleDU list> jsonInput
         test.areEqual expected deserialized
 
+    testCase "Serializing one-arg tuples works" <| fun _ -> 
+        let typeInfo = Converter.createTypeInfo typeof<Maybe<int64>>
+        let fullTypeInfo = TypeInfo.Tuple (fun _ -> [| typeInfo |])
+        
+        fullTypeInfo
+        |> Convert.serialize (Maybe.Just 42L) 
+        |> Json.parseAs<list<Maybe<int64>>> 
+        |> test.areEqual [ Maybe.Just 42L ]
+
     testCase "Tuple<'a, 'b, 'c> roundtrip" <| fun _ ->
         (1, true, [ One; Two 20 ])
         |> Json.serialize

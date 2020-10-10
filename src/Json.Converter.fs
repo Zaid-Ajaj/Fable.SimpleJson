@@ -794,13 +794,16 @@ module Convert =
         | TypeInfo.Tuple getTupleTypes ->
             let tupleTypes = getTupleTypes()
 
-            let serializedValues =
-                value
-                |> unbox<obj array>
-                |> Array.mapi (fun index element -> serialize element tupleTypes.[index])
-                |> String.concat ", "
+            if tupleTypes.Length = 1 then
+                "[" + serialize value tupleTypes.[0] + "]"
+            else
+                let serializedValues =
+                    value
+                    |> unbox<obj array>
+                    |> Array.mapi (fun index element -> serialize element tupleTypes.[index])
+                    |> String.concat ", "
 
-            "[" + serializedValues + "]"
+                "[" + serializedValues + "]"
 
         | TypeInfo.Any getType ->
             // fallback to low-level serialization
