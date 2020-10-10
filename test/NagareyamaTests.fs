@@ -419,6 +419,11 @@ let everyTest =
         |> Json.parseAs<list<Maybe<int64>>> 
         |> test.areEqual [ Maybe.Just 42L ]
 
+    testCase "Serializing cases without data works" <| fun _ -> 
+        Nothing
+        |> Json.serialize
+        |> test.areEqual "\"Nothing\""
+
     testCase "Tuple<'a, 'b, 'c> roundtrip" <| fun _ ->
         (1, true, [ One; Two 20 ])
         |> Json.serialize

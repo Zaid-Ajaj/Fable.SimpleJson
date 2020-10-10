@@ -115,12 +115,15 @@ module Convert =
             | _ -> ()
         ]
 
+    /// <summary>Returns whether the type information resembles a type of a sequence of elements (including tuples)</summary>
     let arrayLike = function
         | TypeInfo.Array _ -> true
         | TypeInfo.List _ -> true
         | TypeInfo.Seq _ -> true
         | TypeInfo.Tuple _ -> true
         | TypeInfo.Set _ -> true
+        | TypeInfo.ResizeArray _ -> true
+        | TypeInfo.HashSet _ -> true
         | _ -> false
 
     let isRecord = function
@@ -732,7 +735,7 @@ module Convert =
                 |> Array.find (fun case -> case.CaseName = usedCase.Name)
                 |> fun case -> case.CaseTypes
 
-            if enumUnion typeInfo then
+            if enumUnion typeInfo || Array.isEmpty caseTypes then
                 betweenQuotes usedCase.Name
             elif caseTypes.Length = 1 then
                 "{" + betweenQuotes usedCase.Name + ": " + serialize fields.[0] caseTypes.[0] + "}"
