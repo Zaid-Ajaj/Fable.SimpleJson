@@ -86,7 +86,12 @@ Target "RunTests" <| fun _ ->
     printfn "Building %s with Fable" testsPath
     run "npm" "test" "."
     run "npm" "run headless-tests" "."
+    CleanDirs [ "dist" ]
     cleanBundles()
+    run "npm" "run test-nagareyama" "."
+    run "npm" "run headless-nagareyama-tests" "."
+    cleanBundles()
+    CleanDirs [ "dist" ]
 
 "Clean"
   ==> "InstallNpmPackages"
