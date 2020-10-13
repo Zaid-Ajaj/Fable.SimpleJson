@@ -43,12 +43,17 @@ JSON Convertion API
 ```fs
 open Fable.SimpleJson
 
-// ...
+// Parsing from JSON
 
 Json.parseAs<'t> (inputJson: string) : 't
 Json.tryParseAs<'t> (inputJson: string) : Result<'t, string>
 Json.parseFromJsonAs<'t> (parsedJson: Json) : 't
 Json.tryParseFromJsonAs<'t> (parsedJson: Json) : Result<'t, string>
+
+// Converting to JSON
+
+Json.stringify(value: obj) : string // Use for Fable 2.x applications
+Json.serialize<'t>(value: 't) : string // Supports Fable 2.x and Fable 3
 ```
 
 The AST looks like this:
@@ -104,7 +109,7 @@ You could also use the non-safe version `SimpleJson.parse` if you know for sure 
 
 ```fs
 let person = { Name = "John"; Age = 34 }
-Json.stringify person
+Json.serialize person
 ```
 
 ## Manual Serialization
