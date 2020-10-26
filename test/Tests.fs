@@ -434,16 +434,16 @@ let fable2xTests =
         |> Map.toList
         |> test.areEqual [ "A", "a"; "B", "b"; "C", "c" ]
 
-    testCase "Serializing one-arg tuples works" <| fun _ -> 
+    testCase "Serializing one-arg tuples works" <| fun _ ->
         let typeInfo = Converter.createTypeInfo typeof<Maybe<int64>>
         let fullTypeInfo = TypeInfo.Tuple (fun _ -> [| typeInfo |])
-        
+
         fullTypeInfo
-        |> Convert.serialize (Maybe.Just 42L) 
-        |> Json.parseAs<list<Maybe<int64>>> 
+        |> Convert.serialize (Maybe.Just 42L)
+        |> Json.parseAs<list<Maybe<int64>>>
         |> test.areEqual [ Maybe.Just 42L ]
 
-    testCase "Serializing cases without data works" <| fun _ -> 
+    testCase "Serializing cases without data works" <| fun _ ->
         Nothing
         |> Json.serialize
         |> test.areEqual "\"Nothing\""
@@ -1763,10 +1763,12 @@ let fable2xTests =
         let dateOffset = DateTimeOffset.Now
         let record = { DateOffset = dateOffset }
         let stringified = dateOffset.ToString("O")
-        match SimpleJson.parseNative (Json.stringify record) with
+        match SimpleJson.parseNative (Json.serialize record) with
         | JObject dict ->
             match Map.tryFind "DateOffset" dict with
-            | Some (JString value) -> test.areEqual value stringified
+            | Some (JString value) ->
+                let parsed = DateTimeOffset.Parse(value)
+                test.equal parsed.Offset dateOffset.Offset
             | otherwise -> test.unexpected otherwise
         | otherwise -> test.unexpected otherwise
 
@@ -1774,13 +1776,6 @@ let fable2xTests =
         let dateOffset = DateTimeOffset.Now
         InteropUtil.isDateOffset dateOffset
         |> test.areEqual true
-
-    testCase "DateTimeOffset uses ToString('O') when stringified" <| fun _ ->
-        let dateOffset = DateTimeOffset.Now
-        let expected = dateOffset.ToString("O")
-        match SimpleJson.parseNative (Json.stringify dateOffset) with
-        | JString actual -> test.areEqual actual expected
-        | otherwise -> test.unexpected otherwise
 
     testCase "decimal arithmetic works after deserialization" <| fun _ ->
         let input = """{ "Value": 9.5 }"""

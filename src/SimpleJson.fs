@@ -65,22 +65,22 @@ module SimpleJson =
     let stringify (value: 'a) : string =
         if isNullOrUndefined value
         then JS.JSON.stringify(null)
-        else JS.JSON.stringify(value, (fun key v ->
-            if isDateOffset (get key jsThis) then
-                let dateOffset : DateTimeOffset = get key jsThis
-                box (dateOffset.ToString("O"))
-            elif isBigInt (get key jsThis) then
-                let bigInt : bigint = get key jsThis
+        else JS.JSON.stringify(value, (fun key jsonValue ->
+            if isBigInt jsonValue then
+                let bigInt : bigint = unbox(jsonValue)
                 box (string (decimal bigInt))
+            elif isDate jsonValue then
+                let dateOffset : DateTimeOffset = unbox(jsonValue)
+                box (dateOffset.ToString("o"))
             else
-            match v with
-            | :? string -> v
+            match jsonValue with
+            | :? string -> jsonValue
             | :? System.Collections.IEnumerable ->
-                if JS.Constructors.Array.isArray(v) then v
-                else arrayFrom v
-            | _ when isBigInt v -> box (string (decimal (unbox<bigint> v)))
-            | _ when isDateOffset v -> box ((unbox<DateTimeOffset> v).ToString("O"))
-            | _ -> v
+                if JS.Constructors.Array.isArray(jsonValue) then jsonValue
+                else arrayFrom jsonValue
+            | _ when isBigInt jsonValue -> box (string (decimal (unbox<bigint> jsonValue)))
+            | _ when isDateOffset jsonValue -> box ((unbox<DateTimeOffset> jsonValue).ToString("O"))
+            | _ -> jsonValue
         ), 0)
 
     let rec internal parseNative' (x: obj) =
