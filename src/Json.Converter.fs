@@ -6,6 +6,7 @@ open FSharp.Reflection
 open System.Numerics
 open System.Collections
 open System.Collections.Generic
+open Fable.Core.JsInterop
 
 module Node =
 
@@ -625,13 +626,15 @@ module Convert =
     let fromJson<'t> json typeInfo =
         unbox<'t> (fromJsonAs json typeInfo)
 
+    let quoteText (inputText: string) : string = importDefault "./quote.js"
+
     let rec serialize value (typeInfo: TypeInfo) =
         match typeInfo with
         | TypeInfo.String ->
             let content = unbox<string> value
             if isNull content
             then "null"
-            else betweenQuotes (content.Replace("\"", "\\\""))
+            else quoteText content
         | TypeInfo.Unit -> "null"
         | TypeInfo.Float
         | TypeInfo.Float32 -> string (unbox<double> value)
