@@ -8,6 +8,8 @@ type TupleStringArrays = {
     Highlights : (string * string []) [ ]
 }
 
+type RecordWithNullable = { Content : Nullable<int> }
+
 type RecordAsKey = { Key: int; Value : string }
 
 type WithByteArray = { Hash: byte [] }

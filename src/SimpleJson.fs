@@ -32,6 +32,9 @@ module InteropUtil =
     [<Emit("console.log($0)")>]
     let log (x: 'a) : unit = jsNative
 
+    [<Emit "({})">]
+    let createEmptyObject() : obj = jsNative
+
 module SimpleJson =
     /// Tries to parse a string into a Json structured JSON data.
     let tryParse (input: string) : Option<Json> =
@@ -61,6 +64,24 @@ module SimpleJson =
             |> List.map (fun (key,value) -> sprintf "\"%s\":%s" key (toString value))
             |> String.concat ","
             |> sprintf "{%s}"
+
+    [<Emit "$2[$0] = $1">]
+    let private setValue (key: string) (value: obj) (destination: obj) = jsNative
+    let rec toPlainObject (input: Json) : obj =
+        match input with
+        | JNull -> unbox null
+        | JBool value -> unbox value
+        | JNumber value -> unbox value
+        | JString value -> unbox value
+        | JArray values ->
+            let array = new ResizeArray<obj>()
+            for value in values do array.Add(toPlainObject value)
+            unbox array
+        | JObject map ->
+            let jsObject = createEmptyObject()
+            for (key, value) in Map.toList map do
+                setValue key (toPlainObject value) jsObject
+            unbox jsObject
 
     let stringify (value: 'a) : string =
         if isNullOrUndefined value

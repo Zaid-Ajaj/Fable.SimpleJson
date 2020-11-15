@@ -37,6 +37,7 @@ type TypeInfo =
     | BigInt
     | TimeSpan
     | Guid
+    | Object
     | Any of (unit -> Type)
     | Async of (unit -> TypeInfo)
     | Promise of (unit -> TypeInfo)

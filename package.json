@@ -5,6 +5,7 @@
         "build-nagareyama": "dotnet fable test && webpack-cli --mode production --config webpack.nagareyama.js",
         "start": "webpack-dev-server",
         "start-nagareyama": "webpack-dev-server --config webpack.nagareyama.js",
+        "watch-nagareyama": "dotnet fable watch test --run webpack-dev-server --config webpack.nagareyama.js",
         "pretest": "fable-splitter test -o dist/tests --commonjs",
         "test": "mocha dist/tests",
         "test-nagareyama": "dotnet tool restore && dotnet fable test --outDir dist/tests && mocha dist/tests -r esm",

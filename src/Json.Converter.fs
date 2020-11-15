@@ -211,6 +211,7 @@ module Convert =
         // null values for strings are just the null string
         | JNull, TypeInfo.String -> unbox null
         | JNull, TypeInfo.Unit -> unbox ()
+        | genericJson, TypeInfo.Object -> unbox (SimpleJson.toPlainObject genericJson)
         // int64 as string -> parse it
         | JString value, TypeInfo.Long -> unbox (int64 value)
         | JString value, TypeInfo.Byte -> unbox (byte value)
@@ -222,6 +223,10 @@ module Convert =
         | JString value, TypeInfo.DateTime -> unbox (DateTime.Parse(value))
         // parse formatted date time offset
         | JString value, TypeInfo.DateTimeOffset -> unbox (DateTimeOffset.Parse(value))
+        | JNumber value, TypeInfo.DateTimeOffset ->
+            let seconds = int64 (JS.Math.floor(value))
+            unbox (DateTimeOffset.FromUnixTimeSeconds seconds)
+
         // deserialize union from objects
         // { "One": 20 } or {"One": [20]} -> One of int
         | JObject values, TypeInfo.Union (getTypes) ->
@@ -763,7 +768,7 @@ module Convert =
 
                     if isPrimitive keyType || enumUnion keyType then
                         if not (isQuoted serializedKey)
-                        then (betweenQuotes serializedKey) + ": " + serializedValue
+                        then (quoteText serializedKey) + ": " + serializedValue
                         else serializedKey + ": " + serializedValue
                     else
                         "[" + serializedKey + ", " + serializedValue + "]"
@@ -810,6 +815,9 @@ module Convert =
                     |> String.concat ", "
 
                 "[" + serializedValues + "]"
+
+        | TypeInfo.Object ->
+            SimpleJson.stringify value
 
         | TypeInfo.Any getType ->
             // fallback to low-level serialization

@@ -30,6 +30,7 @@ module Converter =
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit
         | "System.Guid" -> Some TypeInfo.Guid
         | "System.Byte" -> Some TypeInfo.Byte
+        | "System.Object" -> Some TypeInfo.Object
         | _ -> None
 
     let (|RecordType|_|) (t: Type) =

@@ -17,8 +17,8 @@ let parseUsing p input =
     Parsimmon.parse input p
 
 type test =
-    static member equal a b = Expect.equal a b "They are equal"
-    static member areEqual a b = Expect.equal a b "They are equal"
+    static member inline equal a b = Expect.equal a b "They are equal"
+    static member inline areEqual a b = Expect.equal a b "They are equal"
     static member pass() = Expect.isTrue true "It must be true"
     static member fail() = Expect.isTrue false "It must be false"
     static member isTrue x = Expect.isTrue x "It must be true"
@@ -511,7 +511,28 @@ let everyTest =
         let parsed1 = Json.parseAs<WithString> parsed2.Str
         test.areEqual str parsed1.Str
 
-    // TODO: Wait for Nullable<'T> support in Fable
+    testCase "Deserialize anything into object" <| fun _ ->
+        let content = "{ \"name\": \"Zaid\", \"age\": 24, \"values\": [1, false, null] }"
+        let deserialized = Json.parseNativeAs<obj> content
+        Expect.equal "Zaid" (unbox deserialized?name) "Name should be there"
+        Expect.equal 24 (unbox deserialized?age) "Age should be there"
+        let values = unbox<obj array> deserialized?values
+        Expect.equal 1 (unbox values.[0]) "First element is 1"
+        Expect.equal false (unbox values.[1]) "Second element is false"
+        Expect.equal null (unbox values.[2]) "Third element is null"
+
+    testCase "Deserialize anything into complex type containing object" <| fun _ ->
+        let content = "{ \"name\": \"Zaid\", \"age\": 24, \"values\": [1, false, null] }"
+        let deserialized = Json.parseNativeAs<Map<string, obj>> content
+        Expect.equal "Zaid" (unbox deserialized.["name"]) "Name should be there"
+        Expect.equal 24 (unbox deserialized.["age"]) "Age should be there"
+        let values = unbox<obj array> deserialized.["values"]
+        Expect.equal 1 (unbox values.[0]) "First element is 1"
+        Expect.equal false (unbox values.[1]) "Second element is false"
+        Expect.equal null (unbox values.[2]) "Third element is null"
+
+
+    // Wait for Fable 3 to be stable and Fable 2.x to obsolete
     //testCase "Deserialize object with nullable" <| fun _ ->
     //    let parsedWithNull = Json.parseAs<RecordWithNullable> "{ \"Content\": null }"
     //    let parsedWithValue = Json.parseAs<RecordWithNullable> "{ \"Content\": 1 }"
