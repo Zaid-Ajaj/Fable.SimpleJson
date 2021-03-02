@@ -272,6 +272,22 @@ let fable2xTests =
         Expect.equal false (unbox values.[1]) "Second element is false"
         Expect.equal null (unbox values.[2]) "Third element is null"
 
+    testCase "Record with float can be converted" <| fun _ ->
+        let input : RecordWithFloat = { Number = 10.0 }
+        input
+        |> Json.serialize
+        |> Json.parseNativeAs<RecordWithFloat>
+        |> test.areEqual input
+
+    testCase "Record with float can be converted when floats are NaN" <| fun _ ->
+        let input : RecordWithFloat = { Number = System.Double.NaN }
+        let deserialized =
+            input
+            |> Json.serialize
+            |> Json.parseNativeAs<RecordWithFloat>
+
+        test.isTrue (Double.IsNaN(deserialized.Number))
+
     testCase "Json parser can parse escaped non-empty objects" <| fun _ ->
         match SimpleJson.tryParse """ {"prop":"value"} """ with
         | Some json ->

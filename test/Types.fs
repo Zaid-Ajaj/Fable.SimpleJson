@@ -57,6 +57,8 @@ type SimpleRec = { A: int; B: string; C: bool; D: float; E: decimal }
 
 type RecordWithEnum = { EnumValue : SimpleEnum }
 
+type RecordWithFloat = { Number: float }
+
 type Maybe<'t> =
     | Just of 't
     | Nothing

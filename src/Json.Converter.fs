@@ -154,7 +154,10 @@ module Convert =
     let rec fromJsonAs (input: Json) (typeInfo: Fable.SimpleJson.TypeInfo) : obj =
         match input, typeInfo with
         | JNumber value, TypeInfo.Float -> unbox value
+        | JString value, TypeInfo.Float when value.ToLower() = "nan" -> unbox (Double.NaN)
+        | JString value, TypeInfo.Float -> unbox (float value)
         | JNumber value, TypeInfo.Float32 -> unbox (float32 value)
+        | JString value, TypeInfo.Float32 when value.ToLower() = "nan" -> unbox (Double.NaN)
         | JString value, TypeInfo.Float32 -> unbox (float32 value)
         // reading number as int -> floor it
         | JNumber value, TypeInfo.Int32 -> unbox (JS.Math.floor(value))
@@ -642,7 +645,10 @@ module Convert =
             else quoteText content
         | TypeInfo.Unit -> "null"
         | TypeInfo.Float
-        | TypeInfo.Float32 -> string (unbox<double> value)
+        | TypeInfo.Float32 ->
+            if Double.IsNaN(unbox value)
+            then quoteText "NaN"
+            else string (unbox<double> value)
         | TypeInfo.Byte
         | TypeInfo.UInt16
         | TypeInfo.UInt32

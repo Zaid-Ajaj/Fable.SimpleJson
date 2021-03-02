@@ -1542,6 +1542,22 @@ let everyTest =
         |> Json.parseNativeAs<Config>
         |> test.areEqual input
 
+    testCase "Record with float can be converted" <| fun _ ->
+        let input : RecordWithFloat = { Number = 10.0 }
+        input
+        |> Json.serialize
+        |> Json.parseNativeAs<RecordWithFloat>
+        |> test.areEqual input
+
+    testCase "Record with float can be converted when floats are NaN" <| fun _ ->
+        let input : RecordWithFloat = { Number = System.Double.NaN }
+        let deserialized =
+            input
+            |> Json.serialize
+            |> Json.parseNativeAs<RecordWithFloat>
+
+        test.isTrue (Double.IsNaN(deserialized.Number))
+
     testCase "SimpleJson.readPath works" <| fun _ ->
         let inputJson =
             """
