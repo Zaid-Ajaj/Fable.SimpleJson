@@ -26,9 +26,13 @@ module Convert =
 
     /// <summary>Uses internal representation of F# maps to determine whether we are using Fable 3 or not</summary>
     let usingFable3() =
+        #if FABLE_COMPILER_3
+        true
+        #else
         let map = JS.JSON.parse(JS.JSON.stringify (Map.ofList [ 1, 1; 2, 2 ]))
         let tree = get "tree" map
-        isDefined (get "k" tree) && isDefined (get "v" tree) && isDefined (get "h" tree)
+        isDefined tree && isDefined (get "k" tree) && isDefined (get "v" tree) && isDefined (get "h" tree)
+        #endif
 
     let isUsingFable3 = usingFable3()
 
