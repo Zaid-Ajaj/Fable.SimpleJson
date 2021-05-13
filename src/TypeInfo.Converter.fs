@@ -11,6 +11,7 @@ module Converter =
     let (|PrimitiveType|_|) (primType: Type) =
         match primType.FullName with
         | "System.String" -> Some TypeInfo.String
+        | "System.Char" -> Some TypeInfo.Char
         | "System.Int16" -> Some TypeInfo.Short
         | "System.Int32" -> Some TypeInfo.Int32
         | "Microsoft.FSharp.Core.int64`1"

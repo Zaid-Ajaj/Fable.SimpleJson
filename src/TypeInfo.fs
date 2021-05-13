@@ -20,6 +20,7 @@ type UnionCase = {
 [<RequireQualifiedAccess>]
 type TypeInfo =
     | Unit
+    | Char
     | String
     | UInt16
     | UInt32

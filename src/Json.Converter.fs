@@ -168,6 +168,8 @@ module Convert =
         | JBool value, TypeInfo.Bool -> unbox value
         // reading int from string -> parse it
         | JString value, TypeInfo.Int32 -> unbox (int value)
+        | JString value, TypeInfo.Char -> unbox (char value)
+        | JNumber value, TypeInfo.Char -> unbox (char (unbox<int> value))
         // reading into strings
         | JString value, TypeInfo.String -> unbox value
         | JNumber value, TypeInfo.String -> unbox (string value)
@@ -653,6 +655,7 @@ module Convert =
             if Double.IsNaN(unbox value)
             then quoteText "NaN"
             else string (unbox<double> value)
+        | TypeInfo.Char -> quoteText (string (unbox<char> value))
         | TypeInfo.Byte
         | TypeInfo.UInt16
         | TypeInfo.UInt32

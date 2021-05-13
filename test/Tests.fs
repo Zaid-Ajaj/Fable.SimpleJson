@@ -279,6 +279,14 @@ let fable2xTests =
         |> Json.parseNativeAs<RecordWithFloat>
         |> test.areEqual input
 
+
+    testCase "Record with char can be converted" <| fun _ ->
+        let input : RecordWithChar = { Char = '*' }
+        input
+        |> Json.serialize
+        |> Json.parseNativeAs<RecordWithChar>
+        |> test.areEqual input
+
     testCase "Record with float can be converted when floats are NaN" <| fun _ ->
         let input : RecordWithFloat = { Number = System.Double.NaN }
         let deserialized =

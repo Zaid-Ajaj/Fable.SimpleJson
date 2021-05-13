@@ -59,6 +59,8 @@ type RecordWithEnum = { EnumValue : SimpleEnum }
 
 type RecordWithFloat = { Number: float }
 
+type RecordWithChar = { Char: char }
+
 type Maybe<'t> =
     | Just of 't
     | Nothing
