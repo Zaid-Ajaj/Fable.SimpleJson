@@ -3,11 +3,21 @@
 A simple library for easily parsing, transforming and converting JSON in Fable projects. It is written using parser combinators from [Fable.Parsimmon](https://github.com/Zaid-Ajaj/Fable.Parsimmon)
 
 ### Installation
+
+Install from nuget using dotnet:
+
+```sh
+dotnet add package Fable.SimpleJson
+```
+
 Install from nuget using paket
+
 ```sh
 paket add nuget Fable.SimpleJson --project path/to/YourProject.fsproj
 ```
+
 Make sure the references are added to your paket files
+
 ```sh
 # paket.dependencies (solution-wide dependencies)
 nuget Fable.SimpleJson
@@ -113,7 +123,10 @@ Json.serialize person
 ```
 
 ## Manual Serialization
-Now, to serialize a typed entity into a JSON string, you build the JSON structure by hand and call `SimpleJson.toString` like the following:
+
+Now, to serialize a typed entity into a JSON string there are two ways:
+
+1. You build the JSON structure by hand and call `SimpleJson.toString` like the following:
 
 ```fs
 let person = { Name = "John"; Age = 34 }
@@ -126,7 +139,17 @@ let serialized =
     |> SimpleJson.toString
 ```
 
+or
 
+2. You use anonymous records and call `Json.serialize` like the following:
+
+```fs
+let person = { Name = "John"; Age = 34 }
+
+let serialized = Json.serialize {| name = person.Name ; age = person.Age |}
+```
+
+There is a big difference here because using a `Map -> JObject` means that you can dynamically add or remove properties at runtime where as an anonymous record will have a static shape. Both ways are valid, though the first example is lower-level and most people will probably need the second one with anonymous records.
 
 ## Pre-processing JSON values
 Suppose you want to deserialize the string:
