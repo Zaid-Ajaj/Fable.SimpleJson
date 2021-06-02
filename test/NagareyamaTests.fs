@@ -1556,6 +1556,13 @@ let everyTest =
         |> Json.parseNativeAs<RecordWithChar>
         |> test.areEqual input
 
+    testCase "Record with char as unicode can be converted" <| fun _ ->
+        let input : RecordWithChar = { Char = 'ŕ' }
+        input
+        |> Json.serialize
+        |> Json.parseNativeAs<RecordWithChar>
+        |> test.areEqual input
+
     testCase "Record with float can be converted when floats are NaN" <| fun _ ->
         let input : RecordWithFloat = { Number = System.Double.NaN }
         let deserialized =
