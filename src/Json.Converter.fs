@@ -225,6 +225,8 @@ module Convert =
         | JString value, TypeInfo.Long -> unbox (int64 value)
         | JString value, TypeInfo.Byte -> unbox (byte value)
         | JNumber value, TypeInfo.Byte -> unbox (byte value)
+        | JNumber value, TypeInfo.SByte -> unbox (sbyte value)
+        | JString value, TypeInfo.SByte -> unbox (sbyte value)
         // BigInt as string -> parse it
         | JString value, TypeInfo.BigInt -> unbox (BigInteger.Parse value)
         | JNumber value, TypeInfo.BigInt -> unbox (bigint (JS.Math.floor(value)))
@@ -657,6 +659,7 @@ module Convert =
             else string (unbox<double> value)
         | TypeInfo.Char -> quoteText (string (unbox<char> value))
         | TypeInfo.Byte
+        | TypeInfo.SByte
         | TypeInfo.UInt16
         | TypeInfo.UInt32
         | TypeInfo.Short

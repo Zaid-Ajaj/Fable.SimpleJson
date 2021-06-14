@@ -33,6 +33,7 @@ type TypeInfo =
     | Short
     | Long
     | Byte
+    | SByte
     | DateTime
     | DateTimeOffset
     | BigInt

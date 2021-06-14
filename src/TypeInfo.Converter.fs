@@ -31,6 +31,7 @@ module Converter =
         | "Microsoft.FSharp.Core.Unit" -> Some TypeInfo.Unit
         | "System.Guid" -> Some TypeInfo.Guid
         | "System.Byte" -> Some TypeInfo.Byte
+        | "System.SByte" -> Some TypeInfo.SByte
         | "System.Object" -> Some TypeInfo.Object
         | _ -> None
 

@@ -1563,6 +1563,18 @@ let everyTest =
         |> Json.parseNativeAs<RecordWithChar>
         |> test.areEqual input
 
+    testCase "Record with sbyte can be converted" <| fun _ ->
+        let input = {
+            Byte = 200uy
+            SByte = -10y
+            Maybes = [ Just -120y; Nothing; Just 120y; Just 5y; Just -5y ]
+        }
+
+        input
+        |> Json.serialize
+        |> Json.parseNativeAs<OtherDataWithSByte>
+        |> test.areEqual input
+
     testCase "Record with float can be converted when floats are NaN" <| fun _ ->
         let input : RecordWithFloat = { Number = System.Double.NaN }
         let deserialized =

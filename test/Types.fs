@@ -69,6 +69,12 @@ type RecWithGenDU<'t> = { Other: 't; Value : Maybe<int> }
 
 type GenericTestRecord<'t> = { Other: 't; Value : Maybe<int> }
 
+type OtherDataWithSByte = {
+    Byte: byte
+    Maybes: Maybe<sbyte> list
+    SByte: sbyte
+}
+
 type Types() =
     static member getNameOf<'t> ([<Inject>] ?resolver: ITypeResolver<'t>) : string =
         let resolvedType = resolver.Value.ResolveType()
