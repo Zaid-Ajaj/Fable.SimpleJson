@@ -247,6 +247,11 @@ let fable2xTests =
         |> List.choose SimpleJson.tryParse
         |> test.areEqual [JString "there is some json inside"; JString ""]
 
+    testCase "Json parser works with escaped utf-16 character" <| fun _ ->
+        ["\"It\\u0027s coming rome\""]
+        |> List.choose SimpleJson.tryParse
+        |> test.areEqual [JString "It's coming rome"]
+
     testCase "Json parser can parse escaped empty objects" <| fun _ ->
         match SimpleJson.tryParse """ {} """ with
         | Some _ -> test.pass()

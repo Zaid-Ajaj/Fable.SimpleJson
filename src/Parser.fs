@@ -73,11 +73,31 @@ module Parser =
             Parsimmon.seq2 (Parsimmon.str "\\") escape
             |> Parsimmon.map snd
 
+        let hexDigit =
+            Parsimmon.oneOf "0123456789ABCDEFabcdef"
+            |> Parsimmon.map(function
+                | "A" | "a" -> 10uy
+                | "B" | "b" -> 11uy
+                | "C" | "c" -> 12uy
+                | "D" | "d" -> 13uy
+                | "E" | "e" -> 14uy
+                | "F" | "f" -> 15uy
+                | c   -> System.Byte.Parse c)
+
+        let utf16code =
+            Parsimmon.seq4 hexDigit hexDigit hexDigit hexDigit
+            |> Parsimmon.map (fun (d1,d2,d3,d4) -> System.Text.Encoding.Unicode.GetString([|d3 * 16uy + d4; d1 * 16uy + d2|]))
+
+        let utf16CharSnippet =
+            Parsimmon.seq2 (Parsimmon.str "\\u") utf16code
+            |> Parsimmon.map snd
+
         let normalCharSnippet = Parsimmon.satisfy (fun c -> c <> "\"" && c <> "\\")
 
         let anyCharSnippet = 
             normalCharSnippet
             |> Parsimmon.orTry escapedCharSnippet
+            |> Parsimmon.orTry utf16CharSnippet
             |> Parsimmon.many
             |> Parsimmon.concat
 
