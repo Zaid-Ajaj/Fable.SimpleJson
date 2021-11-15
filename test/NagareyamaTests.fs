@@ -2165,13 +2165,33 @@ let everyTest =
         |> fun result -> test.areEqual result input
 
     // Fable 2 cannot compile this, so use a directive
-#if NAGAREYAMA
+#if !NAGAREYAMA
     testCase "DateOnly roundtrip" <| fun _ ->
-        let expected = DateOnly.MinValue
+        let expected = DateOnly.FromDateTime DateTime.Now
 
         expected
         |> Json.serialize
         |> Json.parseAs<DateOnly>
         |> fun result -> test.areEqual result expected
+
+    testCase "Deserializing DateOnly works" <| fun _ ->
+        """ { "value": 3652058 } """
+        |> Json.serialize
+        |> Json.parseAs<{| value: DateOnly |}>
+        |> fun result -> test.areEqual result.value DateOnly.MaxValue
+
+    testCase "TimeOnly roundtrip" <| fun _ ->
+        let expected = TimeOnly.FromDateTime DateTime.Now
+
+        expected
+        |> Json.serialize
+        |> Json.parseAs<TimeOnly>
+        |> fun result -> test.areEqual result expected
+
+    testCase "Deserializing TimeOnly works" <| fun _ ->
+        """ { "value": "863999999999" } """
+        |> Json.serialize
+        |> Json.parseAs<{| value: TimeOnly |}>
+        |> fun result -> test.areEqual result.value TimeOnly.MaxValue
 #endif
 ]
