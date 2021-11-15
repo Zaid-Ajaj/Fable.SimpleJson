@@ -2163,4 +2163,15 @@ let everyTest =
         |> Json.serialize
         |> Json.parseNativeAs<FlagsEnum>
         |> fun result -> test.areEqual result input
+
+    // Fable 2 cannot compile this, so use a directive
+#if NAGAREYAMA
+    testCase "DateOnly roundtrip" <| fun _ ->
+        let expected = DateOnly.MinValue
+
+        expected
+        |> Json.serialize
+        |> Json.parseAs<DateOnly>
+        |> fun result -> test.areEqual result expected
+#endif
 ]
