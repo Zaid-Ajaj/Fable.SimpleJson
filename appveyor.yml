@@ -1,4 +1,4 @@
-image: Ubuntu1804
+image: Ubuntu2004
 
 stack: node 10
 
@@ -6,6 +6,7 @@ environment:
   nodejs_version: "10.10.0"
 
 build_script:
+- sh: sudo apt-get install -y dotnet-sdk-6.0
 - sh: ./build.sh RunTests
 
 test: off
