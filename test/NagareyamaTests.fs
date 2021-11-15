@@ -2181,7 +2181,7 @@ let everyTest =
         |> fun result -> test.areEqual result.value DateOnly.MaxValue
 
     testCase "TimeOnly roundtrip" <| fun _ ->
-        let expected = TimeOnly.FromDateTime DateTime.Now
+        let expected = TimeOnly (23, 11, 20, 333)
 
         expected
         |> Json.serialize
