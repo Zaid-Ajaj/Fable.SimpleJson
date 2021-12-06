@@ -2,13 +2,13 @@
     "private": true,
     "scripts": {
         "build": "webpack-cli --mode production",
-        "build-nagareyama": "dotnet fable test && webpack-cli --mode production --config webpack.nagareyama.js",
+        "build-nagareyama": "dotnet fable test --define NAGAREYAMA && webpack-cli --mode production --config webpack.nagareyama.js",
         "start": "webpack-dev-server",
         "start-nagareyama": "webpack-dev-server --config webpack.nagareyama.js",
-        "watch-nagareyama": "dotnet fable watch test --run webpack-dev-server --config webpack.nagareyama.js",
+        "watch-nagareyama": "dotnet fable watch test --define NAGAREYAMA --run webpack-dev-server --config webpack.nagareyama.js",
         "pretest": "fable-splitter test -o dist/tests --commonjs",
         "test": "mocha dist/tests",
-        "test-nagareyama": "dotnet tool restore && dotnet fable test --outDir dist/tests && mocha dist/tests -r esm",
+        "test-nagareyama": "dotnet tool restore && dotnet fable test --define NAGAREYAMA --outDir dist/tests && mocha dist/tests -r esm",
         "headless-tests": "webpack-cli --mode production && dotnet run --project ./headless/Headless.fsproj",
         "headless-nagareyama-tests": "npm run build-nagareyama && dotnet run --project ./headless/Headless.fsproj"
     },

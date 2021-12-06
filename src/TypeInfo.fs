@@ -36,6 +36,8 @@ type TypeInfo =
     | SByte
     | DateTime
     | DateTimeOffset
+    | DateOnly
+    | TimeOnly
     | BigInt
     | TimeSpan
     | Guid

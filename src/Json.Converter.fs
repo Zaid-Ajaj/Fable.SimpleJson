@@ -10,8 +10,8 @@ open Fable.Core.JsInterop
 
 module Node =
 
-    [<Emit("Array.prototype.slice.call(Buffer.from($0, 'base64'))")>]
     /// Converts Base64 string into a byte array in Node environment
+    [<Emit("Array.prototype.slice.call(Buffer.from($0, 'base64'))")>]
     let bytesFromBase64 (value: string) : byte array = jsNative
 
 module Convert =
@@ -237,6 +237,11 @@ module Convert =
         | JNumber value, TypeInfo.DateTimeOffset ->
             let seconds = int64 (JS.Math.floor(value))
             unbox (DateTimeOffset.FromUnixTimeSeconds seconds)
+#if NET6_0_OR_GREATER
+        // TimeOnly, DateOnly
+        | JNumber value, TypeInfo.DateOnly -> unbox (DateOnly.FromDayNumber (int value))
+        | JString value, TypeInfo.TimeOnly -> unbox (TimeOnly (int64 value))
+#endif
 
         // deserialize union from objects
         // { "One": 20 } or {"One": [20]} -> One of int
@@ -674,6 +679,10 @@ module Convert =
         | TypeInfo.Guid -> betweenQuotes ((unbox<Guid> value).ToString())
         | TypeInfo.DateTime -> betweenQuotes ((unbox<DateTime> value).ToString("O"))
         | TypeInfo.DateTimeOffset -> betweenQuotes ((unbox<DateTimeOffset> value).ToString("O"))
+#if NET6_0_OR_GREATER
+        | TypeInfo.DateOnly -> string (unbox<DateOnly> value).DayNumber
+        | TypeInfo.TimeOnly -> betweenQuotes (string (unbox<TimeOnly> value).Ticks)
+#endif
         | TypeInfo.Record getFields ->
             let (fieldTypes, recordType) = getFields()
             let serializedFields =

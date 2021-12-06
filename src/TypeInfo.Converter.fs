@@ -20,6 +20,8 @@ module Converter =
         | "System.UInt32" -> Some TypeInfo.UInt32
         | "System.UInt64" -> Some TypeInfo.UInt64
         | "System.DateTime" -> Some TypeInfo.DateTime
+        | "System.DateOnly" -> Some TypeInfo.DateOnly
+        | "System.TimeOnly" -> Some TypeInfo.TimeOnly
         | "System.TimeSpan" -> Some TypeInfo.TimeSpan
         | "System.DateTimeOffset" -> Some TypeInfo.DateTimeOffset
         | "System.Boolean" -> Some  TypeInfo.Bool
@@ -224,6 +226,8 @@ module Converter =
         | TypeInfo.Byte
         | TypeInfo.DateTime
         | TypeInfo.DateTimeOffset
+        | TypeInfo.DateOnly
+        | TypeInfo.TimeOnly
         | TypeInfo.BigInt
         | TypeInfo.Guid
         | TypeInfo.Option _ -> true
