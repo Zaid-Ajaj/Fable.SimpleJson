@@ -240,6 +240,7 @@ module Convert =
 #if NET6_0_OR_GREATER
         // TimeOnly, DateOnly
         | JNumber value, TypeInfo.DateOnly -> unbox (DateOnly.FromDayNumber (int value))
+        | JString value, TypeInfo.DateOnly -> unbox (DateOnly.FromDayNumber (int value))
         | JString value, TypeInfo.TimeOnly -> unbox (TimeOnly (int64 value))
 #endif
 
