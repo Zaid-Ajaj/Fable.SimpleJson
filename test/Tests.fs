@@ -226,9 +226,9 @@ let fable2xTests =
             | otherResult -> test.unexpected otherResult
 
     testCase "Json parser parses number values" <| fun _ ->
-        ["12"; "12.0"]
+        ["12"; "12.0"; "12E5"; "12e-5"; "6.66666666666667E-05"]
         |> List.choose SimpleJson.tryParse
-        |> test.areEqual [JNumber 12.0; JNumber 12.0]
+        |> test.areEqual [JNumber 12.0; JNumber 12.0; JNumber 1200000.; JNumber 0.00012; JNumber 6.66666666666667E-05]
 
     testCase "Json parser parses boolean values" <| fun _ ->
         ["true"; "false"; "something else"]

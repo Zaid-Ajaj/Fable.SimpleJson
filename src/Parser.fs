@@ -17,37 +17,18 @@ module Parser =
         Parsimmon.seq2 (Parsimmon.str "-") jint 
         |> Parsimmon.map (fun (sign, number) -> -number)
 
-    let jfloat = 
+    let jfloat =
+        let floatWithComma =
+            Parsimmon.regex "-?(0|[1-9][0-9]*)?[.][0-9]+([eE][+-]?[0-9]+)?"
+        let floatWithoutComma =
+            Parsimmon.regex "-?[1-9][0-9]*[eE][+-]?[0-9]+"
 
-        let digits = 
-            Parsimmon.digit 
-            |> Parsimmon.many
-            |> Parsimmon.concat
-
-        let dot = Parsimmon.str "."
-
-        let decimals = 
-            Parsimmon.digit
-            |> Parsimmon.atLeastOneOrMany
-            |> Parsimmon.concat
-
-        Parsimmon.seq3 digits dot decimals
-        |> Parsimmon.map (fun (digitsLeft,dot,digitsRight) -> 
-            match digitsLeft with
-            | "" -> "0"
-            | other -> other 
-            |> fun digitsLeft ->
-                [digitsLeft; dot; digitsRight]
-                |> String.concat "" 
-                |> float
-        )
-
-    let negativeJFloat = 
-        Parsimmon.seq2 (Parsimmon.str "-") jfloat 
-        |> Parsimmon.map (fun (sign, number) -> -number)
+        [ floatWithComma; floatWithoutComma ]
+        |> Parsimmon.choose
+        |> Parsimmon.map float
 
     let jnumber = 
-        [jfloat; negativeJFloat; jint; negJint] 
+        [jfloat; jint; negJint] 
         |> Parsimmon.choose
         |> Parsimmon.map JNumber
 
