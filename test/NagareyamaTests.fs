@@ -2176,9 +2176,15 @@ let everyTest =
 
     testCase "Deserializing DateOnly works" <| fun _ ->
         """ { "value": 3652058 } """
-        |> Json.serialize
         |> Json.parseAs<{| value: DateOnly |}>
         |> fun result -> test.areEqual result.value DateOnly.MaxValue
+
+    testCase "Deserializing DateOnly map works" <| fun _ ->
+        let expected = [ (DateOnly.MinValue, DateOnly.MaxValue); (DateOnly.FromDayNumber 1000, DateOnly.FromDateTime DateTime.Now) ] |> Map.ofList
+
+        """ { "value": { "0": 3652058, "1000": 738139 } } """
+        |> Json.parseAs<{| value: Map<DateOnly, DateOnly> |}>
+        |> fun result -> test.areEqual result.value expected
 
     testCase "TimeOnly roundtrip" <| fun _ ->
         let expected = TimeOnly (23, 11, 20, 333)
@@ -2190,7 +2196,6 @@ let everyTest =
 
     testCase "Deserializing TimeOnly works" <| fun _ ->
         """ { "value": "863999999999" } """
-        |> Json.serialize
         |> Json.parseAs<{| value: TimeOnly |}>
         |> fun result -> test.areEqual result.value TimeOnly.MaxValue
 #endif
