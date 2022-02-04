@@ -2180,7 +2180,7 @@ let everyTest =
         |> fun result -> test.areEqual result.value DateOnly.MaxValue
 
     testCase "Deserializing DateOnly map works" <| fun _ ->
-        let expected = [ (DateOnly.MinValue, DateOnly.MaxValue); (DateOnly.FromDayNumber 1000, DateOnly.FromDateTime DateTime.Now) ] |> Map.ofList
+        let expected = [ (DateOnly.MinValue, DateOnly.MaxValue); (DateOnly.FromDayNumber 1000, DateOnly.FromDateTime (DateTime (2021, 12, 16))) ] |> Map.ofList
 
         """ { "value": { "0": 3652058, "1000": 738139 } } """
         |> Json.parseAs<{| value: Map<DateOnly, DateOnly> |}>
