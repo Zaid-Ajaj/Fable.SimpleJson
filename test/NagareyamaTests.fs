@@ -461,6 +461,13 @@ let everyTest =
         |> Map.toList
         |> test.areEqual [ "A", "a"; "B", "b"; "C", "c" ]
 
+    testCase "Parsing URIs works" <| fun _ -> 
+        { SomeUri = Uri "http://localhost:8080/" }
+        |> Json.serialize
+        |> Json.parseAs<RecordWithUri>
+        |> fun output -> output.SomeUri.ToString()
+        |> test.areEqual "http://localhost:8080/"
+
     testCase "Parsing maps with integers as keys from string works" <| fun _ ->
         "[[1, \"one\"], [2, \"two\"], [3,\"three\"]]"
         |> Json.parseAs<Map<int, string>>
@@ -2180,9 +2187,10 @@ let everyTest =
         |> fun result -> test.areEqual result.value DateOnly.MaxValue
 
     testCase "Deserializing DateOnly map works" <| fun _ ->
-        let expected = [ (DateOnly.MinValue, DateOnly.MaxValue); (DateOnly.FromDayNumber 1000, DateOnly.FromDateTime DateTime.Now) ] |> Map.ofList
+        let dayNmber = 738139
+        let expected = [ (DateOnly.MinValue, DateOnly.MaxValue); (DateOnly.FromDayNumber 1000, DateOnly.FromDayNumber dayNmber) ] |> Map.ofList
 
-        """ { "value": { "0": 3652058, "1000": 738139 } } """
+        $"{ \"value\": { \"0\": 3652058, \"1000\": {dayNmber} } }"
         |> Json.parseAs<{| value: Map<DateOnly, DateOnly> |}>
         |> fun result -> test.areEqual result.value expected
 

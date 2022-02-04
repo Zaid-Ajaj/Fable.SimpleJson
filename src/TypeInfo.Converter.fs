@@ -35,6 +35,7 @@ module Converter =
         | "System.Byte" -> Some TypeInfo.Byte
         | "System.SByte" -> Some TypeInfo.SByte
         | "System.Object" -> Some TypeInfo.Object
+        | "System.Uri" -> Some TypeInfo.Uri
         | _ -> None
 
     let (|RecordType|_|) (t: Type) =

@@ -173,6 +173,8 @@ module Convert =
         // reading into strings
         | JString value, TypeInfo.String -> unbox value
         | JNumber value, TypeInfo.String -> unbox (string value)
+        // uri
+        | JString value, TypeInfo.Uri -> unbox(Uri(value))
         // decimals
         | JString value, TypeInfo.Decimal -> unbox (decimal value)
         | JNumber value, TypeInfo.Decimal -> unbox (decimal value)
@@ -678,6 +680,7 @@ module Convert =
         | TypeInfo.Decimal -> betweenQuotes (string (unbox<decimal> value))
         | TypeInfo.Bool -> if unbox<bool> value then "true" else "false"
         | TypeInfo.Guid -> betweenQuotes ((unbox<Guid> value).ToString())
+        | TypeInfo.Uri -> betweenQuotes ((unbox<Uri> value).ToString())
         | TypeInfo.DateTime -> betweenQuotes ((unbox<DateTime> value).ToString("O"))
         | TypeInfo.DateTimeOffset -> betweenQuotes ((unbox<DateTimeOffset> value).ToString("O"))
 #if NET6_0_OR_GREATER

@@ -24,6 +24,8 @@ type UnsignedIntegers = {
 
 type RecordWithDateOffset = { DateOffset:  DateTimeOffset }
 
+type RecordWithUri = { SomeUri : Uri }
+
 type Balance = { Value : decimal }
 
 type ComplexKey<'t> = ComplexKey of 't

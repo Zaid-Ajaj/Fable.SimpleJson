@@ -41,6 +41,7 @@ type TypeInfo =
     | BigInt
     | TimeSpan
     | Guid
+    | Uri
     | Object
     | Any of (unit -> Type)
     | Async of (unit -> TypeInfo)
