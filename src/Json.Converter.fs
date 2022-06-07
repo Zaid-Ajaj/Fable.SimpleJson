@@ -15,8 +15,7 @@ module Node =
     let bytesFromBase64 (value: string) : byte array = jsNative
 
 module Convert =
-    [<Emit("new Function(\"try {return this===window;}catch(e){ return false;}\")")>]
-    let internal isBrowser : unit -> bool = jsNative
+    let internal isBrowser () : bool = importDefault "./isBrowser.js"
 
     let insideBrowser = isBrowser()
 
