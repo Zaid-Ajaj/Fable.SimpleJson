@@ -2162,6 +2162,15 @@ let fable2xTests =
         |> Json.stringify
         |> Json.parseNativeAs<FlagsEnum>
         |> fun result -> test.areEqual result input
+    
+    testCase "Test IsBrowser" <| fun _ ->
+        Fable.SimpleJson.Convert.isBrowser()
+#if MOCHA
+        |> fun result -> test.isFalse result
+#else
+        |> fun result -> test.isTrue result
+#endif
+
 ]
 
 let tests = testList "All tests" [
