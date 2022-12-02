@@ -129,12 +129,17 @@ module Converter =
         then t.GetGenericArguments().[0] |> Some
         else None
 
-    let (|AsyncType|_|) (t:Type) =
+    let (|AsyncType|_|) (t: Type) =
         if t.FullName.StartsWith "Microsoft.FSharp.Control.FSharpAsync`1"
-        then  t.GetGenericArguments().[0] |> Some
+        then t.GetGenericArguments().[0] |> Some
         else None
 
-    let (|PromiseType|_|) (t:Type) =
+    let (|TaskType|_|) (t: Type) =
+        if t.FullName.StartsWith "System.Threading.Tasks.Task`1"
+        then t.GetGenericArguments().[0] |> Some
+        else None
+
+    let (|PromiseType|_|) (t: Type) =
         if t.FullName.StartsWith "Fable.Core.JS.Promise`1"
         then t.GetGenericArguments().[0] |> Some
         else None
@@ -183,6 +188,7 @@ module Converter =
         | SeqType elemType -> TypeInfo.Seq (lazyToDelayed <| lazy (createTypeInfo elemType))
         | AsyncType elemType -> TypeInfo.Async (lazyToDelayed <| lazy (createTypeInfo elemType))
         | PromiseType elemType -> TypeInfo.Promise (lazyToDelayed <| lazy (createTypeInfo elemType))
+        | TaskType elemType -> TypeInfo.Task (lazyToDelayed <| lazy (createTypeInfo elemType))
         | _ -> TypeInfo.Any (lazyToDelayed <| lazy (resolvedType))
 
     and private typeInfoCache = Dictionary<Type,Fable.SimpleJson.TypeInfo>()
