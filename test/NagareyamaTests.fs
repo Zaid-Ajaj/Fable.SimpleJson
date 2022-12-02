@@ -2207,4 +2207,12 @@ let everyTest =
         |> Json.parseAs<{| value: TimeOnly |}>
         |> fun result -> test.areEqual result.value TimeOnly.MaxValue
 #endif
+
+    testCase "TypeInfo can be generated from Task" <| fun _ ->
+        match TypeInfo.createFrom<System.Threading.Tasks.Task<int>>() with
+        | TypeInfo.Task getArgType ->
+            match getArgType() with
+            | TypeInfo.Int32 -> test.pass()
+            | _ -> test.failwith "Expected Int32"
+        | _ -> test.failwith "Expected Task"
 ]

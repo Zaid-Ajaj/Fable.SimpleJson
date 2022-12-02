@@ -45,6 +45,7 @@ type TypeInfo =
     | Object
     | Any of (unit -> Type)
     | Async of (unit -> TypeInfo)
+    | Task of (unit -> TypeInfo)
     | Promise of (unit -> TypeInfo)
     | Option of (unit -> TypeInfo)
     | List of (unit -> TypeInfo)
