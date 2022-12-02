@@ -20,7 +20,7 @@
         "fable-compiler": "^2.13.0",
         "fable-loader": "^2.1.9",
         "fable-splitter": "^2.1.13",
-        "mocha": "^6.2.0",
+        "mocha": "^6.2.3",
         "webpack": "^4.27.1",
         "webpack-cli": "^3.3.12",
         "webpack-dev-server": "^3.11.0"
