@@ -22,7 +22,7 @@ Make sure the references are added to your paket files
 # paket.dependencies (solution-wide dependencies)
 nuget Fable.SimpleJson
 
-# paket.refernces (project-specific dependencies)
+# paket.references (project-specific dependencies)
 Fable.SimpleJson
 ```
 
